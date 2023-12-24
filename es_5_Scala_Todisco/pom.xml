@@ -1,0 +1,105 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>unisa.compilatori</groupId>
+  <artifactId>es_5_Scala_Todisco</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>es_5_Scala_Todisco</name>
+  <url>http://maven.apache.org</url>
+
+
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+
+
+  <dependencies>
+    <dependency>
+      <groupId>com.github.vbmacher</groupId>
+      <artifactId>java-cup-runtime</artifactId>
+      <version>11b-20160615-1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.abrarsyed.jastyle</groupId>
+      <artifactId>jAstyle</artifactId>
+      <version>1.3</version>
+    </dependency>
+    <dependency>
+      <groupId>de.jflex</groupId>
+      <artifactId>maven-jflex-plugin</artifactId>
+      <version>1.4.3-r1</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>
+      src
+    </sourceDirectory>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <phase>clean</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <!-- Qui specifichi il task per eliminare il tuo file .java -->
+                <delete file="src/unisa/compilatori/Lexer.java"/>
+                <delete file="src/unisa/compilatori/sym.java"/>
+                <delete file="src/unisa/compilatori/parser.java"/>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>de.jflex</groupId>
+        <artifactId>jflex-maven-plugin</artifactId>
+        <version>1.8.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>src</outputDirectory>
+              <lexDefinitions>
+                <lexDefinition>srcjflexcup</lexDefinition>
+              </lexDefinitions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.vbmacher</groupId>
+        <artifactId>cup-maven-plugin</artifactId>
+        <version>11b-20160615</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <outputDirectory>src</outputDirectory>
+          <cupDefinition>srcjflexcup/parser.cup</cupDefinition>
+          <packageName>unisa.compilatori</packageName>
+          <expectedConflicts>0</expectedConflicts>
+
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

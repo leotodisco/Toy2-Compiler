@@ -1,0 +1,270 @@
+import java_cup.runtime.*;
+import unisa.compilatori.nodes.expr.*;
+import unisa.compilatori.nodes.stat.*;
+import unisa.compilatori.nodes.*;
+import unisa.compilatori.Token;
+import java.util.ArrayList;
+
+terminal REF, ENDVAR, UMINUS, VAR, COLON, ASSIGN, SEMI, ID, COMMA, REAL_CONST, INTEGER_CONST, STRING_CONST, TRUE, FALSE, REAL, INTEGER, STRING, BOOLEAN, RETURN, FUNCTION, TYPERETURN, ENDFUNCTION, LPAR, RPAR, PROCEDURE, ENDPROCEDURE, OUT, WRITE, WRITERETURN, DOLLARSIGN, READ, IF, THEN, ELSE, ENDIF, ELIF, WHILE, DO, ENDWHILE, PLUS, MINUS, TIMES, DIV, EQ, NE, LT, LE, GT, GE, AND, OR, NOT;
+nonterminal FunCall, ProcExprs, ProcCall, IOArgsExpr, IterWithoutProcedure, Program, Iter, VarDecl, Decls, Ids, Consts, Type, Function, FuncParams, OtherFuncParams, Types, Procedure, ProcParams, OtherProcParams, ProcParamId, Body, Stat, IfStat, Elifs, Else, WhileStat, Elif, Exprs, IOArgs;
+nonterminal ConstOP Const;
+nonterminal UnaryOP Unary;
+nonterminal ExprOP Expr;
+
+/* Precedenze */
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+precedence nonassoc EQ, NE, LT, LE, GT, GE;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIV;
+
+Program ::= IterWithoutProcedure:iterNoProc Procedure:proc Iter:it {: RESULT = new ProgramOp((Procedure) proc, (IterWithoutProcedure) iterNoProc, (IterOp)it);
+System.out.println(RESULT);
+:};
+
+IterWithoutProcedure ::= VarDecl:attr IterWithoutProcedure:it {:IterWithoutProcedure iter = (IterWithoutProcedure)it;
+                                                               iter.addDecl((VarDecl)attr);
+                                                               RESULT = iter;:}
+      | Function:attr IterWithoutProcedure:it {:
+    IterWithoutProcedure iter = (IterWithoutProcedure)it;
+                                   iter.addFunction((Function)attr);
+                                   RESULT = iter;
+      :}
+      | /* empty */ {:RESULT = new IterWithoutProcedure(); :};
+
+Iter ::= VarDecl:declaration Iter:it {:
+                                       IterOp iter = (IterOp)it;
+                                       iter.addDecl((VarDecl)declaration);
+                                        System.out.println("\nITER 1 iter = " + iter + "\n\n");
+                                       RESULT = iter;
+                                       :}
+      | Function:function Iter:it {:
+                                     IterOp iter = (IterOp)it;
+
+                                     iter.addFunction((Function)function);
+                                     RESULT = iter;
+                                     :}
+      | Procedure:procedure Iter:it {:
+
+                                     IterOp iter = (IterOp)it;
+                                     iter.addProcedure((Procedure) procedure);
+                                     RESULT = iter;
+                                     :}
+      | /* empty */ {:RESULT = new IterOp(); :};
+
+VarDecl ::= VAR Decls:decls {:RESULT = new VarDecl( (ArrayList<Decl>) decls);:} ;
+
+Decls ::= Ids:ids COLON Type:tipo SEMI Decls:decls {:ArrayList<Decl> temp = (ArrayList<Decl>) decls;
+                                                     //Type type = new Type(tipo);
+                                                     Decl decl = new Decl((ArrayList<Identifier>) ids, (Type) tipo, Decl.TipoDecl.TYPE);
+                                                     temp.add(decl);
+                                                     RESULT = temp;
+
+                                                    :}
+	| Ids:ids ASSIGN Consts:consts SEMI Decls:decls {:ArrayList<Decl> temp = (ArrayList<Decl>) decls;
+	                                                  Decl decl = new Decl((ArrayList<ConstOP>) consts, (ArrayList<Identifier>) ids, null, Decl.TipoDecl.ASSIGN);
+                                                      temp.add(decl);
+                                                      RESULT = temp;
+	                                                 :}
+	| Ids:ids COLON Type:tipo SEMI ENDVAR {:
+	                                        //Type type = new Type(tipo);
+	                                        Decl decl = new Decl((ArrayList<Identifier>) ids, (Type) tipo, Decl.TipoDecl.TYPE);
+	                                        ArrayList<Decl> decls = new ArrayList<>();
+                                            decls.add(decl);
+                                            RESULT = decls;
+                                           :}
+	| Ids:ids ASSIGN Consts:consts SEMI ENDVAR {:   ArrayList<Decl> decls = new ArrayList<>();
+                                                    Decl decl = new Decl((ArrayList<ConstOP>) consts, (ArrayList<Identifier>) ids, null, Decl.TipoDecl.ASSIGN);
+                                                    decls.add(decl);
+                                                    RESULT = decls; :};
+
+Ids ::= ID:id COMMA Ids:ids {: ArrayList<Identifier> temp = (ArrayList<Identifier>) ids; temp.add( new Identifier(id, Identifier.Mode.VARIABLENAME)); RESULT = temp; :}
+        | ID:id {:ArrayList<Identifier> ids = new ArrayList<>(); ids.add( new Identifier( id, Identifier.Mode.VARIABLENAME )); RESULT = ids;:};
+
+Consts ::= Const:costante COMMA Consts:listaCostanti {: ArrayList<ConstOP> temp = (ArrayList<ConstOP>) listaCostanti; temp.add( (ConstOP) costante); RESULT = temp;:}
+	| Const:costante {:ArrayList<ConstOP> consts = new ArrayList<ConstOP>(); consts.add ( (ConstOP)costante); RESULT = consts;:};
+
+/**NB: Aggiunti MINUS REAL_CONST che ci permettono di gestire anche UMINUS per le costanti*/
+Const ::= REAL_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.REAL_CONST); :}
+	| INTEGER_CONST:lessema {:RESULT =new ConstOP(lessema, ConstOP.Kind.INTEGER_CONST); :}
+	| STRING_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.STRING_CONST);:}
+	| TRUE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST); :}
+	| FALSE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST);:}
+	| MINUS INTEGER_CONST:lessema {:Token temp = (Token)lessema; temp.setAttribute("-"+temp.getAttribute()); RESULT = new ConstOP(lessema, ConstOP.Kind.INTEGER_CONST);:}
+    | MINUS REAL_CONST:lessema {:Token temp = (Token)lessema; temp.setAttribute("-"+temp.getAttribute()); RESULT = new ConstOP(lessema, ConstOP.Kind.REAL_CONST);:};
+
+Type ::= REAL:lessema {:RESULT = new Type(lessema); :}
+	| INTEGER:lessema {:RESULT = new Type(lessema); :}
+	| STRING:lessema {:RESULT = new Type(lessema); :}
+	| BOOLEAN:lessema {:RESULT = new Type(lessema); :};
+
+Function  ::= FUNCTION ID:functionId LPAR FuncParams:paramsList RPAR TYPERETURN Types:typesList COLON Body:body ENDFUNCTION {:
+                                                                            Identifier functionIdentifier = new Identifier(functionId, Identifier.Mode.FUNCTIONIDENTIFIER);
+                                                                            ArrayList<FunctionParam> params = (ArrayList<FunctionParam>) paramsList;
+                                                                            ArrayList<Type> tipi = (ArrayList<Type>) typesList;
+
+                                                                            Function fun = new Function(functionIdentifier, tipi, params, (Body)body);
+                                                                            System.out.println(fun);
+                                                                            RESULT = fun;
+
+:};
+
+FuncParams ::= ID:id COLON Type:tipo OtherFuncParams:paramsList {:
+                                                                ArrayList<FunctionParam> temp = (ArrayList<FunctionParam>) paramsList;
+                                                                Identifier identifier = new Identifier(id, Identifier.Mode.PARAMS);
+                                                                FunctionParam fp = new FunctionParam(identifier, (Type) tipo);
+                                                                temp.add(fp);
+                                                                RESULT = temp;
+                                                                :}
+	    | /* empty */ {:
+                        ArrayList<FunctionParam> temp = new ArrayList<>();
+                        RESULT = temp;
+                        :};
+
+OtherFuncParams ::= COMMA ID:id COLON Type:tipo OtherFuncParams:paramsList {:
+                                                                ArrayList<FunctionParam> temp = (ArrayList<FunctionParam>) paramsList;
+                                                                Identifier identifier = new Identifier(id, Identifier.Mode.PARAMS);
+                                                                FunctionParam fp = new FunctionParam(identifier, (Type) tipo);
+                                                                temp.add(fp);
+                                                                RESULT = temp;
+                                                                :}
+	    | /* empty */ {:
+	                    ArrayList<FunctionParam> temp = new ArrayList<>();
+	                    RESULT = temp;
+	                    :};
+
+Types ::= Type:type COMMA Types:typeList {:
+                                            ArrayList<Type> temp = (ArrayList<Type>) typeList;
+                                            temp.add((Type) type);
+                                            RESULT = temp;
+                                            :}
+	    | Type:type {:
+                             ArrayList<Type> types = new ArrayList<>();
+                	         types.add((Type) type);
+                	         RESULT = types;
+                	 :};
+
+Procedure ::= PROCEDURE ID:id LPAR ProcParams:procparams RPAR COLON Body:body ENDPROCEDURE {:if(procparams == null)
+ RESULT = new Procedure(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (Body) body);
+ else  RESULT = new Procedure(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<ProcParamDecl>) procparams, (Body) body); :};
+
+ProcParams::= ProcParamId:procparamid COLON Type:tipo OtherProcParams:otherParams {:ArrayList<ProcParamDecl> temp = (ArrayList<ProcParamDecl>) otherParams; temp.add(new ProcParamDecl((Identifier) procparamid, (Type) tipo)); RESULT = temp; System.out.println(temp);:}
+	   | /* empty */ ;
+
+OtherProcParams ::= COMMA ProcParamId:procparamid COLON Type:tipo OtherProcParams:otherParams {:ArrayList<ProcParamDecl> temp = (ArrayList<ProcParamDecl>) otherParams; temp.add(new ProcParamDecl((Identifier) procparamid, (Type) tipo)); RESULT = temp; System.out.println(temp);:}
+	   | /* empty */ {:RESULT = new ArrayList<ProcParamDecl>();:};
+
+ProcParamId ::= ID:id {:RESULT = new Identifier(id, Identifier.Mode.PARAMS);:}
+	    | OUT ID:id {:RESULT = new Identifier(id, Identifier.Mode.PARAMSOUT);:};
+
+Body ::= VarDecl:vardecl Body:body   {:Body bodytemp = (Body)body; bodytemp.addDecl((VarDecl) vardecl); RESULT = bodytemp;:}
+	| Stat:stat Body:body {:Body bodytemp = (Body)body; bodytemp.addStatement((Stat) stat); RESULT = bodytemp;:}
+	| /* empty */ {:Body body = new Body(new ArrayList<>(), new ArrayList<>()); RESULT = body;:};
+
+Stat ::= Ids:ids ASSIGN Exprs:exprList SEMI {:Stat stat = new Stat(Stat.Mode.ASSIGN, (ArrayList<Identifier>) ids, (ArrayList<ExprOP>)exprList); RESULT = stat;:}
+	 | ProcCall:proccall SEMI {:RESULT = proccall;:}
+	 | RETURN Exprs:expList SEMI {:Stat stat = new Stat(Stat.Mode.RETURN, (ArrayList<ExprOP>)expList, null); RESULT=stat; :}
+	 | WRITE IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.WRITE, null, (IOArgsOp)ioArgs); RESULT=stat; :}
+	 | WRITERETURN IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.WRITE_RETURN, null, (IOArgsOp)ioArgs); RESULT=stat; :}
+	 | READ IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.READ, null, (IOArgsOp)ioArgs); RESULT=stat; :}
+	 | IfStat:IfStat SEMI {:RESULT = IfStat;:}
+	 | WhileStat:WhileStat SEMI {:RESULT = WhileStat;:};
+
+FunCall ::= ID:id LPAR Exprs:listaEspressioni RPAR {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni);:}           /* chiamata con almeno un parametro */
+         | ID:id LPAR RPAR   {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER)); :}               /* chiamata con nessun parametro */;
+
+ProcCall ::= ID:id LPAR ProcExprs:listaEspressioni RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni);:}   /* chiamata con almeno un parametro */
+         | ID:id LPAR RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER)); :}  ;           /* chiamata con nessun parametro */
+
+IfStat ::= IF Expr:expr THEN Body:body Elifs:elifs Else:elseop ENDIF {:RESULT = new IfStat((ExprOP) expr, (Body) body, (ElseOP) elseop, (ArrayList<ElseIfOP>) elifs);:};
+
+Elifs ::= Elif:elif Elifs:elifs {:ArrayList<ElseIfOP> temp = (ArrayList<ElseIfOP>) elifs; temp.add((ElseIfOP) elif); RESULT = temp;:}
+      | /* empty */ {:RESULT = new ArrayList<ElseIfOP>();:};
+
+Elif ::= ELIF Expr:expr THEN Body:body {:RESULT = new ElseIfOP((ExprOP) expr, (Body) body);:};
+
+Else ::= ELSE Body:body {:RESULT = new ElseOP((Body) body);:}
+     | /* empty */;
+
+WhileStat ::= WHILE Expr:expr DO Body:body ENDWHILE {:RESULT = new WhileStat((ExprOP) expr, (Body) body);:};
+
+
+IOArgs ::= IOArgsExpr:ioArgsExpr IOArgs:ioArgs {:
+                                                IOArgsOp temp = (IOArgsOp) ioArgs;
+                                                temp.addIOArgsExpr((IOArgsExpr) ioArgsExpr);
+                                                System.out.println(temp);
+                                                RESULT = temp;
+                                                :}    /* qui l'Expr corretta è concatenazione di stringhe o singola stringa*/
+       |  DOLLARSIGN LPAR Expr:e1 RPAR IOArgs:ioArgs {:
+                                                IOArgsOp temp = (IOArgsOp) ioArgs;
+                                                //IOArgsOp temp = (IOArgsOp) ioArgs;
+                                                temp.addExpr(e1);
+                                                System.out.println(temp);
+                                                RESULT = temp;
+                                                :}
+       | /* empty */ {:IOArgsOp ioArgsOp = new IOArgsOp(); RESULT = ioArgsOp;:};
+
+IOArgsExpr ::= STRING_CONST:strConst {:
+                                       ConstOP cons = new ConstOP(strConst, ConstOP.Kind.STRING_CONST) ;
+                                       IOArgsExpr expr = new IOArgsExpr(cons);
+                                       RESULT = expr;
+                                       :}   /* Aggiunto un expr speciale per IOArgs, dato che si richiedeva soltanto la concatenazione di stringhe e null altro */
+        | IOArgsExpr:e1 PLUS IOArgsExpr:e2 {:
+                                            IOArgsExpr expr = new IOArgsExpr((IOArgsExpr) e1, (IOArgsExpr) e2);
+                                            RESULT = expr;
+                                            :};
+
+ProcExprs::= Expr:e1 COMMA ProcExprs:exprList {:ArrayList<ExprOP> temp = (ArrayList<ExprOP>) exprList;
+                                                temp.add(e1);
+                                                RESULT = temp;
+                                               :}
+	  | REF ID:id COMMA ProcExprs:exprList {:ArrayList<ExprOP> temp = (ArrayList<ExprOP>) exprList;
+	                                        temp.add(new Identifier(id, Identifier.Mode.PARAMSREF));
+                                          RESULT = temp;
+	                                     :}
+      | Expr:e1 {:ArrayList<ExprOP> exprs = new ArrayList<>();
+                  exprs.add(e1);
+                  RESULT = exprs;
+                 :}
+	  | REF ID:id {:
+	  var arrayList = new ArrayList<ExprOP>();
+	  arrayList.add(new Identifier(id, Identifier.Mode.PARAMSREF));
+	  RESULT = arrayList;
+
+	  :};
+
+Exprs ::= Expr:e COMMA Exprs:exprs {:
+                                        ArrayList<ExprOP> temp = (ArrayList<ExprOP>) exprs;
+                                        temp.add(e);
+                                        RESULT = temp;
+                                    :}
+	| Expr:e {:
+             ArrayList<ExprOP> Exprs = new ArrayList<>();
+	         Exprs.add(e);
+	         RESULT = Exprs;
+	         :};
+
+Expr ::= FunCall:funcall {:RESULT = (ExprOP) funcall; :}
+	| REAL_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.REAL_CONST); :}
+    | INTEGER_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.INTEGER_CONST);   :}
+	| STRING_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.STRING_CONST);  :}
+	| ID:lessema {:RESULT = new Identifier(lessema, Identifier.Mode.VARIABLENAME);:}
+    | TRUE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST);  :}
+    | FALSE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST);  :}
+    | Expr:e1 PLUS Expr:e2 {:RESULT = new BinaryOP("plus_op", e1, e2); :}
+	| Expr:e1 MINUS Expr:e2 {:RESULT = new BinaryOP("minus_op", e1, e2);:}
+	| Expr:e1 TIMES Expr:e2 {:RESULT = new BinaryOP("times_op", e1, e2);:}
+	| Expr:e1 DIV Expr:e2 {:RESULT = new BinaryOP("div_op", e1, e2);:}
+	| Expr:e1 AND Expr:e2 {:RESULT = new BinaryOP("and_op", e1, e2);:}
+	| Expr:e1 OR Expr:e2 {:RESULT = new BinaryOP("or_op", e1, e2);:}
+	| Expr:e1 GT Expr:e2 {:RESULT = new BinaryOP("gt_op", e1, e2);:}
+	| Expr:e1 GE Expr:e2 {:RESULT = new BinaryOP("ge_op", e1, e2);:}
+	| Expr:e1 LT Expr:e2 {:RESULT = new BinaryOP("lt_op",e1, e2);:}
+	| Expr:e1 LE Expr:e2 {:RESULT = new BinaryOP("le_op", e1, e2);:}
+	| Expr:e1 EQ Expr:e2 {:RESULT = new BinaryOP("eq_op", e1, e2);:}
+	| Expr:e1 NE Expr:e2 {:RESULT = new BinaryOP("ne_op", e1, e2);:}
+	| LPAR Expr:valore RPAR {:RESULT = valore;:}
+	| MINUS Expr:valore {:RESULT = new UnaryOP("UMINUS", valore); :} %prec UMINUS
+	| NOT Expr:valore {:RESULT = new UnaryOP("NOT", valore); :} ;
+

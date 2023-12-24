@@ -1,0 +1,27 @@
+proc main():
+	sdsdsdssommac(a, x, b, @taglia, @risultato);
+	--> "La somma finale è" ;
+	 while i < 4 do
+                var i ^= 0;\
+       endwhile;
+
+return 1+11;
+endproc
+
+proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
+
+    result  ^=  a + b + c + d;
+
+    if result > 100 then
+        var valore ^= "grande";\
+         size ^= valore;
+    elseif result > 50 then
+        var valore ^= "media";\
+         size ^= valore;
+    else
+        var valore ^= "piccola";\
+         size ^= valore;
+    endif;
+
+endproc
+
