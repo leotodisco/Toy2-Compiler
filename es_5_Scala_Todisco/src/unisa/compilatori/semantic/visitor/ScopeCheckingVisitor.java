@@ -62,17 +62,56 @@ public class ScopeCheckingVisitor implements Visitor {
         program.getProc().accept(this);
         program.getIterOp().accept(this);
 
-        System.out.println("PROGRAM OP " + table);
+        return null;
+    }
 
+    @Override
+    public Object visit(IterWithoutProcedure iterOP) {
+        if(!iterOP.getFunctions().isEmpty()) {
+            iterOP.getFunctions().forEach(function -> {
+                String identificatore = function.getId().getLessema();
+                CallableFieldType fieldType = new CallableFieldType();
 
-        /*this.table = new SymbolTable();
-        program.getIterWithoutProcedure().getFunctions().forEach(fun -> {
-            try {
-                fun.accept(this);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                fieldType.setInputParams(function.getParametersList());
+
+                SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType,"" /*TODO*/);
+
+                try {
+                    table.addEntry(record);
+                    function.accept(this);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            });
+        }
+
+        if(!iterOP.getDeclarations().isEmpty()) {
+            //per ogni decl dobbiamo chiamare accept e addentry
+            iterOP.getDeclarations()
+                    .stream()
+                    .forEach(varDecl -> varDecl.accept(this));
+
+            for(VarDecl varDecl : iterOP.getDeclarations()) {
+                for(Decl decl : varDecl.getDecls()) {
+                    VarFieldType varFieldType = new VarFieldType(decl.getTipoDecl().toString());
+                    //per ogni id fai un record, poi aggiungi tutti i record alla tabella
+                    decl.getIds()
+                            .parallelStream()
+                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, "placeholder"))
+                            .forEach(record -> {
+                                try {
+                                    //System.out.println("\n\n\nRECORD IN ITER \n\n");
+                                    table.addEntry(record);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+
+                }
             }
-        });*/
+        }
+
 
         return null;
     }
@@ -156,21 +195,10 @@ public class ScopeCheckingVisitor implements Visitor {
                 try {
                     this.table.addEntry(record);
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
-
-
             }
-
         }
-
-
-
-        return null;
-    }
-
-    @Override
-    public Object visit(IterWithoutProcedure iterWithoutProcedure) {
 
         return null;
     }
@@ -245,8 +273,6 @@ public class ScopeCheckingVisitor implements Visitor {
         funzioneTable.setFather(this.table);
         funzioneTable.setScope(funzione.getId().getLessema());
 
-        //this.table
-
         //se sono presenti dei parametri si aggiungono allo scope
         if(funzione.getParametersList() != null) {
             funzione.getParametersList()
@@ -259,18 +285,12 @@ public class ScopeCheckingVisitor implements Visitor {
                             throw new RuntimeException(e);
                         }
                     });
-
-            //funzione.setTable(table);
         }
 
         if(funzione.getBody()!=null) {
-            var tbl = this.table;
-            this.table = funzione.getTable(); //entri nello scope
+            enterScope(funzione.getTable());
             funzione.getBody().accept(this);
-
-            this.table = tbl;
-
-
+            exitScope();
         }
         System.out.println("TABLE = " + funzione.getTable());
         return null;
@@ -290,10 +310,12 @@ public class ScopeCheckingVisitor implements Visitor {
         symbolTableThen.setScope("IF-THEN");
         symbolTableThen.setFather(this.table);
 
+
         //Symbol Table THEN
         if(ifStat.getBody()!=null) {
-            this.table = ifStat.getSymbolTableThen();
+            enterScope(ifStat.getSymbolTableThen());
             ifStat.getBody().accept(this);
+            exitScope();
         }
 
         //chiamo il visitor sulla lista di elseif
@@ -314,8 +336,9 @@ public class ScopeCheckingVisitor implements Visitor {
         symbolTableThen.setFather(this.table);
 
         if(elseOP.getBody()!=null) {
-            this.table = elseOP.getSymbolTableElseOp();
+            enterScope(elseOP.getSymbolTableElseOp());
             elseOP.getBody().accept(this);
+            exitScope();
         }
 
         return null;
@@ -323,16 +346,17 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(ElseIfOP elseIfOP) {
-
         //set up della symbol table
         elseIfOP.setSymbolTableElseIF(new SymbolTable());
         SymbolTable symbolTableThen = elseIfOP.getSymbolTableElseIF();
         symbolTableThen.setScope("IF-ELIF");
         symbolTableThen.setFather(this.table);
 
-        if(elseIfOP.getBody()!=null) {
-            this.table = elseIfOP.getSymbolTableElseIF();
+        if(elseIfOP.getBody() != null) {
+
+            enterScope(elseIfOP.getSymbolTableElseIF());
             elseIfOP.getBody().accept(this);
+            exitScope();
         }
 
         return null;
@@ -351,8 +375,9 @@ public class ScopeCheckingVisitor implements Visitor {
         symbolTable.setFather(this.table);
 
         if(whileStat.getBody() != null) {
-            this.table = whileStat.getTable();
+            enterScope(whileStat.getTable());
             whileStat.getBody().accept(this);
+            exitScope();
         }
 
         return null;
@@ -397,7 +422,7 @@ public class ScopeCheckingVisitor implements Visitor {
                         try {
                             procedureTable.addEntry(symbolTableRecord);
                         } catch (Exception e) {
-                            throw new RuntimeException(e);
+                            e.printStackTrace();
                         }
                     });
         }
@@ -408,12 +433,13 @@ public class ScopeCheckingVisitor implements Visitor {
                 procedure.getBody().accept(this);
                 exitScope(); //esce dallo scope
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         }
 
         return null;
     }
+
 
     @Override
     public Object visit(ConstOP constOP) {
@@ -433,6 +459,8 @@ public class ScopeCheckingVisitor implements Visitor {
 
         return null;
     }
+
+
 
     @Override
     public Object visit(FunCall funCall) {

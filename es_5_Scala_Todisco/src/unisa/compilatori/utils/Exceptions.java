@@ -7,4 +7,11 @@ public class Exceptions {
         }
     }
 
+    public static class LackOfMain extends Exception {
+        public LackOfMain() {
+            super("Manca la procedura main");
+        }
+    }
+
+
 }

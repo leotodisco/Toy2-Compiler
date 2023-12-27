@@ -1,20 +1,26 @@
-proc main():
+proc main(messaggio: string):
 var i ^= 0;\
 endproc
 
-func stampa(messaggio: string, prova:integer)-> string:
-    var i ^= 0;\
-    while i < 4 do
-    -->! ;
-    endwhile;
+proc STAMPA():
+var llll ^= 0;\
 
-     --> $(messaggio);
-    return "ok";
-endfunc
+    if result > 100 then
+        var valore ^= "grande";\
+         size ^= valore;
+    elseif result > 50 then
+         var valore ^= "grande";\
+         size ^= valore;
+    else
+        var valore ^= "grande";\
+        size ^= valore;
+    endif;
+
+endproc
+
 
 proc ciao():
 var llll ^= 0;\
-
 
     if result > 100 then
         var valore ^= "grande";\
