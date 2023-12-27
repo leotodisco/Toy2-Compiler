@@ -90,9 +90,7 @@ Const ::= REAL_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.REAL_C
 	| INTEGER_CONST:lessema {:RESULT =new ConstOP(lessema, ConstOP.Kind.INTEGER_CONST); :}
 	| STRING_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.STRING_CONST);:}
 	| TRUE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST); :}
-	| FALSE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST);:}
-	| MINUS INTEGER_CONST:lessema {:Token temp = (Token)lessema; temp.setAttribute("-"+temp.getAttribute()); RESULT = new ConstOP(lessema, ConstOP.Kind.INTEGER_CONST);:}
-    | MINUS REAL_CONST:lessema {:Token temp = (Token)lessema; temp.setAttribute("-"+temp.getAttribute()); RESULT = new ConstOP(lessema, ConstOP.Kind.REAL_CONST);:};
+	| FALSE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST);:};
 
 Type ::= REAL:lessema {:RESULT = new Type(lessema); :}
 	| INTEGER:lessema {:RESULT = new Type(lessema); :}
