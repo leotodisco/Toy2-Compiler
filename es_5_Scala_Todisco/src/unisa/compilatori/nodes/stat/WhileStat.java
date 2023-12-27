@@ -4,11 +4,14 @@ import unisa.compilatori.nodes.Body;
 import unisa.compilatori.nodes.expr.ExprOP;
 import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
+import unisa.compilatori.semantic.symboltable.*;
 
 public class WhileStat extends Stat implements Visitable {
 
     private ExprOP expr;
     private Body body;
+
+    private SymbolTable table;
 
     public WhileStat(ExprOP expr, Body body) {
         this.expr = expr;
@@ -16,6 +19,14 @@ public class WhileStat extends Stat implements Visitable {
 
         super.add(body);
         super.add(expr);
+    }
+
+    public void setTable(SymbolTable table) {
+        this.table = table;
+    }
+
+    public SymbolTable getTable() {
+        return table;
     }
 
     public ExprOP getExpr() {

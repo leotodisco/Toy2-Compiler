@@ -1,38 +1,42 @@
 package unisa.compilatori.semantic.symboltable;
 
+import unisa.compilatori.nodes.CallableParam;
+import unisa.compilatori.nodes.Type;
+
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 
 /**
  * Questa classe mantiene le informazioni su Procedure e Function
  */
 public class CallableFieldType implements FieldType {
-    private ArrayList<String> inputParams;
+    private ArrayList<CallableParam> inputParams;
 
-    private ArrayList<String> outputParams;
+    private ArrayList<CallableParam> outputParams;
 
     public CallableFieldType() {
-        inputParams =new ArrayList<String>();
-        outputParams =new ArrayList<String>();
+        inputParams = new ArrayList<CallableParam>();
+        outputParams = new ArrayList<CallableParam>();
     }
 
-    public CallableFieldType(ArrayList<String> inputParams, ArrayList<String> outputParams){
+    public CallableFieldType(ArrayList<CallableParam> inputParams, ArrayList<CallableParam> outputParams){
         this.inputParams = inputParams;
         this.outputParams = outputParams;
     }
 
-    public ArrayList<String> getInputParams() {
+    public ArrayList<CallableParam> getInputParams() {
         return inputParams;
     }
 
-    public void setInputParams(ArrayList<String> inputParams) {
+    public void setInputParams(ArrayList<CallableParam> inputParams) {
         this.inputParams = inputParams;
     }
 
-    public ArrayList<String> getOutputParams() {
+    public ArrayList<CallableParam> getOutputParams() {
         return outputParams;
     }
 
-    public void setOutputParams(ArrayList<String> outputParams) {
+    public void setOutputParams(ArrayList<CallableParam> outputParams) {
         this.outputParams = outputParams;
     }
 

@@ -5,9 +5,8 @@ import unisa.compilatori.semantic.symboltable.SymbolTable;
 import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
 
-import javax.swing.tree.DefaultMutableTreeNode;
 
-public class ElseOP extends DefaultMutableTreeNode implements Visitable {
+public class ElseOP extends Stat implements Visitable {
 
     private Body body;
 
