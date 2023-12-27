@@ -1,10 +1,12 @@
 package unisa.compilatori.nodes.expr;
 
 import unisa.compilatori.Token;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class Identifier extends ExprOP{
+public class Identifier extends ExprOP implements Visitable {
     private String lessema;
 
     private Mode mode;
@@ -47,5 +49,10 @@ public class Identifier extends ExprOP{
                 "lessema='" + lessema + '\'' +
                 ", mode=" + mode +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

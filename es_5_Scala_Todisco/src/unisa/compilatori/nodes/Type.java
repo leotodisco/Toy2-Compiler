@@ -1,10 +1,12 @@
 package unisa.compilatori.nodes;
 
 import unisa.compilatori.Token;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class Type extends DefaultMutableTreeNode {
+public class Type extends DefaultMutableTreeNode implements Visitable {
     private String tipo;
 
     public Type(final Object lessema) {
@@ -26,5 +28,10 @@ public class Type extends DefaultMutableTreeNode {
         return "Type{" +
                 "tipo='" + tipo + '\'' +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

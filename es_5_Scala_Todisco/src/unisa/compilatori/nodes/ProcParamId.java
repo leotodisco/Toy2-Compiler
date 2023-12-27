@@ -1,10 +1,12 @@
 package unisa.compilatori.nodes;
 
 import unisa.compilatori.nodes.expr.Identifier;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class ProcParamId extends DefaultMutableTreeNode {
+public class ProcParamId extends DefaultMutableTreeNode implements Visitable {
 
     private Identifier Id;
     private Boolean outMode;
@@ -38,5 +40,10 @@ public class ProcParamId extends DefaultMutableTreeNode {
                 "Id='" + Id + '\'' +
                 ", outMode=" + outMode +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return null;
     }
 }

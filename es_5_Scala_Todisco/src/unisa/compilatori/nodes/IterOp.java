@@ -1,9 +1,12 @@
 package unisa.compilatori.nodes;
 
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
+
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 
-public class IterOp extends DefaultMutableTreeNode {
+public class IterOp extends DefaultMutableTreeNode implements Visitable {
     private ArrayList<Function> functions;
     private ArrayList<VarDecl> declarations;
     private ArrayList<Procedure> procedures;
@@ -73,5 +76,10 @@ public class IterOp extends DefaultMutableTreeNode {
                 ", procedures=" + procedures +
                 ", declarations=" + declarations +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

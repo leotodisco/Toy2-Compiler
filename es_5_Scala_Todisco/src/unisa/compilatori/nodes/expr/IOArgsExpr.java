@@ -1,6 +1,9 @@
 package unisa.compilatori.nodes.expr;
 
-public class IOArgsExpr extends ExprOP {
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
+
+public class IOArgsExpr extends ExprOP implements Visitable {
     private IOArgsExpr e1, e2;
     private String str;
 

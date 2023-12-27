@@ -1,6 +1,9 @@
 package unisa.compilatori;
 
 
+import unisa.compilatori.nodes.ProgramOp;
+import unisa.compilatori.semantic.visitor.ScopeCheckingVisitor;
+
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.BufferedReader;
@@ -18,6 +21,7 @@ public class Prova {
 
             DefaultMutableTreeNode root = (DefaultMutableTreeNode) p.parse().value;
             tree=new JTree(root);
+            ((ProgramOp) root).accept(new ScopeCheckingVisitor());
 
             JFrame framePannello=new JFrame();
             framePannello.setSize(400, 400);

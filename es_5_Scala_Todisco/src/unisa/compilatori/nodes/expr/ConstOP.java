@@ -2,12 +2,19 @@ package unisa.compilatori.nodes.expr;
 
 import com.sun.jdi.InvalidTypeException;
 import unisa.compilatori.Token;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class ConstOP extends ExprOP {
+public class ConstOP extends ExprOP implements Visitable {
     private String lessema;
     private String type; //indica di che tipo di costante parliamo
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
+    }
 
     /**
      * enum che indica il tipo della costante

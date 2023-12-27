@@ -1,7 +1,10 @@
 package unisa.compilatori.nodes.expr;
 
 
-public class BinaryOP extends ExprOP {
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
+
+public class BinaryOP extends ExprOP implements Visitable {
     private String name; //indica che espressione binaria è: plus,...
     private ExprOP expr1, expr2;
 
@@ -45,5 +48,10 @@ public class BinaryOP extends ExprOP {
                 ", expr1=" + expr1 +
                 ", expr2=" + expr2 +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

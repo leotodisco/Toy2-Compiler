@@ -1,8 +1,11 @@
 package unisa.compilatori.nodes.expr;
 
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
+
 import java.util.ArrayList;
 
-public class FunCall extends ExprOP{
+public class FunCall extends ExprOP implements Visitable {
     private Identifier identifier;
     private ArrayList<ExprOP> exprs;
 

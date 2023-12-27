@@ -1,12 +1,14 @@
 package unisa.compilatori.nodes;
 
 import unisa.compilatori.nodes.expr.Identifier;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 import java.util.Optional;
 
-public class Procedure extends DefaultMutableTreeNode /*probabilmente extends Iter*/{
+public class Procedure extends DefaultMutableTreeNode implements Visitable {
     private Identifier id;
     private ArrayList<ProcParamDecl> procParamDeclList;
     private Body body;
@@ -64,5 +66,10 @@ public class Procedure extends DefaultMutableTreeNode /*probabilmente extends It
                 ", procParamDeclList=" + procParamDeclList +
                 ", body=" + body +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

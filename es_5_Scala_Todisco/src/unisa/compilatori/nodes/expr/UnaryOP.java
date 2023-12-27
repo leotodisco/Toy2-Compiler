@@ -1,8 +1,11 @@
 package unisa.compilatori.nodes.expr;
 
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
+
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class UnaryOP extends ExprOP {
+public class UnaryOP extends ExprOP implements Visitable {
     private String simbolo; //nome può essere NOT o MINUS (UMINUS)
     private ExprOP expr;
 

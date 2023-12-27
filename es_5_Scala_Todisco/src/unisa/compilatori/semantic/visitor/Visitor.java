@@ -9,7 +9,7 @@ public interface Visitor<T> {
     T visit(BinaryOP operazioneBinaria);
     T visit(UnaryOP operazioneUnaria);
     T visit(VarDecl dichiarazione);
-    T visit(Function funzione);
+    T visit(Function funzione) throws Exception;
     T visit(Stat statement);
     T visit(Body body);
 

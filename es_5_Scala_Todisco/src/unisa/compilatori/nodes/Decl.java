@@ -2,17 +2,25 @@ package unisa.compilatori.nodes;
 
 import unisa.compilatori.nodes.expr.ConstOP;
 import unisa.compilatori.nodes.expr.Identifier;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 import java.util.Optional;
 
-public class Decl extends DefaultMutableTreeNode {
+public class Decl extends DefaultMutableTreeNode implements Visitable {
 
     private ArrayList<ConstOP> consts;
     private ArrayList<Identifier> ids;
     private Type tipo;
     private TipoDecl tipoDecl;
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
+    }
+
     /*
     * le modalità di una dichiarazio possono essere 2.
     * MODE.ASSIGN se stai anche assegnando un valore e non hai bisogno di scrivere il tipo esplicitamente;

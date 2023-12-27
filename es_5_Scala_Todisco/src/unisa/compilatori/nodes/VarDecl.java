@@ -1,8 +1,11 @@
 package unisa.compilatori.nodes;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
+
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 
-public class VarDecl extends DefaultMutableTreeNode{
+public class VarDecl extends DefaultMutableTreeNode implements Visitable {
     private ArrayList<Decl> decls;
 
     public VarDecl(ArrayList<Decl> decls) {
@@ -24,5 +27,10 @@ public class VarDecl extends DefaultMutableTreeNode{
         return "VarDecl{" +
                 "decls=" + decls +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }
