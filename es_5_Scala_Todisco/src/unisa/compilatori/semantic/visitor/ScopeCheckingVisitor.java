@@ -4,6 +4,7 @@ import unisa.compilatori.nodes.*;
 import unisa.compilatori.nodes.expr.*;
 import unisa.compilatori.nodes.stat.*;
 import unisa.compilatori.semantic.symboltable.*;
+import unisa.compilatori.utils.Exceptions;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -55,7 +56,7 @@ public class ScopeCheckingVisitor implements Visitor {
                     table.addEntry(record);
                     function.accept(this);
                 } catch (Exception e) {
-                    System.out.println("id di funzione già dichiarata");
+                    e.printStackTrace();
                 }
                 
             });
@@ -81,7 +82,7 @@ public class ScopeCheckingVisitor implements Visitor {
                                     //System.out.println("\n\n\nRECORD IN ITER \n\n");
                                     table.addEntry(record);
                                 } catch (Exception e) {
-                                    throw new RuntimeException(e);
+                                    e.printStackTrace();
                                 }
                             });
 
@@ -461,7 +462,7 @@ public class ScopeCheckingVisitor implements Visitor {
                     try{
                     table.addEntry(record);
                     } catch (Exception e) {
-                        System.out.println("error table.addEntry()");
+                        e.printStackTrace();
                     }
                 }
             }

@@ -2,6 +2,7 @@ package unisa.compilatori.semantic.symboltable;
 
 import java_cup.runtime.Symbol;
 import unisa.compilatori.Token;
+import unisa.compilatori.utils.Exceptions;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -66,8 +67,7 @@ public class SymbolTable implements ISymbolTable {
 
         if(!shadowing) {
             if(isRecordDeclared(record)) {
-                throw new Exception("Invalid name for the variable");
-                //TODO CUSTOM EXCEPTION
+                throw new Exceptions.MultipleDeclaration(record.getSimbolo());
             } else {
                 recordsList.add(record);
             }
@@ -77,8 +77,7 @@ public class SymbolTable implements ISymbolTable {
             ISymbolTable symbolTable = this;
             while (symbolTable != null) {
                 if(symbolTable.isRecordDeclared(record)) {
-                    throw new Exception("Invalid name for the variable");
-                    //TODO CUSTOM EXCEPTION
+                    throw new Exceptions.MultipleDeclaration(record.getSimbolo());
                 }
                 symbolTable = symbolTable.getFather();
             }
