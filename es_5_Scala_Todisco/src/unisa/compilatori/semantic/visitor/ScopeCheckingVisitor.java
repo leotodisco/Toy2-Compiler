@@ -295,6 +295,16 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(WhileStat whileStat) {
+        whileStat.setTable(new SymbolTable());
+        SymbolTable symbolTable = whileStat.getTable();
+        symbolTable.setScope("While");
+        symbolTable.setFather(this.table);
+
+        if(whileStat.getBody() != null) {
+            this.table = whileStat.getTable();
+            whileStat.getBody().accept(this);
+        }
+
         return null;
     }
 
@@ -314,23 +324,67 @@ public class ScopeCheckingVisitor implements Visitor {
     }
 
 
-    @Override
-    public Object visit(IterOp iterOP) {
-        return null;
-    }
 
-    @Override
-    public Object visit(IterWithoutProcedure iterWithoutProcedure) {
-        return null;
-    }
+
+    java.util.function.Function<CallableParam, SymbolTableRecord> mapProcParamToEntry =  procParam -> {
+        return new SymbolTableRecord(procParam.getId().getLessema(),
+                procParam,
+                new VarFieldType(procParam.getTipo().toString()),
+                "placeholder");
+    };
 
     @Override
     public Object visit(Procedure procedure) {
+        //in questa parte si inizializza la symbol table
+        procedure.setTable(new SymbolTable());
+        SymbolTable funzioneTable = procedure.getTable();
+        funzioneTable.setFather(this.table);
+        funzioneTable.setScope(procedure.getId().getLessema());
+
+        //se sono presenti dei parametri si aggiungono allo scope
+        if(procedure.getProcParamDeclList() != null) {
+            procedure.getProcParamDeclList()
+                    .stream()
+                    .map(mapProcParamToEntry)
+                    .forEach(symbolTableRecord -> {
+                        try {
+                            table.addEntry(symbolTableRecord);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
+            procedure.setTable(table);
+        }
+
+        if(procedure.getBody()!=null) {
+            this.table = procedure.getTable();
+            try {
+                procedure.getBody().accept(this);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         return null;
     }
 
     @Override
     public Object visit(ConstOP constOP) {
+        String type = constOP.getType().toString();
+        if(type.equals("INTEGER_CONST")) {
+            return "integer";
+        }
+        if(type.equals("BOOLEAN_CONST")) {
+            return "boolean";
+        }
+        if(type.equals("REAL_CONST")) {
+            return "real";
+        }
+        if(type.equals("STRING_CONST")) {
+            return "string";
+        }
+
         return null;
     }
 
@@ -346,6 +400,17 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(ExprOP exprOP) {
+        if(exprOP instanceof UnaryOP) {
+            var exp = (UnaryOP) exprOP;
+            exp.accept(this);
+        } else if(exprOP instanceof BinaryOP){
+            var exp = (UnaryOP) exprOP;
+            exp.accept(this);
+        } else if(exprOP instanceof Identifier){
+            var exp = (Identifier) exprOP;
+            exp.accept(this);
+        }
+
         return null;
     }
 
@@ -355,12 +420,54 @@ public class ScopeCheckingVisitor implements Visitor {
     }
 
     @Override
-    public Object visit(Stat statement) {
+    public Object visit(Stat s) {
+        //qui si gestrisce dove deve andare
+        if(s instanceof WhileStat) {
+            var stat = (WhileStat) s;
+            stat.accept(this);
+        } else if(s instanceof IfStat) {
+            var stat = (IfStat) s;
+            stat.accept(this);
+        } else if(s instanceof ElseIfOP) {
+            var stat = (ElseIfOP) s;
+            stat.accept(this);
+        } else if(s instanceof ElseOP) {
+            var stat = (ElseOP) s;
+            stat.accept(this);
+        }
+
+
         return null;
     }
 
     @Override
     public Object visit(Body body) {
+
+        //se il body ha una lista di dichiarazioni non vuota
+        //mettiamo nella symbol table le variabili
+        if(body.getVarDeclList() != null) {
+            ArrayList<SymbolTableRecord> listaVar;
+            for (VarDecl var : body.getVarDeclList()) {
+                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
+                for ( SymbolTableRecord record: listaVar) {
+                    try{
+                    table.addEntry(record);
+                    } catch (Exception e) {
+                        System.out.println("error table.addEntry()");
+                    }
+                }
+            }
+
+        }
+
+
+        //per ogni statement si chiama la accept corretta
+        if(body.getStatList() != null) {
+            for(Stat s : body.getStatList()) {
+                s.accept(this);
+            }
+        }
+        
         return null;
     }
 
