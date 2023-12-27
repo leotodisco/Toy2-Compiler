@@ -1,10 +1,8 @@
 package unisa.compilatori.nodes;
 
-
 import unisa.compilatori.semantic.visitor.Visitable;
-
-import unisa.compilatori.semantic.symboltable.*;
 import unisa.compilatori.semantic.visitor.Visitor;
+
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class ProgramOp extends DefaultMutableTreeNode implements Visitable {
@@ -12,15 +10,6 @@ public class ProgramOp extends DefaultMutableTreeNode implements Visitable {
     private IterWithoutProcedure iterWithoutProcedure;
     private IterOp iterOp;
 
-    private SymbolTable table;
-
-    public void setTable(SymbolTable table) {
-        this.table = table;
-    }
-
-    public SymbolTable getTable() {
-        return this.table;
-}
     public ProgramOp(Procedure proc,
                      IterWithoutProcedure iterWithoutProcedure,
                      IterOp iterOp) {

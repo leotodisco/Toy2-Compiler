@@ -3,7 +3,6 @@ package unisa.compilatori.nodes;
 import unisa.compilatori.nodes.expr.Identifier;
 import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
-import unisa.compilatori.semantic.symboltable.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
@@ -13,16 +12,6 @@ public class Procedure extends DefaultMutableTreeNode implements Visitable {
     private Identifier id;
     private ArrayList<CallableParam> procParamDeclList;
     private Body body;
-
-    private SymbolTable table;
-
-    public SymbolTable getTable() {
-        return table;
-    }
-
-    public void setTable(SymbolTable table) {
-        this.table = table;
-    }
 
     public Procedure(Identifier id,
                      ArrayList<CallableParam> procParamDeclList,

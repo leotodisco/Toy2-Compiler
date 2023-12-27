@@ -16,7 +16,6 @@ public class IterOp extends DefaultMutableTreeNode implements Visitable {
         this.declarations = new ArrayList<>();
         this.procedures = new ArrayList<>();
 
-        super.add(new DefaultMutableTreeNode());
     }
 
     public IterOp(ArrayList<Function> functions,
