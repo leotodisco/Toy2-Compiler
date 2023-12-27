@@ -10,11 +10,11 @@ import java.util.Optional;
 
 public class Procedure extends DefaultMutableTreeNode implements Visitable {
     private Identifier id;
-    private ArrayList<ProcParamDecl> procParamDeclList;
+    private ArrayList<CallableParam> procParamDeclList;
     private Body body;
 
     public Procedure(Identifier id,
-                     ArrayList<ProcParamDecl> procParamDeclList,
+                     ArrayList<CallableParam> procParamDeclList,
                      Body body) {
         this.id = id;
         Optional.of(procParamDeclList).ifPresent(lista -> this.procParamDeclList=lista);
@@ -43,11 +43,11 @@ public class Procedure extends DefaultMutableTreeNode implements Visitable {
         this.id = id;
     }
 
-    public ArrayList<ProcParamDecl> getProcParamDeclList() {
+    public ArrayList<CallableParam> getProcParamDeclList() {
         return procParamDeclList;
     }
 
-    public void setProcParamDeclList(ArrayList<ProcParamDecl> procParamDeclList) {
+    public void setProcParamDeclList(ArrayList<CallableParam> procParamDeclList) {
         this.procParamDeclList = procParamDeclList;
     }
 

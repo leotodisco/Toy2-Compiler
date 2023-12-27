@@ -1,13 +1,15 @@
+
+
+proc main():
+
+endproc
+
 func stampa(messaggio: string, prova:integer)-> string:
     var i ^= 0;\
-    while i < 4 do 
+    while i < 4 do
     -->! ;
     endwhile;
 
      --> $(messaggio);
     return "ok";
 endfunc
-
-proc main():
-
-endproc

@@ -12,14 +12,14 @@ import java.util.Optional;
 public class Function extends DefaultMutableTreeNode implements Visitable {
     private Identifier id;
     private ArrayList<Type> returnTypes;
-    private ArrayList<FunctionParam> parametersList;
+    private ArrayList<CallableParam> parametersList;
     private Body body;
 
     private SymbolTable table;
 
     public Function(Identifier id,
                     ArrayList<Type> returnTypes,
-                    ArrayList<FunctionParam> parametersList,
+                    ArrayList<CallableParam> parametersList,
                     Body body) {
         this.id = id;
         this.returnTypes = returnTypes;
@@ -57,11 +57,11 @@ public class Function extends DefaultMutableTreeNode implements Visitable {
         this.returnTypes = returnTypes;
     }
 
-    public ArrayList<FunctionParam> getParametersList() {
+    public ArrayList<CallableParam> getParametersList() {
         return parametersList;
     }
 
-    public void setParametersList(ArrayList<FunctionParam> parametersList) {
+    public void setParametersList(ArrayList<CallableParam> parametersList) {
         this.parametersList = parametersList;
     }
 
@@ -80,6 +80,7 @@ public class Function extends DefaultMutableTreeNode implements Visitable {
     public void setTable(SymbolTable table) {
         this.table = table;
     }
+
 
     @Override
     public <T> T accept(Visitor<T> visitor) throws Exception {

@@ -1,6 +1,7 @@
 package unisa.compilatori.nodes.stat;
 
 import unisa.compilatori.nodes.Body;
+import unisa.compilatori.semantic.symboltable.SymbolTable;
 import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
 
@@ -9,6 +10,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class ElseOP extends DefaultMutableTreeNode implements Visitable {
 
     private Body body;
+
+    private SymbolTable symbolTableElseOp;
 
     public ElseOP(Body body) {
         this.body = body;
@@ -28,6 +31,14 @@ public class ElseOP extends DefaultMutableTreeNode implements Visitable {
         return "ElseOP{" +
                 "body=" + body +
                 '}';
+    }
+
+    public SymbolTable getSymbolTableElseOp() {
+        return symbolTableElseOp;
+    }
+
+    public void setSymbolTableElseOp(SymbolTable symbolTableElseOp) {
+        this.symbolTableElseOp = symbolTableElseOp;
     }
 
     @Override

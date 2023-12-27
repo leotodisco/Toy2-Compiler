@@ -4,6 +4,7 @@ import unisa.compilatori.nodes.Body;
 import unisa.compilatori.nodes.expr.ExprOP;
 import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
+import unisa.compilatori.semantic.symboltable.*;
 
 import java.util.ArrayList;
 
@@ -13,6 +14,12 @@ public class IfStat extends Stat implements Visitable {
     private ElseOP elseOP;
 
     private ArrayList<ElseIfOP> elseIfOPList;
+
+    private SymbolTable symbolTableThen;
+
+    private SymbolTable symbolTableElse;
+
+    private SymbolTable symbolTableElseIf;
 
     public IfStat(ExprOP expr, Body body, ElseOP elseOP, ArrayList<ElseIfOP> elseIfOPList) {
         this.expr = expr;
@@ -57,6 +64,30 @@ public class IfStat extends Stat implements Visitable {
 
     public void setElseIfOPList(ArrayList<ElseIfOP> elseIfOPList) {
         this.elseIfOPList = elseIfOPList;
+    }
+
+    public SymbolTable getSymbolTableThen() {
+        return symbolTableThen;
+    }
+
+    public void setSymbolTableThen(SymbolTable symbolTableThen) {
+        this.symbolTableThen = symbolTableThen;
+    }
+
+    public SymbolTable getSymbolTableElse() {
+        return symbolTableElse;
+    }
+
+    public void setSymbolTableElse(SymbolTable symbolTableElse) {
+        this.symbolTableElse = symbolTableElse;
+    }
+
+    public SymbolTable getSymbolTableElseIf() {
+        return symbolTableElseIf;
+    }
+
+    public void setSymbolTableElseIf(SymbolTable symbolTableElseIf) {
+        this.symbolTableElseIf = symbolTableElseIf;
     }
 
     @Override

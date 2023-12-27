@@ -15,7 +15,7 @@ public class SymbolTable implements ISymbolTable {
     /** serve a controllare se nello scope c'è già l'id */
     private static boolean shadowing = true;
     private String scope;
-    public final String NAME_ROOT = "ROOT";
+    public static final String NAME_ROOT = "ROOT";
     private ISymbolTable father;
 
     public SymbolTable(){

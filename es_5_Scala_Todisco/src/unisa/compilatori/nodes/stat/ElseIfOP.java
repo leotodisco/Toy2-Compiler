@@ -1,7 +1,9 @@
 package unisa.compilatori.nodes.stat;
 
+import java_cup.runtime.Symbol;
 import unisa.compilatori.nodes.Body;
 import unisa.compilatori.nodes.expr.ExprOP;
+import unisa.compilatori.semantic.symboltable.SymbolTable;
 import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
 
@@ -11,6 +13,7 @@ public class ElseIfOP extends Stat implements Visitable {
 
     private Body body;
 
+    private SymbolTable symbolTableElseIF;
     public ElseIfOP(ExprOP expr, Body body) {
         this.expr = expr;
         this.body = body;
@@ -41,6 +44,14 @@ public class ElseIfOP extends Stat implements Visitable {
 
     public void setBody(Body body) {
         this.body = body;
+    }
+
+    public SymbolTable getSymbolTableElseIF() {
+        return symbolTableElseIF;
+    }
+
+    public void setSymbolTableElseIF(SymbolTable symbolTableElseIF) {
+        this.symbolTableElseIF = symbolTableElseIF;
     }
 
     @Override
