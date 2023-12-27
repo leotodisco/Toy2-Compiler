@@ -22,7 +22,7 @@ public class Prova {
             DefaultMutableTreeNode root = (DefaultMutableTreeNode) p.parse().value;
             //tree=new JTree(root);
             ((ProgramOp) root).accept(new ScopeCheckingVisitor());
-
+int a = 0;
             //JFrame framePannello=new JFrame();
             //framePannello.setSize(400, 400);
             //JScrollPane treeView = new JScrollPane(tree);

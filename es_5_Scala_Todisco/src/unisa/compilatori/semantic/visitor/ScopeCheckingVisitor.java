@@ -25,6 +25,8 @@ public class ScopeCheckingVisitor implements Visitor {
         program.getProc().accept(this);
         program.getIterOp().accept(this);
 
+        System.out.println("PROGRAM OP " + table);
+
 
         /*this.table = new SymbolTable();
         program.getIterWithoutProcedure().getFunctions().forEach(fun -> {
@@ -76,6 +78,7 @@ public class ScopeCheckingVisitor implements Visitor {
                             .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, "placeholder"))
                             .forEach(record -> {
                                 try {
+                                    //System.out.println("\n\n\nRECORD IN ITER \n\n");
                                     table.addEntry(record);
                                 } catch (Exception e) {
                                     throw new RuntimeException(e);
@@ -96,6 +99,9 @@ public class ScopeCheckingVisitor implements Visitor {
                     .forEach(procedure -> procedure.accept(this));
 
             for(Procedure proc : iterOP.getProcedures()) {
+                if(proc.getProcParamDeclList() == null) {
+                    continue;
+                }
                 //prendi i parametri output della procedura
                 var outParams = (ArrayList<CallableParam>) proc.getProcParamDeclList()
                                 .stream()
@@ -202,6 +208,8 @@ public class ScopeCheckingVisitor implements Visitor {
         funzioneTable.setFather(this.table);
         funzioneTable.setScope(funzione.getId().getLessema());
 
+        //this.table
+
         //se sono presenti dei parametri si aggiungono allo scope
         if(funzione.getParametersList() != null) {
             funzione.getParametersList()
@@ -219,8 +227,13 @@ public class ScopeCheckingVisitor implements Visitor {
         }
 
         if(funzione.getBody()!=null) {
-            this.table = funzione.getTable();
+            var tbl = this.table;
+            this.table = funzione.getTable(); //entri nello scope
             funzione.getBody().accept(this);
+
+            this.table = tbl;
+
+
         }
         System.out.println("TABLE = " + funzione.getTable());
         return null;
@@ -233,7 +246,6 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(IfStat ifStat) {
-
         //set up della symbol table
         ifStat.setSymbolTableThen(new SymbolTable());
         SymbolTable symbolTableThen = ifStat.getSymbolTableThen();
@@ -323,9 +335,6 @@ public class ScopeCheckingVisitor implements Visitor {
         return null;
     }
 
-
-
-
     java.util.function.Function<CallableParam, SymbolTableRecord> mapProcParamToEntry =  procParam -> {
         return new SymbolTableRecord(procParam.getId().getLessema(),
                 procParam,
@@ -335,11 +344,11 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(Procedure procedure) {
-        //in questa parte si inizializza la symbol table
+        //in questa parte si inizializza la symbol table di procedure
         procedure.setTable(new SymbolTable());
-        SymbolTable funzioneTable = procedure.getTable();
-        funzioneTable.setFather(this.table);
-        funzioneTable.setScope(procedure.getId().getLessema());
+        SymbolTable procedureTable = procedure.getTable();
+        procedureTable.setFather(this.table); //link
+        procedureTable.setScope(procedure.getId().getLessema());
 
         //se sono presenti dei parametri si aggiungono allo scope
         if(procedure.getProcParamDeclList() != null) {
@@ -348,19 +357,19 @@ public class ScopeCheckingVisitor implements Visitor {
                     .map(mapProcParamToEntry)
                     .forEach(symbolTableRecord -> {
                         try {
-                            table.addEntry(symbolTableRecord);
+                            procedureTable.addEntry(symbolTableRecord);
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
                     });
-
-            procedure.setTable(table);
         }
 
         if(procedure.getBody()!=null) {
+            var tbl = this.table;
             this.table = procedure.getTable();
             try {
                 procedure.getBody().accept(this);
+                this.table = tbl; //esce dallo socper
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -442,7 +451,6 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(Body body) {
-
         //se il body ha una lista di dichiarazioni non vuota
         //mettiamo nella symbol table le variabili
         if(body.getVarDeclList() != null) {

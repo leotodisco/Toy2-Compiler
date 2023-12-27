@@ -56,11 +56,11 @@ public class SymbolTableRecord  {
 
     @Override
     public String toString() {
-        return "SymbolTableRecord{" +
+        return "\nSymbolTableRecord{" +
                 "simbolo=" + simbolo +
                 ", Visitable=" + nodo +
                 ", FieldType=" + fieldType +
                 ", properties=" + properties +
-                '}';
+                "} \n";
     }
 }

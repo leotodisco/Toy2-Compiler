@@ -135,10 +135,10 @@ public class SymbolTable implements ISymbolTable {
 
     @Override
     public String toString() {
-        return "SymbolTable{" +
-                "root=" + root +
-                ", recordsList=" + recordsList +
-                ", scope='" + scope + '\'' +
+        return "SymbolTable{"
+                + "\n"+
+                ", recordsList=" + recordsList + "\n"+
+
                 '}';
     }
 }
