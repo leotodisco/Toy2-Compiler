@@ -41,4 +41,8 @@ public class UnaryOP extends ExprOP implements Visitable {
                 ", expr=" + expr +
                 '}';
     }
+
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }

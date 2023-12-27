@@ -8,3 +8,6 @@ func stampa(messaggio: string, prova:integer)-> string:
     return "ok";
 endfunc
 
+proc main():
+
+endproc

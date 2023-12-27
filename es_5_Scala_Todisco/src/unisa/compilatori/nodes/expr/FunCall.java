@@ -47,4 +47,8 @@ public class FunCall extends ExprOP implements Visitable {
                 ", exprs=" + exprs +
                 '}';
     }
+
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }

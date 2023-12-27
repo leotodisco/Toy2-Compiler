@@ -2,10 +2,12 @@ package unisa.compilatori.nodes.stat;
 
 import unisa.compilatori.nodes.expr.ExprOP;
 import unisa.compilatori.nodes.expr.Identifier;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import java.util.ArrayList;
 
-public class ProcCall extends Stat {
+public class ProcCall extends Stat implements Visitable {
 
     private Identifier identifier;
     private ArrayList<ExprOP> exprs;
@@ -43,5 +45,10 @@ public class ProcCall extends Stat {
         return "ProcCall{" +
                 "identifier=" + identifier + ", " +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

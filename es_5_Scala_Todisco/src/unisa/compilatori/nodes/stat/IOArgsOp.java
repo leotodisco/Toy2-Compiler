@@ -2,10 +2,12 @@ package unisa.compilatori.nodes.stat;
 
 import unisa.compilatori.nodes.expr.ExprOP;
 import unisa.compilatori.nodes.expr.IOArgsExpr;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import java.util.ArrayList;
 
-public class IOArgsOp extends Stat {
+public class IOArgsOp extends Stat implements Visitable {
     private ArrayList<ExprOP> listaEspressioni;
     private ArrayList<IOArgsExpr> listaIOArgsExpr;
 
@@ -38,5 +40,10 @@ public class IOArgsOp extends Stat {
                 "listaEspressioni=" + listaEspressioni +
                 ", listaIOArgsExpr=" + listaIOArgsExpr +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

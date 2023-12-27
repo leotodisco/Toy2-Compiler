@@ -2,10 +2,12 @@ package unisa.compilatori.nodes.stat;
 
 import unisa.compilatori.nodes.Body;
 import unisa.compilatori.nodes.expr.ExprOP;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import java.util.ArrayList;
 
-public class IfStat extends Stat{
+public class IfStat extends Stat implements Visitable {
     private ExprOP expr;
     private Body body;
     private ElseOP elseOP;
@@ -65,5 +67,10 @@ public class IfStat extends Stat{
                 ", elseOP=" + elseOP +
                 ", elseIfOPList=" + elseIfOPList +
                 '}';
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

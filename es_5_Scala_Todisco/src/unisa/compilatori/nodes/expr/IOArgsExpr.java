@@ -58,4 +58,7 @@ public class IOArgsExpr extends ExprOP implements Visitable {
                 ", str='" + str + '\'' +
                 '}';
     }
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }

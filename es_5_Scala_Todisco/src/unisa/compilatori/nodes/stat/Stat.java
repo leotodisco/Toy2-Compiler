@@ -2,12 +2,14 @@ package unisa.compilatori.nodes.stat;
 
 import unisa.compilatori.nodes.expr.ExprOP;
 import unisa.compilatori.nodes.expr.Identifier;
+import unisa.compilatori.semantic.visitor.Visitable;
+import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
 import java.util.Optional;
 
-public class Stat extends DefaultMutableTreeNode {
+public class Stat extends DefaultMutableTreeNode implements Visitable {
     public enum Mode {
         READ,
         ASSIGN,
@@ -71,8 +73,10 @@ public class Stat extends DefaultMutableTreeNode {
     }
 
 
-
-
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
+    }
 
     @Override
     public String toString() {
