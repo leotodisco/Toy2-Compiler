@@ -11,10 +11,20 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ScopeCheckingVisitor implements Visitor {
     private SymbolTable table;
+    private SymbolTable TempSymbolTable;
 
+    public void enterScope(SymbolTable scope) {
+        TempSymbolTable = this.table;
+        this.table = scope;
+    }
+
+    public void exitScope() {
+        this.table = TempSymbolTable;
+    }
     @Override
     public Object visit(ProgramOp program) {
         //inizializzo la tabella dei simboli alla ROOT
@@ -23,6 +33,32 @@ public class ScopeCheckingVisitor implements Visitor {
         table.setFather(null);
 
         program.getIterWithoutProcedure().accept(this);
+
+        Procedure proc = program.getProc();
+
+        CallableFieldType fieldTypeProc = new CallableFieldType();
+
+        if(proc.getProcParamDeclList() != null) {
+            //prendi i parametri output della procedura
+            var outParams = proc.getProcParamDeclList()
+                    .stream()
+                    .filter(callableParam -> callableParam.getId().getMode().toString().equals("PARAMSOUT"))
+                    .collect(Collectors.toCollection(ArrayList::new));
+
+            var inputParams = proc.getProcParamDeclList()
+                    .stream()
+                    .filter(callableParam -> !callableParam.getId().getMode().toString().equals("PARAMSOUT"))
+                    .collect(Collectors.toCollection(ArrayList::new));
+
+            var fieldType = new CallableFieldType(inputParams, outParams);
+            SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(),proc, fieldType, "placeholder");
+            try {
+                table.addEntry(recordProc);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         program.getProc().accept(this);
         program.getIterOp().accept(this);
 
@@ -247,6 +283,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(IfStat ifStat) {
+        System.out.println("ciao");
         //set up della symbol table
         ifStat.setSymbolTableThen(new SymbolTable());
         SymbolTable symbolTableThen = ifStat.getSymbolTableThen();
@@ -365,12 +402,11 @@ public class ScopeCheckingVisitor implements Visitor {
                     });
         }
 
-        if(procedure.getBody()!=null) {
-            var tbl = this.table;
-            this.table = procedure.getTable();
+        if(procedure.getBody() != null) {
             try {
+                enterScope(procedure.getTable()); //entro nello scope
                 procedure.getBody().accept(this);
-                this.table = tbl; //esce dallo socper
+                exitScope(); //esce dallo scope
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
