@@ -108,7 +108,7 @@ Identifier = [A-Za-z][A-Za-z0-9]*
 "-"   { return symbol(sym.MINUS, new Token("MINUS", yytext())); }
 "*"   { return symbol(sym.TIMES, new Token("TIMES", yytext())); }
 "/"     { return symbol(sym.DIV, new Token("DIV", yytext())); }
-"=="      { return symbol(sym.EQ, new Token("EQ", yytext())); }
+"="      { return symbol(sym.EQ, new Token("EQ", yytext())); }
 "<>"      { return symbol(sym.NE, new Token("NE", yytext())); }
 "<"      { return symbol(sym.LT, new Token("LT", yytext())); }
 "<="      { return symbol(sym.LE, new Token("LE", yytext())); }
