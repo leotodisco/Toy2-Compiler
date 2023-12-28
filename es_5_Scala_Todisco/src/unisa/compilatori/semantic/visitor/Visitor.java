@@ -14,8 +14,8 @@ public interface Visitor<T> {
     T visit(IfStat ifStat);
     T visit(ElseOP elseOP);
     T visit(ElseIfOP elseIfOP);
-    T visit(ProcCall procCall);
-    T visit(WhileStat whileStat);
+    T visit(ProcCall procCall) throws Exception;
+    T visit(WhileStat whileStat) throws Exception;
     T visit(IOArgsOp ioArgsOp);
     T visit(Body body);
     T visit(Type type);

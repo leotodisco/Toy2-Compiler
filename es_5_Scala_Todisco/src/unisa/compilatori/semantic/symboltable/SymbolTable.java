@@ -50,11 +50,35 @@ public class SymbolTable implements ISymbolTable {
      */
     @Override
     public Optional<SymbolTableRecord> lookup(String symbol) {
-        return this.recordsList
-                .stream()
-                .filter(record -> record.getSimbolo().equals(symbol))
-                .findFirst();
+        SymbolTable symbolTable = this;
+        Optional<SymbolTableRecord> result = Optional.ofNullable(null);
+
+        while (symbolTable != null) {
+            for (SymbolTableRecord r : symbolTable.recordsList) {
+                if (r.getSimbolo().equals(symbol)){
+                    result = Optional.ofNullable(r);
+                    break;
+                }
+            }
+            symbolTable = (SymbolTable) symbolTable.father;
+        }
+        return result;
     }
+        /**
+         *SymbolTable symbolTable=this;
+         *         while (symbolTable!=null){
+         *             for(TableRow r:symbolTable.listRow) {
+         *                 if (r.getSymbol().equals(id))
+         *                     return r;
+         *             }
+         *             symbolTable=symbolTable.father;
+         *         }
+         *         return null;
+         *
+         * ;
+         *
+         */
+
 
     /**
      *

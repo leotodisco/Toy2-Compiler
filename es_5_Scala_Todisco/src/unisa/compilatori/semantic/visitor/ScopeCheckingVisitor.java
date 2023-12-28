@@ -8,10 +8,7 @@ import unisa.compilatori.utils.Exceptions;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Stack;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ScopeCheckingVisitor implements Visitor {
