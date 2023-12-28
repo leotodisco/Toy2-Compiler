@@ -65,7 +65,7 @@ public class SymbolTable implements ISymbolTable {
     @Override
     public void addEntry(SymbolTableRecord record) throws Exception {
 
-        if(!shadowing) {
+        if(shadowing) {
             if(isRecordDeclared(record)) {
                 throw new Exceptions.MultipleDeclaration(record.getSimbolo());
             } else {
