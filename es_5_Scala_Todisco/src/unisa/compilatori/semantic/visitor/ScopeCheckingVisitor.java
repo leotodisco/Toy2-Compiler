@@ -126,7 +126,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
                 fieldType.setInputParams(function.getParametersList());
 
-                SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType,"" /*TODO*/);
+                SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType,returnTypeListToString(function.getReturnTypes()));
 
                 try {
                     table.addEntry(record);
@@ -152,7 +152,7 @@ public class ScopeCheckingVisitor implements Visitor {
                    //per ogni id fai un record, poi aggiungi tutti i record alla tabella
                     decl.getIds()
                             .stream()
-                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, "placeholder"))
+                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, ""))
                             .forEach(record -> {
                                 try {
                                     //System.out.println("\n\n\nRECORD IN ITER \n\n");

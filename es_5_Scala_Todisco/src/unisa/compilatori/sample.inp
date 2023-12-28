@@ -1,68 +1,7 @@
-func funzione(pippo:integer, pluto:string) -> integer:
-    var llll ^= 0;\
-
-        if result > 100 then
-            while  a > 0 do
-                var a ^= 2;\
-            endwhile;
-        elseif result > 50 then
-             var valore ^= "grande";\
-             size ^= valore;
-             while  a > 0 do
-                var a ^= 2;\
-             endwhile;
-        else
-            var valore ^= "grande";\
-            size ^= valore;
-        endif;
-endfunc
 
 
-proc main(messaggio: string):
-var i ^= 0;\
-endproc
-
-proc STAMPA():
-var llll ^= 0;\
-
-    if result > 100 then
-        var valore ^= "grande";\
-         size ^= valore;
-    elseif result > 50 then
-         var valore ^= "grande";\
-         size ^= valore;
-    else
-        var valore ^= "grande";\
-        size ^= valore;
-    endif;
-
-endproc
-
-
-proc ciao():
-var llll ^= 0;\
-
-    if result > 100 then
-        var valore ^= "grande";\
-         size ^= valore;
-    elseif result > 50 then
-         var valore ^= "grande";\
-         size ^= valore;
-    elseif result > 50 then
-         var valore ^= "grande";\
-         size ^= valore;
-    else
-        var valore ^= "grande";\
-        size ^= valore;
-    endif;
-
-endproc
-
-proc provaif():
-var llll ^= 0;\
-
-    if result > 100 then
-
-    endif;
+% fa somma e restituisce anche la taglia del numero, oltre che il risultato%
+proc sommac():
+	var a : boolean;\
 
 endproc
