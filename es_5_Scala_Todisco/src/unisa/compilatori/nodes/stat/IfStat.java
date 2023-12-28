@@ -29,7 +29,10 @@ public class IfStat extends Stat implements Visitable {
 
         super.add(expr);
         super.add(body);
-        super.add(elseOP);
+
+        if (elseOP != null) {
+            super.add(elseOP);
+        }
 
         elseIfOPList.forEach(elseIfOP -> super.add(elseIfOP));
     }

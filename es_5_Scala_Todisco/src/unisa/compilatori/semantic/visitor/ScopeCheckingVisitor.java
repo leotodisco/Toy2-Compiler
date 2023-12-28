@@ -11,19 +11,20 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 public class ScopeCheckingVisitor implements Visitor {
     private SymbolTable table;
-    private SymbolTable TempSymbolTable;
+    private Stack<SymbolTable> TempSymbolTable = new Stack<>();
 
     public void enterScope(SymbolTable scope) {
-        TempSymbolTable = this.table;
+        TempSymbolTable.push(this.table);
         this.table = scope;
     }
 
     public void exitScope() {
-        this.table = TempSymbolTable;
+        this.table = TempSymbolTable.pop();
     }
     @Override
     public Object visit(ProgramOp program) {
@@ -97,7 +98,7 @@ public class ScopeCheckingVisitor implements Visitor {
                     VarFieldType varFieldType = new VarFieldType(decl.getTipoDecl().toString());
                     //per ogni id fai un record, poi aggiungi tutti i record alla tabella
                     decl.getIds()
-                            .parallelStream()
+                            .stream()
                             .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, "placeholder"))
                             .forEach(record -> {
                                 try {
@@ -150,7 +151,7 @@ public class ScopeCheckingVisitor implements Visitor {
                    VarFieldType varFieldType = new VarFieldType(decl.getTipoDecl().toString());
                    //per ogni id fai un record, poi aggiungi tutti i record alla tabella
                     decl.getIds()
-                            .parallelStream()
+                            .stream()
                             .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, "placeholder"))
                             .forEach(record -> {
                                 try {
@@ -171,7 +172,7 @@ public class ScopeCheckingVisitor implements Visitor {
         if(!iterOP.getProcedures().isEmpty()) {
             //su tutte le procedure chiami accept
             iterOP.getProcedures()
-                    .parallelStream()
+                    .stream()
                     .forEach(procedure -> procedure.accept(this));
 
             for(Procedure proc : iterOP.getProcedures()) {
@@ -318,27 +319,45 @@ public class ScopeCheckingVisitor implements Visitor {
             exitScope();
         }
 
-        //chiamo il visitor sulla lista di elseif
-        ifStat.getElseIfOPList().stream().forEach(elseIfOP -> elseIfOP.accept(this));
+        if(!ifStat.getElseIfOPList().isEmpty()) {
+            for (ElseIfOP elseIfOP : ifStat.getElseIfOPList() ) {
+                //set up della symbol table
+
+                elseIfOP.setSymbolTableElseIF(new SymbolTable());
+                SymbolTable symbolTableElseIf = elseIfOP.getSymbolTableElseIF();
+                symbolTableElseIf.setScope("IF-ELIF");
+                symbolTableElseIf.setFather(this.table);
+
+                this.enterScope(elseIfOP.getSymbolTableElseIF());
+                elseIfOP.accept(this);
+                this.exitScope();
+            }
+        }
+
+
+        if(ifStat.getElseOP()==null)
+            return null;
+
+        //set up della symbol table
+        ifStat.getElseOP().setSymbolTableElseOp(new SymbolTable());
+        SymbolTable symbolTableElse = ifStat.getElseOP().getSymbolTableElseOp();
+        symbolTableElse.setScope("IF-ELIF");
+        symbolTableElse.setFather(this.table);
 
         //chiamo il visitor su else
+        enterScope(symbolTableElse);
         ifStat.getElseOP().accept(this);
+        exitScope();
 
         return null;
     }
 
     @Override
     public Object visit(ElseOP elseOP) {
-        //set up della symbol table
-        elseOP.setSymbolTableElseOp(new SymbolTable());
-        SymbolTable symbolTableThen = elseOP.getSymbolTableElseOp();
-        symbolTableThen.setScope("IF-ELSE");
-        symbolTableThen.setFather(this.table);
+
 
         if(elseOP.getBody()!=null) {
-            enterScope(elseOP.getSymbolTableElseOp());
             elseOP.getBody().accept(this);
-            exitScope();
         }
 
         return null;
@@ -346,17 +365,9 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(ElseIfOP elseIfOP) {
-        //set up della symbol table
-        elseIfOP.setSymbolTableElseIF(new SymbolTable());
-        SymbolTable symbolTableThen = elseIfOP.getSymbolTableElseIF();
-        symbolTableThen.setScope("IF-ELIF");
-        symbolTableThen.setFather(this.table);
 
         if(elseIfOP.getBody() != null) {
-
-            enterScope(elseIfOP.getSymbolTableElseIF());
             elseIfOP.getBody().accept(this);
-            exitScope();
         }
 
         return null;
