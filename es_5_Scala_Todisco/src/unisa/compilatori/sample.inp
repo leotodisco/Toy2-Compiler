@@ -1,10 +1,12 @@
 
 
-% fa somma e restituisce anche la taglia del numero, oltre che il risultato%
-proc sommac(ab: integer, b:string, d:integer,out z:integer, out c:boolean):
-	var a : boolean;\
-endproc
 
-proc main():
-    sommac(12, "sort", 11, 10, true);
+proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
+    result  ^=  a + b + c + d;
+
+    if result > 100 then
+
+    endif;
+
+
 endproc

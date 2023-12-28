@@ -22,6 +22,13 @@ public class SymbolTableRecord  {
         this.properties = properties;
     }
 
+    /**
+     * empty constructor
+     */
+    public SymbolTableRecord() {
+
+    }
+
     public String getSimbolo() {
         return simbolo;
     }

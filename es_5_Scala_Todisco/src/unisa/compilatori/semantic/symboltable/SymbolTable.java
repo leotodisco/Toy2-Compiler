@@ -57,7 +57,9 @@ public class SymbolTable implements ISymbolTable {
             for (SymbolTableRecord r : symbolTable.recordsList) {
                 if (r.getSimbolo().equals(symbol)){
                     result = Optional.ofNullable(r);
-                    break;
+
+                    symbolTable = (SymbolTable) symbolTable.father;
+                    return result;
                 }
             }
             symbolTable = (SymbolTable) symbolTable.father;

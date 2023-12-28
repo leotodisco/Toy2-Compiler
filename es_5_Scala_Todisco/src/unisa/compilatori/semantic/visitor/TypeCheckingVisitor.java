@@ -35,20 +35,20 @@ public class TypeCheckingVisitor implements Visitor {
      */
     private String evaluateType(String type1, String type2, String op) throws Exception {
         switch (op){
-            case "plus_op", "TIMES", "DIV", "MINUS":
-                if (type1.equals("INTEGER") && type2.equals("INTEGER"))
+            case "plus_op", "times_op", "div_op", "minus_op":
+                if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
                     return "integer";
-                else if (type1.equals("INTEGER") && type2.equals("REAL"))
-                    return new String("REAL_CONST");
-                else if (type1.equals("REAL_CONST") && type2.equals("INTEGER_CONST"))
-                    return new String("REAL_CONST");
-                else if (type1.equals("REAL_CONST") && type2.equals("REAL_CONST"))
-                    return new String("REAL_CONST");
+                else if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("REAL"))
+                    return new String("REAL");
+                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("INTEGER"))
+                    return new String("REAL");
+                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
+                    return new String("REAL");
                 else
                     throw new Exception("errore di tipo nella evaluate type");
 
             case "OR", "AND":
-                if(type1.equals("BOOLEAN_CONST") && type2.equals("BOOLEAN_CONST"))
+                if(type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("BOOLEAN"))
                     return new String("bool");
                 else
                     throw new Exception("errore");
@@ -59,21 +59,21 @@ public class TypeCheckingVisitor implements Visitor {
                 else
                     throw new Exception("errore");
 
-            case "GT", "GE", "LT", "LE":
-                if(type1.equals("INTEGER_CONST") && type2.equals("INTEGER_CONST"))
-                    return new String("BOOLEAN_CONST");
-                else if(type1.equals("REAL_CONST") && type2.equals("INTEGER_CONST"))
-                    return new String("BOOLEAN_CONST");
-                else if(type1.equals("INTEGER_CONST") && type2.equals("REAL_CONST"))
-                    return new String("BOOLEAN_CONST");
-                else if(type1.equals("REAL_CONST") && type2.equals("REAL_CONST"))
-                    return new String("BOOLEAN_CONST");
+            case "gt_op", "ge_op", "lt_op", "le_op":
+                if(type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
+                    return new String("BOOLEAN");
+                else if(type1.equalsIgnoreCase("REAL") && type2.equals("INTEGER"))
+                    return new String("BOOLEAN");
+                else if(type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("REAL"))
+                    return new String("BOOLEAN");
+                else if(type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
+                    return new String("BOOLEAN");
                 else
-                    throw new Exception("errore");
+                    throw new Exception("errore 11111");
 
             case "eq", "ne":
                 if(type1.equals(type2))
-                    return new String("BOOLEAN_CONST");
+                    return new String("BOOLEAN");
                 else
                     throw new Exception("errore");
         }
@@ -131,6 +131,7 @@ public class TypeCheckingVisitor implements Visitor {
         String typeExpr1 = "";
         try{
             typeExpr1 = (String) operazioneBinaria.getExpr1().accept(this);
+            System.out.println("EXPR1 = " + typeExpr1);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -271,7 +272,7 @@ public class TypeCheckingVisitor implements Visitor {
             e.printStackTrace();
         }
 
-        if (!tipoExpr.equals("boolean")) {
+        if (!tipoExpr.equalsIgnoreCase("boolean")) {
             //TODO ECCEZZIONE;
             throw new RuntimeException("tipo condizione non valido");
         }
@@ -400,7 +401,7 @@ public class TypeCheckingVisitor implements Visitor {
     public Object visit(WhileStat whileStat) throws Exception {
         String condition = (String) whileStat.getExpr().accept(this);
 
-        if( !condition.equals("boolean")){
+        if( !condition.equalsIgnoreCase("boolean")){
             //TODO ECCEZIONE
             throw new Exception("Errore, tipo della condizione in while stat non corretto");
         }
@@ -514,7 +515,8 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(Identifier id) {
-        SymbolTableRecord record;
+        SymbolTableRecord record = new SymbolTableRecord();
+
         try{
         record = currentScope
                 .lookup(id.getLessema())
@@ -523,13 +525,9 @@ public class TypeCheckingVisitor implements Visitor {
             e.printStackTrace();
         }
 
+        var varFieldType = (VarFieldType) record.getFieldType();
+        return varFieldType.getType();
 
-        //var recordUnwrapped = record.get();
-
-
-
-
-        return null;
     }
 
     @Override
@@ -572,10 +570,12 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(ConstOP constOP) {
+
         int len = "_CONST".length();
         var typeAsString = constOP.getType().toString();
         //Prendo solo la parte che mi interessa di type ossia quella senza "_CONST"
         String type = typeAsString.substring(0, typeAsString.length()-len);
+
 
         return type;
     }

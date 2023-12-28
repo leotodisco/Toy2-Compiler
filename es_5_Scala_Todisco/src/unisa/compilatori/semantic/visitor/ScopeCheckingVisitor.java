@@ -222,6 +222,7 @@ public class ScopeCheckingVisitor implements Visitor {
     @Override
     public Object visit(BinaryOP operazioneBinaria) {
         try {
+
             operazioneBinaria.getExpr1().accept(this);
             operazioneBinaria.getExpr2().accept(this);
         } catch (Exception e) {
@@ -268,7 +269,8 @@ public class ScopeCheckingVisitor implements Visitor {
             itIds = decl.getIds().iterator();
             while(itIds.hasNext()) {
                 Identifier id = itIds.next();
-                listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(decl.getTipo().toString()), ""));
+
+                listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(decl.getTipo().getTipo()), ""));
             }
         }
 
@@ -283,7 +285,7 @@ public class ScopeCheckingVisitor implements Visitor {
     java.util.function.Function<CallableParam, SymbolTableRecord> mapperFunctionParamToEntry =  functionParam -> {
     return new SymbolTableRecord(functionParam.getId().getLessema(),
             functionParam,
-            new VarFieldType(functionParam.getTipo().toString()),
+            new VarFieldType(functionParam.getTipo().getTipo().toString()),
             "");
 };
 
@@ -432,7 +434,7 @@ public class ScopeCheckingVisitor implements Visitor {
     java.util.function.Function<CallableParam, SymbolTableRecord> mapProcParamToEntry =  param -> {
         return new SymbolTableRecord(param.getId().getLessema(),
                 param,
-                new VarFieldType(param.getTipo().toString()),
+                new VarFieldType(param.getTipo().getTipo().toString()),
                 "");
     };
 
@@ -475,6 +477,8 @@ public class ScopeCheckingVisitor implements Visitor {
     @Override
     public Object visit(ConstOP constOP) {
         String type = constOP.getType().toString();
+        System.out.println("IL TIPO DI COSTANTE " + type);
+
         if(type.equals("INTEGER_CONST")) {
             return "integer";
         }
