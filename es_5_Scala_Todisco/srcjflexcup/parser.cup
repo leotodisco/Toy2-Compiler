@@ -20,7 +20,6 @@ precedence left PLUS, MINUS;
 precedence left TIMES, DIV;
 
 Program ::= IterWithoutProcedure:iterNoProc Procedure:proc Iter:it {: RESULT = new ProgramOp((Procedure) proc, (IterWithoutProcedure) iterNoProc, (IterOp)it);
-System.out.println(RESULT);
 :};
 
 IterWithoutProcedure ::= VarDecl:attr IterWithoutProcedure:it {:IterWithoutProcedure iter = (IterWithoutProcedure)it;
@@ -36,7 +35,6 @@ IterWithoutProcedure ::= VarDecl:attr IterWithoutProcedure:it {:IterWithoutProce
 Iter ::= VarDecl:declaration Iter:it {:
                                        IterOp iter = (IterOp)it;
                                        iter.addDecl((VarDecl)declaration);
-                                        System.out.println("\nITER 1 iter = " + iter + "\n\n");
                                        RESULT = iter;
                                        :}
       | Function:function Iter:it {:
@@ -99,36 +97,35 @@ Type ::= REAL:lessema {:RESULT = new Type(lessema); :}
 
 Function  ::= FUNCTION ID:functionId LPAR FuncParams:paramsList RPAR TYPERETURN Types:typesList COLON Body:body ENDFUNCTION {:
                                                                             Identifier functionIdentifier = new Identifier(functionId, Identifier.Mode.FUNCTIONIDENTIFIER);
-                                                                            ArrayList<FunctionParam> params = (ArrayList<FunctionParam>) paramsList;
+                                                                            ArrayList<CallableParam> params = (ArrayList<CallableParam>) paramsList;
                                                                             ArrayList<Type> tipi = (ArrayList<Type>) typesList;
 
                                                                             Function fun = new Function(functionIdentifier, tipi, params, (Body)body);
-                                                                            System.out.println(fun);
                                                                             RESULT = fun;
 
 :};
 
 FuncParams ::= ID:id COLON Type:tipo OtherFuncParams:paramsList {:
-                                                                ArrayList<FunctionParam> temp = (ArrayList<FunctionParam>) paramsList;
+                                                                ArrayList<CallableParam> temp = (ArrayList<CallableParam>) paramsList;
                                                                 Identifier identifier = new Identifier(id, Identifier.Mode.PARAMS);
-                                                                FunctionParam fp = new FunctionParam(identifier, (Type) tipo);
+                                                                CallableParam fp = new CallableParam(identifier, (Type) tipo);
                                                                 temp.add(fp);
                                                                 RESULT = temp;
                                                                 :}
 	    | /* empty */ {:
-                        ArrayList<FunctionParam> temp = new ArrayList<>();
+                        ArrayList<CallableParam> temp = new ArrayList<>();
                         RESULT = temp;
                         :};
 
 OtherFuncParams ::= COMMA ID:id COLON Type:tipo OtherFuncParams:paramsList {:
-                                                                ArrayList<FunctionParam> temp = (ArrayList<FunctionParam>) paramsList;
+                                                                ArrayList<CallableParam> temp = (ArrayList<CallableParam>) paramsList;
                                                                 Identifier identifier = new Identifier(id, Identifier.Mode.PARAMS);
-                                                                FunctionParam fp = new FunctionParam(identifier, (Type) tipo);
+                                                                CallableParam fp = new CallableParam(identifier, (Type) tipo);
                                                                 temp.add(fp);
                                                                 RESULT = temp;
                                                                 :}
 	    | /* empty */ {:
-	                    ArrayList<FunctionParam> temp = new ArrayList<>();
+	                    ArrayList<CallableParam> temp = new ArrayList<>();
 	                    RESULT = temp;
 	                    :};
 
@@ -145,13 +142,13 @@ Types ::= Type:type COMMA Types:typeList {:
 
 Procedure ::= PROCEDURE ID:id LPAR ProcParams:procparams RPAR COLON Body:body ENDPROCEDURE {:if(procparams == null)
  RESULT = new Procedure(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (Body) body);
- else  RESULT = new Procedure(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<ProcParamDecl>) procparams, (Body) body); :};
+ else  RESULT = new Procedure(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<CallableParam>) procparams, (Body) body); :};
 
-ProcParams::= ProcParamId:procparamid COLON Type:tipo OtherProcParams:otherParams {:ArrayList<ProcParamDecl> temp = (ArrayList<ProcParamDecl>) otherParams; temp.add(new ProcParamDecl((Identifier) procparamid, (Type) tipo)); RESULT = temp; System.out.println(temp);:}
+ProcParams::= ProcParamId:procparamid COLON Type:tipo OtherProcParams:otherParams {:ArrayList<CallableParam> temp = (ArrayList<CallableParam>) otherParams; temp.add(new CallableParam((Identifier) procparamid, (Type) tipo)); RESULT = temp;:}
 	   | /* empty */ ;
 
-OtherProcParams ::= COMMA ProcParamId:procparamid COLON Type:tipo OtherProcParams:otherParams {:ArrayList<ProcParamDecl> temp = (ArrayList<ProcParamDecl>) otherParams; temp.add(new ProcParamDecl((Identifier) procparamid, (Type) tipo)); RESULT = temp; System.out.println(temp);:}
-	   | /* empty */ {:RESULT = new ArrayList<ProcParamDecl>();:};
+OtherProcParams ::= COMMA ProcParamId:procparamid COLON Type:tipo OtherProcParams:otherParams {:ArrayList<CallableParam> temp = (ArrayList<CallableParam>) otherParams; temp.add(new CallableParam((Identifier) procparamid, (Type) tipo)); RESULT = temp;:}
+	   | /* empty */ {:RESULT = new ArrayList<CallableParam>();:};
 
 ProcParamId ::= ID:id {:RESULT = new Identifier(id, Identifier.Mode.PARAMS);:}
 	    | OUT ID:id {:RESULT = new Identifier(id, Identifier.Mode.PARAMSOUT);:};
@@ -191,14 +188,12 @@ WhileStat ::= WHILE Expr:expr DO Body:body ENDWHILE {:RESULT = new WhileStat((Ex
 IOArgs ::= IOArgsExpr:ioArgsExpr IOArgs:ioArgs {:
                                                 IOArgsOp temp = (IOArgsOp) ioArgs;
                                                 temp.addIOArgsExpr((IOArgsExpr) ioArgsExpr);
-                                                System.out.println(temp);
                                                 RESULT = temp;
                                                 :}    /* qui l'Expr corretta è concatenazione di stringhe o singola stringa*/
        |  DOLLARSIGN LPAR Expr:e1 RPAR IOArgs:ioArgs {:
                                                 IOArgsOp temp = (IOArgsOp) ioArgs;
                                                 //IOArgsOp temp = (IOArgsOp) ioArgs;
                                                 temp.addExpr(e1);
-                                                System.out.println(temp);
                                                 RESULT = temp;
                                                 :}
        | /* empty */ {:IOArgsOp ioArgsOp = new IOArgsOp(); RESULT = ioArgsOp;:};

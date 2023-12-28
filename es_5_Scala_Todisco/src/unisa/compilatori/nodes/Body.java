@@ -1,6 +1,7 @@
 package unisa.compilatori.nodes;
 
 import unisa.compilatori.nodes.stat.Stat;
+import unisa.compilatori.semantic.symboltable.SymbolTable;
 import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
 
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 public class Body extends DefaultMutableTreeNode implements Visitable {
     private ArrayList<Stat> statList;
     private ArrayList<VarDecl> varDeclList;
+
 
     public Body(ArrayList<Stat> statementsList, ArrayList<VarDecl> varDeclsList) {
         super("Body");

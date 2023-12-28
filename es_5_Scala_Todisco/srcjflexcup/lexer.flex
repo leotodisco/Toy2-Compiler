@@ -79,10 +79,10 @@ Identifier = [A-Za-z][A-Za-z0-9]*
 ","   { return symbol(sym.COMMA, new Token("COMMA", yytext())); }
 "true"    { return symbol(sym.TRUE, new Token("TRUE", yytext())); }
 "false"   { return symbol(sym.FALSE, new Token("FALSE", yytext())); }
-"real"    { return symbol(sym.REAL, new Token("REAL", yytext())); }
-"integer" { return symbol(sym.INTEGER, new Token("INTEGER", yytext())); }
-"string"  { return symbol(sym.STRING, new Token("STRING", yytext())); }
-"boolean" { return symbol(sym.BOOLEAN, new Token("BOOLEAN", yytext())); }
+"real"    { return symbol(sym.REAL, new Token("REAL","REAL_CONST")); }
+"integer" { return symbol(sym.INTEGER, new Token("INTEGER","INTEGER_CONST")); }
+"string"  { return symbol(sym.STRING, new Token("STRING", "STRING_CONST")); }
+"boolean" { return symbol(sym.BOOLEAN, new Token("BOOLEAN", "BOOLEAN_CONST")); }
 "return"  { return symbol(sym.RETURN, new Token("RETURN", yytext())); }
 "func" { return symbol(sym.FUNCTION, new Token("FUNCTION", yytext())); }
 "->" { return symbol(sym.TYPERETURN, new Token("TYPERETURN", yytext())); }

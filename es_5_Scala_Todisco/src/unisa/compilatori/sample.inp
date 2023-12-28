@@ -1,13 +1,7 @@
-func stampa(messaggio: string, prova:integer)-> string:
-    var i ^= 0;\
-    while i < 4 do 
-    -->! ;
-    endwhile;
 
-     --> $(messaggio);
-    return "ok";
-endfunc
 
-proc main():
+% fa somma e restituisce anche la taglia del numero, oltre che il risultato%
+proc sommac():
+	var a : boolean;\
 
 endproc

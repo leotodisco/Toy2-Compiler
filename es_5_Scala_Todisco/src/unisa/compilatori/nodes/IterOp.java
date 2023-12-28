@@ -5,6 +5,7 @@ import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class IterOp extends DefaultMutableTreeNode implements Visitable {
     private ArrayList<Function> functions;
@@ -16,6 +17,7 @@ public class IterOp extends DefaultMutableTreeNode implements Visitable {
         this.declarations = new ArrayList<>();
         this.procedures = new ArrayList<>();
 
+        super.add(new DefaultMutableTreeNode());
     }
 
     public IterOp(ArrayList<Function> functions,
@@ -23,7 +25,11 @@ public class IterOp extends DefaultMutableTreeNode implements Visitable {
                   ArrayList<VarDecl> declaration) {
         this.functions = functions;
         this.declarations = declaration;
-        this.procedures = proceduresList;
+        if(proceduresList != null) {
+            this.procedures = proceduresList;
+        } else {
+            this.procedures = new ArrayList<>();
+        }
 
         functions.forEach(s->super.add(s));
         this.declarations.forEach(s->super.add(s));

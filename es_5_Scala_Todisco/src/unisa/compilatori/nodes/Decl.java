@@ -83,6 +83,14 @@ public class Decl extends DefaultMutableTreeNode implements Visitable {
         this.tipo = tipo;
     }
 
+    public TipoDecl getTipoDecl() {
+        return tipoDecl;
+    }
+
+    public void setTipoDecl(TipoDecl tipoDecl) {
+        this.tipoDecl = tipoDecl;
+    }
+
     @Override
     public String toString() {
         return "Decl{" +

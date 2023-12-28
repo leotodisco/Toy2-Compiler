@@ -30,4 +30,5 @@ public interface Visitor<T> {
     T visit(FunCall funCall);
     T visit(IOArgsExpr ioArgsExpr);
     T visit(ExprOP exprOP);
+    T visit(CallableParam callableParam);
 }

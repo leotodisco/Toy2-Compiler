@@ -20,14 +20,14 @@ public class Prova {
             parser p = new parser(prova);
 
             DefaultMutableTreeNode root = (DefaultMutableTreeNode) p.parse().value;
-            tree=new JTree(root);
+            //tree=new JTree(root);
             ((ProgramOp) root).accept(new ScopeCheckingVisitor());
-
-            JFrame framePannello=new JFrame();
-            framePannello.setSize(400, 400);
-            JScrollPane treeView = new JScrollPane(tree);
-            framePannello.add(treeView);
-            framePannello.setVisible(true);
+            int a = 0;
+            //JFrame framePannello=new JFrame();
+            //framePannello.setSize(400, 400);
+            //JScrollPane treeView = new JScrollPane(tree);
+            //framePannello.add(treeView);
+            //framePannello.setVisible(true);
 
             /*while (!prova.yyatEOF()){
                 p.debug_parse();

@@ -2,6 +2,7 @@ package unisa.compilatori.semantic.symboltable;
 
 import java_cup.runtime.Symbol;
 import unisa.compilatori.Token;
+import unisa.compilatori.utils.Exceptions;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -15,7 +16,7 @@ public class SymbolTable implements ISymbolTable {
     /** serve a controllare se nello scope c'è già l'id */
     private static boolean shadowing = true;
     private String scope;
-    public final String NAME_ROOT = "ROOT";
+    public static final String NAME_ROOT = "ROOT";
     private ISymbolTable father;
 
     public SymbolTable(){
@@ -64,10 +65,9 @@ public class SymbolTable implements ISymbolTable {
     @Override
     public void addEntry(SymbolTableRecord record) throws Exception {
 
-        if(!shadowing) {
+        if(shadowing) {
             if(isRecordDeclared(record)) {
-                throw new Exception("Invalid name for the variable");
-                //TODO CUSTOM EXCEPTION
+                throw new Exceptions.MultipleDeclaration(record.getSimbolo());
             } else {
                 recordsList.add(record);
             }
@@ -77,8 +77,7 @@ public class SymbolTable implements ISymbolTable {
             ISymbolTable symbolTable = this;
             while (symbolTable != null) {
                 if(symbolTable.isRecordDeclared(record)) {
-                    throw new Exception("Invalid name for the variable");
-                    //TODO CUSTOM EXCEPTION
+                    throw new Exceptions.MultipleDeclaration(record.getSimbolo());
                 }
                 symbolTable = symbolTable.getFather();
             }
@@ -135,10 +134,10 @@ public class SymbolTable implements ISymbolTable {
 
     @Override
     public String toString() {
-        return "SymbolTable{" +
-                "root=" + root +
-                ", recordsList=" + recordsList +
-                ", scope='" + scope + '\'' +
+        return "SymbolTable{"
+                + "\n"+
+                ", recordsList=" + recordsList + "\n"+
+
                 '}';
     }
 }
