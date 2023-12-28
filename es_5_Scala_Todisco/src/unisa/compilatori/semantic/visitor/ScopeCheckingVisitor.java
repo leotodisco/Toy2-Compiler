@@ -176,19 +176,23 @@ public class ScopeCheckingVisitor implements Visitor {
                     .forEach(procedure -> procedure.accept(this));
 
             for(Procedure proc : iterOP.getProcedures()) {
-                if(proc.getProcParamDeclList() == null) {
-                    continue;
-                }
-                //prendi i parametri output della procedura
-                var outParams = (ArrayList<CallableParam>) proc.getProcParamDeclList()
-                                .stream()
-                                .filter(callableParam -> callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                                .toList();
+                ArrayList<CallableParam> outParams;
+                ArrayList<CallableParam> inputParams;
 
-                var inputParams = (ArrayList<CallableParam>) proc.getProcParamDeclList()
-                        .stream()
-                        .filter(callableParam -> !callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                        .toList();
+                if(proc.getProcParamDeclList() != null) {
+                    outParams = proc.getProcParamDeclList()
+                            .stream()
+                            .filter(callableParam -> callableParam.getId().getMode().toString().equals("PARAMSOUT"))
+                            .collect(Collectors.toCollection(ArrayList::new));
+
+                    inputParams = proc.getProcParamDeclList()
+                            .stream()
+                            .filter(callableParam -> !callableParam.getId().getMode().toString().equals("PARAMSOUT"))
+                            .collect(Collectors.toCollection(ArrayList::new));
+                } else {
+                    outParams = new ArrayList<>();
+                    inputParams = new ArrayList<>();
+                }
 
                 var fieldType = new CallableFieldType(inputParams, outParams);
                 SymbolTableRecord record = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "placeholder");
@@ -233,11 +237,13 @@ public class ScopeCheckingVisitor implements Visitor {
     public Object visit(Decl decl) {
         ArrayList<SymbolTableRecord> listaVar = new ArrayList<>();
 
-        Iterator<ConstOP> itConst = decl.getConsts().iterator();
-        Iterator<Identifier> itIds = decl.getIds().iterator();
+        Iterator<ConstOP> itConst;
+        Iterator<Identifier> itIds;
 
         // se il tipo di dichiarazione è del tipo var a ^=2;\
         if(decl.getTipoDecl().equals(Decl.TipoDecl.ASSIGN)) {
+            itConst = decl.getConsts().iterator();
+            itIds = decl.getIds().iterator();
             while(itConst.hasNext() && itIds.hasNext()) {
                 Identifier id = itIds.next();
                 ConstOP costante = itConst.next();
@@ -245,9 +251,9 @@ public class ScopeCheckingVisitor implements Visitor {
             }
         // se il tipo di dichiarazione è del tipo var a : string;\
         } else {
+            itIds = decl.getIds().iterator();
             while(itIds.hasNext()) {
                 Identifier id = itIds.next();
-                ConstOP costante = itConst.next();
                 listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(decl.getTipo().toString()), ""));
             }
         }
@@ -341,7 +347,7 @@ public class ScopeCheckingVisitor implements Visitor {
         //set up della symbol table
         ifStat.getElseOP().setSymbolTableElseOp(new SymbolTable());
         SymbolTable symbolTableElse = ifStat.getElseOP().getSymbolTableElseOp();
-        symbolTableElse.setScope("IF-ELIF");
+        symbolTableElse.setScope("IF-ELSE");
         symbolTableElse.setFather(this.table);
 
         //chiamo il visitor su else
