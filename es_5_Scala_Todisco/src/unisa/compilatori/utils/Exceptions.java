@@ -13,5 +13,11 @@ public class Exceptions {
         }
     }
 
+    public static class NoDeclarationError extends Exception {
+        public NoDeclarationError(String id) {
+            super("Dichiarazione assente per id: " + id);
+        }
+    }
+
 
 }

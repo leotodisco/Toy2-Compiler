@@ -27,15 +27,16 @@ public class TypeCheckingVisitor implements Visitor {
 
     /**
      * Metodo che dati due tipi e un'operazione restituisce il tipo del risultato
+     * per le binary expr
      * @param type1
      * @param type2
      * @param op
      * @return
      */
-    private String evaluateType(String type1, String type2, String op) throws Exception{
+    private String evaluateType(String type1, String type2, String op) throws Exception {
         switch (op){
-            case "plus", "times", "div", "minus", "pow":
-                if (type1.equals("integer") && type2.equals("integer"))
+            case "plus_op", "TIMES", "DIV", "MINUS":
+                if (type1.equals("INTEGER") && type2.equals("INTEGER"))
                     return "integer";
                 else if (type1.equals("INTEGER") && type2.equals("REAL"))
                     return new String("REAL_CONST");
@@ -44,17 +45,17 @@ public class TypeCheckingVisitor implements Visitor {
                 else if (type1.equals("REAL_CONST") && type2.equals("REAL_CONST"))
                     return new String("REAL_CONST");
                 else
-                    throw new Exception("errore");
+                    throw new Exception("errore di tipo nella evaluate type");
 
-            case "or", "and":
-                if(type1.equals("bool") && type2.equals("bool"))
+            case "OR", "AND":
+                if(type1.equals("BOOLEAN_CONST") && type2.equals("BOOLEAN_CONST"))
                     return new String("bool");
                 else
                     throw new Exception("errore");
 
             case "stringConcat":
-                if(type1.equals("string") && type2.equals("string"))
-                    return new String("string");
+                if(type1.equals("STRING_CONST") && type2.equals("STRING_CONST"))
+                    return new String("STRING_CONST");
                 else
                     throw new Exception("errore");
 
@@ -78,6 +79,38 @@ public class TypeCheckingVisitor implements Visitor {
         }
         return null;
     }
+
+    /**
+     * Overloading per le unary expressions
+     * @param type1 è il tipo dell'id dell'operazione unaria
+     * @param op è l'operazione
+     * @return
+     * @throws Exception
+     */
+    private String evaluateType(String type1, String op) throws Exception {
+        switch(op) {
+            case "UMINUS":
+                if(type1.equals("INTEGER_CONST")) {
+                    return "INTEGER_CONST";
+                }
+                else if(type1.equals("REAL_CONST")) {
+                    return "REAL_CONST";
+                }
+                else
+                    throw new Exception("TIPO NON COMPATIBILE"); //TODO CUSTOM EXCEPTION
+            case "NOT":
+                if(type1.equals("BOOLEAN_CONST")) {
+                    return "BOOLEAN_CONST";
+                }
+                else
+                    throw new Exception("TIPO NON COMPATIBILE"); //TODO CUSTOM EXCEPTION
+
+            default:
+                throw new Exception("ERRORE COI TIPI"); //TODO custom exception
+        }
+    }
+
+
 
     @Override
     public Object visit(ProgramOp program) {
@@ -125,11 +158,29 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(UnaryOP operazioneUnaria) {
-        return null;
+        String expr1 = "";
+        try {
+            expr1 = (String) operazioneUnaria.getExpr().accept(this);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        String expName = operazioneUnaria.getSimbolo(); //TODO accertarsi che UMINUS funziona altrimenti metti MINUS
+        String risultato = "";
+        try {
+            risultato = evaluateType(expr1, expName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return risultato;
     }
+
 
     @Override
     public Object visit(VarDecl dichiarazione) {
+        for(Decl vars : dichiarazione.getDecls()) {
+            vars.accept(this);
+        }
         return null;
     }
 
@@ -360,8 +411,31 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+    /**
+     * Delega al giusto visit
+     * @param ioArgsOp
+     * @return
+     */
     @Override
     public Object visit(IOArgsOp ioArgsOp) {
+        var expressionsList = ioArgsOp.getEspressioniList();
+        for(ExprOP exp : expressionsList) {
+            try {
+                exp.accept(this);
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        var ioArgsExpr = ioArgsOp.getListaIOArgsExpr();
+        for(IOArgsExpr exp : ioArgsExpr) {
+            try {
+                exp.accept(this);
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
         return null;
     }
 
@@ -396,13 +470,65 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+    /**
+     * Qui si controlla che il tipo matcha col valore effettivo
+     * @param decl dichiarazione che contiene vari id e un tipo.
+     * @return
+     */
     @Override
     public Object visit(Decl decl) {
+        var tipo = decl.getTipo().getTipo();
+
+        if(decl.getTipoDecl().toString().equals("ASSIGN")) {
+            if (!decl.getConsts().isEmpty()) {
+                //per ogni costante si vede se matcha col tipo.
+                decl.getConsts()
+                        .stream()
+                        .map(ConstOP::getType)
+                        .forEach(kind -> {
+                            var len = "_CONST".length();
+                            //qui trasformo l'enum nella stringa senza "_CONST" per fare la compare col tipo
+                            var kindToString = kind.toString().substring(0, kind.toString().length()-len);
+                            if (!kindToString.equals(tipo)) {
+                                try {
+                                    throw new Exception("TIPI NON MATCHANO"); //TODO custom exception
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+            }
+        }
+
+
         return null;
     }
 
+
+    /**
+     * In questo metodo si vede nella tabella dei simboli se l'id è stato dichiarato
+     * se non è stato dichiarato si lancia l'eccezione.
+     *
+     * @param id
+     * @return
+     */
     @Override
     public Object visit(Identifier id) {
+        SymbolTableRecord record;
+        try{
+        record = currentScope
+                .lookup(id.getLessema())
+                .orElseThrow(() -> new Exceptions.NoDeclarationError(id.getLessema()));
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+
+        //var recordUnwrapped = record.get();
+
+
+
+
         return null;
     }
 
@@ -439,23 +565,118 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+    /**
+     *
+     * @param constOP
+     * @return il tipo della costante senza "_CONST"
+     */
     @Override
     public Object visit(ConstOP constOP) {
-        return null;
+        int len = "_CONST".length();
+        var typeAsString = constOP.getType().toString();
+        //Prendo solo la parte che mi interessa di type ossia quella senza "_CONST"
+        String type = typeAsString.substring(0, typeAsString.length()-len);
+
+        return type;
     }
 
+    /**
+     * Qui si controlla che il numero di parametri della funcall
+     * coincide col numero di parametri nella tabella dei simboli.
+     * Si controlla che il tipo dei parametri sia uguale al
+     * tipo di parametri nella tabella dei simboli.
+     *
+     * @param funCall
+     * @return
+     */
     @Override
-    public Object visit(FunCall funCall) {
+    public Object visit(FunCall funCall) throws Exception {
+        //1. controlllo il numero di parametri se coincide con quello nella table
+        //se record è null vuol dire che la funzione non è mai stata dichiarata
+        SymbolTableRecord record;
+        record = currentScope
+                .lookup(funCall.getIdentifier().getLessema())
+                .orElseThrow(() -> new Exceptions.NoDeclarationError(funCall.getIdentifier().getLessema()));
+
+
+        var fieldType = (CallableFieldType) record.getFieldType();
+
+        var listaParametriNellaChiamata = funCall.getExprs();
+        var listaParametriDichiarazione = fieldType.getInputParams();
+
+        var nParamsChiamata = listaParametriNellaChiamata.size();
+        var nParamsDichiarati = listaParametriDichiarazione.size();
+
+        var isEqual = (nParamsChiamata == nParamsDichiarati) ? true : false ;
+
+        if(!isEqual) {
+            throw new Exception("NUMERO DI PARAMETRI DIVERSO DALLA DECL"); //TODO CUSTOM EXC
+        }
+
+        //2. per ogni expr controllo che il tipo sia uguale a quello nella decl
+        for(int i = 0; i < nParamsChiamata; i++) {
+            //se l'i-esimo parametro nella chiamata non ha lo stesso tipo
+            //dell'i-esimo parametro nella dichiarazione
+            //fermati e throw exception
+            CallableParam parametroInDichiarazione = listaParametriDichiarazione.get(i);
+            ExprOP parametroInChiamata = listaParametriNellaChiamata.get(i);
+
+            String tipoCallableParam = parametroInDichiarazione.getTipo().getTipo();
+            String tipoExpr = (String) parametroInChiamata.accept(this);
+
+           //controlla i tipi
+            if(!tipoCallableParam.equals(tipoExpr)) {
+                throw new Exception("I TIPI NON MATCHANO"); //TODO CUSTOM EXCEPTION
+            }
+
+        }
+
         return null;
     }
 
+    /**
+     * Si controlla che
+     * @param ioArgsExpr
+     * @return
+     */
     @Override
     public Object visit(IOArgsExpr ioArgsExpr) {
+
         return null;
     }
 
+    /**
+     * Capisce se è una unary o una BinaryExpr
+     * o se è una Const
+     * e delega al giusto figlio.
+     * @param exprOP
+     * @return
+     */
     @Override
     public Object visit(ExprOP exprOP) {
+        if(exprOP instanceof ConstOP) {
+            return ((ConstOP) exprOP).accept(this);
+        }
+        else if(exprOP instanceof BinaryOP) {
+            return ((BinaryOP) exprOP).accept(this);
+        }
+        else if(exprOP instanceof Identifier) {
+            return ((Identifier) exprOP).accept(this);
+        }
+        else if(exprOP instanceof UnaryOP) {
+            return ((UnaryOP) exprOP).accept(this);
+        }
+        else if(exprOP instanceof IOArgsExpr) {
+            return ((IOArgsExpr) exprOP).accept(this);
+        }
+        else if(exprOP instanceof FunCall) {
+            try {
+                return ((FunCall) exprOP).accept(this);
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         return null;
     }
 

@@ -27,7 +27,7 @@ public interface Visitor<T> {
     T visit(IterWithoutProcedure iterWithoutProcedure);
     T visit(Procedure procedure);
     T visit(ConstOP constOP);
-    T visit(FunCall funCall);
+    T visit(FunCall funCall) throws Exception;
     T visit(IOArgsExpr ioArgsExpr);
     T visit(ExprOP exprOP);
     T visit(CallableParam callableParam);

@@ -45,8 +45,8 @@ public class SymbolTable implements ISymbolTable {
 
     /**
      * Controlla nella lista delle symbol table se esiste già il lessema da qualche parte
-     * @param symbol
-     * @return
+     * @param sym
+     * @retur
      */
     @Override
     public Optional<SymbolTableRecord> lookup(String symbol) {

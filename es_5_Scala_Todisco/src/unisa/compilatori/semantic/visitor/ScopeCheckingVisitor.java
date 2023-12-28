@@ -221,9 +221,12 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(BinaryOP operazioneBinaria) {
-        operazioneBinaria.getExpr1().accept(this);
-        operazioneBinaria.getExpr2().accept(this);
-
+        try {
+            operazioneBinaria.getExpr1().accept(this);
+            operazioneBinaria.getExpr2().accept(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

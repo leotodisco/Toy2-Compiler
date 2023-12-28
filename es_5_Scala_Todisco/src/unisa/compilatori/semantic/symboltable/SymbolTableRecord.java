@@ -53,6 +53,7 @@ public class SymbolTableRecord  {
     public String getProperties(){
         return properties;
     }
+    public FieldType getFieldType( ){return this.fieldType;}
 
     @Override
     public String toString() {

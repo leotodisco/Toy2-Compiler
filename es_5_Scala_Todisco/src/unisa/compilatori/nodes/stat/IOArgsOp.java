@@ -16,6 +16,11 @@ public class IOArgsOp extends Stat implements Visitable {
         this.listaIOArgsExpr = new ArrayList<>();
     }
 
+    public ArrayList<IOArgsExpr> getListaIOArgsExpr() {
+        return this.listaIOArgsExpr;
+    }
+
+
     public void addExpr(ExprOP ex) {
         listaEspressioni.add(ex);
         super.add(ex);
