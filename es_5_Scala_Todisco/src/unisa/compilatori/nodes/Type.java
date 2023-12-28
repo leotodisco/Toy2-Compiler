@@ -12,8 +12,11 @@ public class Type extends DefaultMutableTreeNode implements Visitable {
     public Type(final Object lessema) {
         super("Type");
         var token = (Token) lessema;
-        this.tipo = token.getAttribute();
+
+        this.tipo = token.getAttribute(); //string -> STRING_CONST
     }
+
+
 
     public String getTipo() {
         return this.tipo;

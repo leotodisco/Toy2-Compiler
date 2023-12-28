@@ -52,7 +52,7 @@ public class ScopeCheckingVisitor implements Visitor {
                     .collect(Collectors.toCollection(ArrayList::new));
 
             var fieldType = new CallableFieldType(inputParams, outParams);
-            SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(),proc, fieldType, "placeholder");
+            SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(),proc, fieldType, "");
             try {
                 table.addEntry(recordProc);
             } catch (Exception e) {
@@ -66,6 +66,20 @@ public class ScopeCheckingVisitor implements Visitor {
         return null;
     }
 
+    /**
+     * Metodo che permette di trasformare una lista di tipi in una Stringa
+     * @param lista
+     * @return
+     */
+    private String returnTypeListToString(ArrayList<Type> lista) {
+        StringBuilder res = new StringBuilder();
+        for (Type tipo : lista) {
+            res.append(tipo.toString() + "\t");
+        }
+
+        return res.toString();
+    }
+
     @Override
     public Object visit(IterWithoutProcedure iterOP) {
         if(!iterOP.getFunctions().isEmpty()) {
@@ -75,7 +89,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
                 fieldType.setInputParams(function.getParametersList());
 
-                SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType,"" /*TODO*/);
+                SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType, returnTypeListToString(function.getReturnTypes()));
 
                 try {
                     table.addEntry(record);
@@ -99,7 +113,7 @@ public class ScopeCheckingVisitor implements Visitor {
                     //per ogni id fai un record, poi aggiungi tutti i record alla tabella
                     decl.getIds()
                             .stream()
-                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, "placeholder"))
+                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, ""))
                             .forEach(record -> {
                                 try {
                                     //System.out.println("\n\n\nRECORD IN ITER \n\n");
@@ -195,7 +209,7 @@ public class ScopeCheckingVisitor implements Visitor {
                 }
 
                 var fieldType = new CallableFieldType(inputParams, outParams);
-                SymbolTableRecord record = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "placeholder");
+                SymbolTableRecord record = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
 
                 try {
                     this.table.addEntry(record);
@@ -270,7 +284,7 @@ public class ScopeCheckingVisitor implements Visitor {
     return new SymbolTableRecord(functionParam.getId().getLessema(),
             functionParam,
             new VarFieldType(functionParam.getTipo().toString()),
-            "placeholder");
+            "");
 };
 
     @Override
@@ -415,11 +429,11 @@ public class ScopeCheckingVisitor implements Visitor {
         return null;
     }
 
-    java.util.function.Function<CallableParam, SymbolTableRecord> mapProcParamToEntry =  procParam -> {
-        return new SymbolTableRecord(procParam.getId().getLessema(),
-                procParam,
-                new VarFieldType(procParam.getTipo().toString()),
-                "placeholder");
+    java.util.function.Function<CallableParam, SymbolTableRecord> mapProcParamToEntry =  param -> {
+        return new SymbolTableRecord(param.getId().getLessema(),
+                param,
+                new VarFieldType(param.getTipo().toString()),
+                "");
     };
 
     @Override
