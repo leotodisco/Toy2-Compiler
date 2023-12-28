@@ -1,12 +1,14 @@
 
 
 
-proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
-    result  ^=  a + b + c + d;
+proc sommac():
+var
+	a, b ^= 1, 2.2; x ^= 3;
+	taglia, ans1 : string;
+	ans ^= "no";
+	risultato ^= 0;\
 
-    if result > 100 then
-
-    endif;
+	ans1 ^= "cavallo";
 
 
 endproc

@@ -1,5 +1,6 @@
 package unisa.compilatori.semantic.visitor;
 
+import unisa.compilatori.Token;
 import unisa.compilatori.nodes.*;
 import unisa.compilatori.nodes.expr.*;
 import unisa.compilatori.nodes.stat.*;
@@ -323,7 +324,7 @@ public class TypeCheckingVisitor implements Visitor {
             e.printStackTrace();
         }
 
-        if (!tipoExpr.equals("boolean"))
+        if (!tipoExpr.equalsIgnoreCase("boolean"))
             throw new RuntimeException("condizione nell'expr dell'else if errata");//TODO ECCEZIONE CUSTOM
 
         enterScope(elseIfOP.getSymbolTableElseIF());
@@ -478,29 +479,53 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(Decl decl) {
-        var tipo = decl.getTipo().getTipo();
+        //var tipo = decl.getTipo().getTipo();
+        var tipo = "";
 
+        // se il tipo di dichiarazione è del tipo var a ^=2;\
         if(decl.getTipoDecl().toString().equals("ASSIGN")) {
-            if (!decl.getConsts().isEmpty()) {
-                //per ogni costante si vede se matcha col tipo.
-                decl.getConsts()
-                        .stream()
-                        .map(ConstOP::getType)
-                        .forEach(kind -> {
-                            var len = "_CONST".length();
-                            //qui trasformo l'enum nella stringa senza "_CONST" per fare la compare col tipo
-                            var kindToString = kind.toString().substring(0, kind.toString().length()-len);
-                            if (!kindToString.equals(tipo)) {
-                                try {
-                                    throw new Exception("TIPI NON MATCHANO"); //TODO custom exception
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
+            /**
+             * fatti 2 classi: una per le const e una per gli id
+             * fatti 2 iteratori uno per la lista di const e uno per la lista di id
+             * itera su entrambe le liste e vedi se i tipi sono uguali
+             */
+            var listaConsts = decl.getConsts();
+            var listaIds = decl.getIds();
+
+            var iteratoreConsts = listaConsts.iterator();
+            var iteratoreIds = listaIds.iterator();
+
+            /**
+             * Per ogni elemento controlla che il tipo dell'ID (quello che ottieni chiamando la accept)
+             * sia effettivamente quello della Costante, se così non fosse lancia un'eccezione.
+             */
+            while(iteratoreConsts.hasNext() && iteratoreIds.hasNext()) {
+                var costanteAttuale = iteratoreConsts.next();
+                var idAttuale = iteratoreIds.next();
+
+                int lunghezza1 = costanteAttuale.getType().toString().length();
+
+                var tipoId = (String) idAttuale.accept(this);
+                var tipoCostante = costanteAttuale.getType().toString().substring(0, lunghezza1 - "_CONST".length());
+
+                if(!tipoId.equalsIgnoreCase(tipoCostante)){
+                    throw new RuntimeException("I tipi dichiarati ed effettivamente restituiti non matchano nella funzione"); //TODO CUSTOM EXCEPTIOP
+                }
             }
         }
-
+        // caso in cui non è assign ma type occorre che io controlli nella tabella che il tipo sia uguale a quello dichiarato
+        else if(decl.getTipoDecl().toString().equals("TYPE")) {
+            for(Identifier id : decl.getIds()) {
+                var tipoInTable = (String) id.accept(this);
+                try {
+                    if (!tipoInTable.equalsIgnoreCase(decl.getTipo().getTipo())) {
+                        throw new Exception("TYPE MISMATCH KING");
+                    }
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
 
         return null;
     }
@@ -526,6 +551,7 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         var varFieldType = (VarFieldType) record.getFieldType();
+        System.out.println("LOG "+ "id = "+ id.getLessema() + " tipo = " + varFieldType.getType());
         return varFieldType.getType();
 
     }

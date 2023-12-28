@@ -262,14 +262,16 @@ public class ScopeCheckingVisitor implements Visitor {
             while(itConst.hasNext() && itIds.hasNext()) {
                 Identifier id = itIds.next();
                 ConstOP costante = itConst.next();
-                listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(costante.getType().toString()), costante.getLessema()));
+                int lunghezzaStringa = costante.getType().toString().length();
+                var substring = costante.getType().toString().substring(0, lunghezzaStringa - "_CONST".length());
+                listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(substring), costante.getLessema()));
             }
         // se il tipo di dichiarazione è del tipo var a : string;\
         } else {
             itIds = decl.getIds().iterator();
             while(itIds.hasNext()) {
                 Identifier id = itIds.next();
-
+                //System.out.println("nel vecchio e caro scope il lexema = " + id.getLessema() + "= " + decl.getTipo().getTipo());
                 listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(decl.getTipo().getTipo()), ""));
             }
         }
