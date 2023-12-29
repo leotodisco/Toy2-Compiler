@@ -29,6 +29,7 @@ public class ScopeCheckingVisitor implements Visitor {
         table = new SymbolTable();
         table.setScope(SymbolTable.NAME_ROOT);
         table.setFather(null);
+        program.setTable(table);
 
         program.getIterWithoutProcedure().accept(this);
 
