@@ -194,7 +194,7 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(Function funzione) throws Exception {
         ArrayList<String> tipiDichiarati;
-        ArrayList<String> tipiRestituiti = null;
+        ArrayList<String> tipiRestituiti = new ArrayList<>();
 
         //in tipi dichiarati ho delle stringhe con i tipi dei parametri dichiarati
         tipiDichiarati = funzione.getReturnTypes()
@@ -204,6 +204,7 @@ public class TypeCheckingVisitor implements Visitor {
 
 
         //prendo i tipi effettivamente restituiti
+        //TODO CONTROLLA CHE CI SIA UN RETURN
         for(Stat stmt: funzione.getBody().getStatList()) {
             if (stmt.getTipo().equals(Stat.Mode.RETURN)){
                 tipiRestituiti = stmt
@@ -213,6 +214,7 @@ public class TypeCheckingVisitor implements Visitor {
                             try {
                                 return (String) expr.accept(this); //TODO assicurarsi che questo return non causa problemi
                             } catch (Exception e) {
+                                System.exit(-1);
                                 throw new RuntimeException(e);
                             }
                         })
@@ -302,6 +304,9 @@ public class TypeCheckingVisitor implements Visitor {
             statement.getEspressioniList();
         }
 
+        //devo controllare che stia all'interno di una funzione e non di una procedura
+        //devo controllare che l'espressione return abbia un tipo compatibile col tipo di ritorno di una funzione
+        //devo controllare che gli ipotetici id siano dichiarati
         if(statement.getTipo().equals(Stat.Mode.RETURN)) {
 
         }
