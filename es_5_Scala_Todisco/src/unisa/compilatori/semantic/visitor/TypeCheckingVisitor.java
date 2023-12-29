@@ -750,8 +750,19 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+    //TODO impementare
     @Override
-    public Object visit(IterWithoutProcedure iterWithoutProcedure) {
+    public Object visit(IterWithoutProcedure iterOP) {
+
+        iterOP.getDeclarations().forEach(s->s.accept(this));
+        iterOP.getFunctions().forEach(s -> {
+            try {
+                s.accept(this);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
         return null;
     }
 
