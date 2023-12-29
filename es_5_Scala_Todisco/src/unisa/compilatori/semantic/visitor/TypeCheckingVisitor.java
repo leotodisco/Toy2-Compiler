@@ -14,7 +14,6 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-
 public class TypeCheckingVisitor implements Visitor {
 
     private SymbolTable currentScope;
@@ -35,8 +34,8 @@ public class TypeCheckingVisitor implements Visitor {
      * @param op
      * @return
      */
-    private String evaluateType(String type1, String type2, String op) throws Exception {
-        switch (op){
+    //TODO fare controllo se fai concat fra stringa e real
+    private String evaluateType(String type1, String type2, String op) throws Exception {        switch (op){
             case "plus_op", "times_op", "div_op", "minus_op":
                 if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
                     return "integer";
@@ -53,7 +52,7 @@ public class TypeCheckingVisitor implements Visitor {
                 else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("INTEGER"))
                     return new String("STRING");
                 else {
-                    throw new Exception("errore di tipo nella evaluate type");
+                    throw new Exception("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
                 }
 
             case "OR", "AND":
@@ -82,7 +81,7 @@ public class TypeCheckingVisitor implements Visitor {
                 else
                     throw new Exception("errore 11111");
 
-            case "eq", "ne":
+            case "eq_op", "ne_op":
                 if(type1.equals(type2))
                     return new String("BOOLEAN");
                 else
@@ -208,8 +207,51 @@ public class TypeCheckingVisitor implements Visitor {
                 .collect(Collectors.toCollection(ArrayList::new));
 
 
+        //CONTROLLA CHE CI SIA UN RETURN
+        if(funzione.getBody().getStatList()==null || funzione.getBody().getStatList().isEmpty()){
+            try {
+                throw new Exception("HAI UN BODY SENZA STATEMENT");
+            } catch(Exception e){
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        }
+
+        //CONTROLLA CHE CI SIA ALMENO UN RETURN
+        funzione.getBody()
+                .getStatList()
+                .stream().
+                filter(stat -> stat.getTipo().equals(Stat.Mode.RETURN))
+                        .findFirst()
+                .orElseThrow(() -> new Exception("DEVI AVERE ALMENO UN RETURN"));
+
+
+
+//TODO FARE CONTROLLO CHE IL RETURN ABBIA LO STESSO TIPO DELLA FUNZIONE
+
+        //mi ricavo i returns
+        ArrayList<Stat> returns = funzione.getBody().getStatList()
+                .stream()
+                .filter(stat -> stat.getTipo().equals(Stat.Mode.RETURN))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
+        for (Stat returnStat: returns) {
+            ArrayList<String> tipiReturn = (ArrayList<String>) returnStat.accept(this);
+            Iterator<String> itTipiReturn = tipiReturn.iterator();
+            Iterator<String> itTipiDichiarati = tipiDichiarati.iterator();
+
+            while(itTipiDichiarati.hasNext() && itTipiReturn.hasNext()) {
+                if(!itTipiReturn.next().equals(itTipiDichiarati.next())) {
+                    throw new Exception("I tipi dei parametri usati nel return non matchano con quelli usati nella funzione,\n" +
+                            " tipi nel return" + tipiReturn +
+                            " tipi nella dichiarazione" + tipiDichiarati);
+                }
+            }
+        }
+
+
         //prendo i tipi effettivamente restituiti
-        //TODO CONTROLLA CHE CI SIA UN RETURN
         for(Stat stmt: funzione.getBody().getStatList()) {
             if (stmt.getTipo().equals(Stat.Mode.RETURN)){
                 tipiRestituiti = stmt
@@ -267,6 +309,7 @@ public class TypeCheckingVisitor implements Visitor {
             ((ProcCall) statement).accept(this);
         }
 
+        //TODO sistemare tenendo conto che puoi avere che funcall restituisce un'arraylist di tipi
         if(statement.getTipo().equals(Stat.Mode.ASSIGN)) {
             //uno statement di questo tipo ha un array di id e un array di espressioni
             var leftSide = statement.getIdsList();
@@ -305,8 +348,15 @@ public class TypeCheckingVisitor implements Visitor {
          * Si controlla che gli id nella read siano stati tutti dichiarati precedentemente
          */
         if(statement.getTipo().equals(Stat.Mode.READ)) {
-            //uno statement di questo tipo ha degli ioArgs
-            statement.getEspressioniList();
+
+            //TODO TESTARE
+            statement.getEspressioniList().forEach(exprOP -> {
+                try {
+                    exprOP.accept(this);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
         //devo controllare che stia all'interno di una funzione e non di una procedura
@@ -327,11 +377,23 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         if(statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
-
+            statement.getEspressioniList().forEach(exprOP -> {
+                try {
+                    exprOP.accept(this);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
         if(statement.getTipo().equals(Stat.Mode.WRITE)) {
-
+            statement.getEspressioniList().forEach(exprOP -> {
+                try {
+                    exprOP.accept(this);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
 
@@ -693,6 +755,7 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+    //TODO fare che non ci devono essere return in una procedura
     @Override
     public Object visit(Procedure procedure) {
 

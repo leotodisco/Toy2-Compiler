@@ -95,7 +95,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
             for(VarDecl varDecl : iterOP.getDeclarations()) {
                 for(Decl decl : varDecl.getDecls()) {
-                    VarFieldType varFieldType = new VarFieldType(decl.getTipoDecl().toString());
+                    VarFieldType varFieldType = new VarFieldType(decl.getTipo().getTipo());
                     //per ogni id fai un record, poi aggiungi tutti i record alla tabella
                     decl.getIds()
                             .stream()

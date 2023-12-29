@@ -14,6 +14,7 @@ public class Stat extends DefaultMutableTreeNode implements Visitable {
         READ,
         ASSIGN,
         RETURN,
+        PROCCALL,
         WRITE,
         WRITE_RETURN,
         WHILE,

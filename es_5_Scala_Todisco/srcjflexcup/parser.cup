@@ -169,8 +169,8 @@ Stat ::= Ids:ids ASSIGN Exprs:exprList SEMI {:Stat stat = new Stat(Stat.Mode.ASS
 FunCall ::= ID:id LPAR Exprs:listaEspressioni RPAR {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni);System.out.println("funzione" + ((ArrayList<ExprOP>)listaEspressioni));:}           /* chiamata con almeno un parametro */
          | ID:id LPAR RPAR   {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER)); :}               /* chiamata con nessun parametro */;
 
-ProcCall ::= ID:id LPAR ProcExprs:listaEspressioni RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni); System.out.println("procedura" + ((ArrayList<ExprOP>)listaEspressioni));:}   /* chiamata con almeno un parametro */
-         | ID:id LPAR RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER)); :}  ;           /* chiamata con nessun parametro */
+ProcCall ::= ID:id LPAR ProcExprs:listaEspressioni RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni, Stat.Mode.PROCCALL); System.out.println("procedura" + ((ArrayList<ExprOP>)listaEspressioni));:}   /* chiamata con almeno un parametro */
+         | ID:id LPAR RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), Stat.Mode.PROCCALL); :}  ;           /* chiamata con nessun parametro */
 
 IfStat ::= IF Expr:expr THEN Body:body Elifs:elifs Else:elseop ENDIF {:RESULT = new IfStat((ExprOP) expr, (Body) body, (ElseOP) elseop, (ArrayList<ElseIfOP>) elifs, Stat.Mode.IF);:};
 
