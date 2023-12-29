@@ -702,7 +702,7 @@ public class TypeCheckingVisitor implements Visitor {
         var fieldType = (CallableFieldType) record.getFieldType();
 
         var listaParametriNellaChiamata = funCall.getExprs();
-        var listaParametriDichiarazione = fieldType.getInputParams();
+        var listaParametriDichiarazione = fieldType.getParams();
 
         var nParamsChiamata = listaParametriNellaChiamata.size();
         var nParamsDichiarati = listaParametriDichiarazione.size();
