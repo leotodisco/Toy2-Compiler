@@ -16,6 +16,12 @@ public class CallableParam extends DefaultMutableTreeNode implements Visitable {
         this.tipo = tipo;
     }
 
+    /**
+     * empty
+     */
+    public CallableParam() {
+
+    }
     public Identifier getId() {
         return id;
     }

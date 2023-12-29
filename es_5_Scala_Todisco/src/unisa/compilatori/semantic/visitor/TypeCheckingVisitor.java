@@ -261,6 +261,7 @@ public class TypeCheckingVisitor implements Visitor {
             ((IOArgsOp) statement).accept(this);
         }
 
+
         return null;
     }
 
@@ -337,7 +338,7 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(ProcCall procCall) throws Exception {
 
-        SymbolTableRecord record = null;
+        SymbolTableRecord record = new SymbolTableRecord();
         try {
             currentScope.lookup(procCall.getIdentifier().getLessema());
 
@@ -390,10 +391,6 @@ public class TypeCheckingVisitor implements Visitor {
                 }
             }
         }
-
-
-
-
 
         return null;
     }
@@ -617,6 +614,8 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(FunCall funCall) throws Exception {
+        System.out.println("FUNZIONEEEEEEEEE\n");
+
         //1. controlllo il numero di parametri se coincide con quello nella table
         //se record è null vuol dire che la funzione non è mai stata dichiarata
         SymbolTableRecord record;
@@ -651,8 +650,9 @@ public class TypeCheckingVisitor implements Visitor {
             String tipoExpr = (String) parametroInChiamata.accept(this);
 
            //controlla i tipi
-            if(!tipoCallableParam.equals(tipoExpr)) {
-                throw new Exception("I TIPI NON MATCHANO"); //TODO CUSTOM EXCEPTION
+            if(!tipoCallableParam.equalsIgnoreCase(tipoExpr)) {
+                //System.out.println("tipo nella Dichiarazione " + tipoCallableParam + " tipo nella chiamata: " + tipoExpr);
+                throw new Exception("I TIPI NON MATCHANO NELLA FUNZIONE"); //TODO CUSTOM EXCEPTION
             }
 
         }
@@ -671,6 +671,7 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+    /**
     /**
      * Capisce se è una unary o una BinaryExpr
      * o se è una Const
