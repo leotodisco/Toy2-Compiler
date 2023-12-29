@@ -37,8 +37,10 @@ public class Stat extends DefaultMutableTreeNode implements Visitable {
 
 
         //super.add(ioArgsOp);
-        Optional.ofNullable(ioArgsOpsList ).ifPresent(arg -> super.add(arg));
-        Optional.ofNullable(this.espressioniList).ifPresent(list -> list.forEach(exprOP -> super.add(exprOP)));
+        Optional.ofNullable(ioArgsOpsList )
+                .ifPresent(arg -> super.add(arg));
+        Optional.ofNullable(this.espressioniList)
+                .ifPresent(list -> list.forEach(exprOP -> super.add(exprOP)));
 
 
     }
@@ -85,5 +87,21 @@ public class Stat extends DefaultMutableTreeNode implements Visitable {
                 ", espressioniList=" + espressioniList +
                 ", ioArgsOpsList=" + ioArgsOp +
                 '}';
+    }
+
+    public ArrayList<Identifier> getIdsList() {
+        return idsList;
+    }
+
+    public void setIdsList(ArrayList<Identifier> idsList) {
+        this.idsList = idsList;
+    }
+
+    public IOArgsOp getIoArgsOp() {
+        return ioArgsOp;
+    }
+
+    public void setIoArgsOp(IOArgsOp ioArgsOp) {
+        this.ioArgsOp = ioArgsOp;
     }
 }

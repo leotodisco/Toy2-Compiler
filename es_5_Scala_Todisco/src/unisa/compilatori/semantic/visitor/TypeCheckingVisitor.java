@@ -45,8 +45,11 @@ public class TypeCheckingVisitor implements Visitor {
                     return new String("REAL");
                 else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
                     return new String("REAL");
-                else
+                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("STRING"))
+                    return new String("STRING");
+                else {
                     throw new Exception("errore di tipo nella evaluate type");
+                }
 
             case "OR", "AND":
                 if(type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("BOOLEAN"))
@@ -55,8 +58,10 @@ public class TypeCheckingVisitor implements Visitor {
                     throw new Exception("errore");
 
             case "stringConcat":
-                if(type1.equals("STRING_CONST") && type2.equals("STRING_CONST"))
+                if(type1.equalsIgnoreCase("STRING_CONST") && type2.equalsIgnoreCase("STRING_CONST")) {
+                    System.out.println("\nHAI TROVATO UNA STRING CONCAT\n");
                     return new String("STRING_CONST");
+                }
                 else
                     throw new Exception("errore");
 
@@ -257,8 +262,60 @@ public class TypeCheckingVisitor implements Visitor {
         if(statement instanceof ProcCall) {
             ((ProcCall) statement).accept(this);
         }
-        if(statement instanceof IOArgsOp) {
-            ((IOArgsOp) statement).accept(this);
+
+        if(statement.getTipo().equals(Stat.Mode.ASSIGN)) {
+            //uno statement di questo tipo ha un array di id e un array di espressioni
+            var leftSide = statement.getIdsList();
+            var rightSide = statement.getEspressioniList();
+
+            var iteratoreLeftSide = leftSide.iterator();
+            var iteratoreRightSide = rightSide.iterator();
+
+            while(iteratoreLeftSide.hasNext() && iteratoreRightSide.hasNext())  {
+                var actualId = iteratoreLeftSide.next();
+                var actualExpression = iteratoreRightSide.next();
+
+                String tipoId = (String) actualId.accept(this);
+                tipoId = tipoId.substring(0, tipoId.length()-6);
+                String tipoEspressione = "";
+                try {
+                    tipoEspressione = (String) actualExpression.accept(this);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                if(!tipoId.equalsIgnoreCase(tipoEspressione)){
+                    try {
+                        throw new Exception("type mismatch: "+ actualId.getLessema() + " ha tipo " + tipoId + " ma gli stai assegnando il tipo: "  + tipoEspressione); //TODO CUSTOM EXCEPTION
+                    } catch (Exception e){
+                        System.out.println("tipo id = " + tipoId + "tipo espressione = " + tipoEspressione);
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+
+
+        }
+
+        /**
+         * Si controlla che gli id nella read siano stati tutti dichiarati precedentemente
+         */
+        if(statement.getTipo().equals(Stat.Mode.READ)) {
+            //uno statement di questo tipo ha degli ioArgs
+            statement.getIoArgsOp().accept(this);
+        }
+
+        if(statement.getTipo().equals(Stat.Mode.RETURN)) {
+
+        }
+
+        if(statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
+
+        }
+
+        if(statement.getTipo().equals(Stat.Mode.WRITE)) {
+
         }
 
 
@@ -493,6 +550,7 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(IOArgsOp ioArgsOp) {
         var expressionsList = ioArgsOp.getEspressioniList();
+
         for(ExprOP exp : expressionsList) {
             try {
                 exp.accept(this);
@@ -620,12 +678,12 @@ public class TypeCheckingVisitor implements Visitor {
                 .orElseThrow(() -> new Exceptions.NoDeclarationError(id.getLessema()));
         } catch(Exception e) {
             e.printStackTrace();
+            System.exit(-1);
         }
 
         var varFieldType = (VarFieldType) record.getFieldType();
         System.out.println("LOG "+ "id = "+ id.getLessema() + " tipo = " + varFieldType.getType());
         return varFieldType.getType();
-
     }
 
     @Override
@@ -730,7 +788,6 @@ public class TypeCheckingVisitor implements Visitor {
                 //System.out.println("tipo nella Dichiarazione " + tipoCallableParam + " tipo nella chiamata: " + tipoExpr);
                 throw new Exception("I TIPI NON MATCHANO NELLA FUNZIONE"); //TODO CUSTOM EXCEPTION
             }
-
         }
         System.out.println("proprietà" + record.getProperties());
 
@@ -748,8 +805,39 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(IOArgsExpr ioArgsExpr) {
+        if(ioArgsExpr.getE1() == null && ioArgsExpr.getE2()==null && ioArgsExpr.getStr()!=null) {
 
-        return null;
+            return "STRING";
+        }
+
+        String risultato = "";
+        String typeExpr1 = "";
+        String typeExpr2 = "";
+
+        var exp1 = ioArgsExpr.getE1();
+        try{
+            typeExpr1 = (String) exp1.accept(this);
+            System.out.println("EXPR1 = " + typeExpr1);
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("EXPR1 = " + typeExpr1);
+        }
+
+
+        var exp2 = ioArgsExpr.getE2();
+        try{
+            typeExpr2 = (String) exp2.accept(this);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        try{
+            risultato = evaluateType(typeExpr1, typeExpr2, "stringConcat");
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return risultato;
     }
 
     /**

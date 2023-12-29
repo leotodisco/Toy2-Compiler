@@ -4,16 +4,40 @@ import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
 
 public class IOArgsExpr extends ExprOP implements Visitable {
-    private IOArgsExpr e1, e2;
+    private ExprOP e1, e2;
     private String str;
 
-    public IOArgsExpr(IOArgsExpr e1, IOArgsExpr e2) {
+    public IOArgsExpr(ExprOP e1, ExprOP e2) {
         super(Mode.IOARGS);
         this.e1 = e1;
         this.e2 = e2;
 
         super.add(e1);
         super.add(e2);
+    }
+
+    public ExprOP getE1() {
+        return e1;
+    }
+
+    public void setE1(ExprOP e1) {
+        this.e1 = e1;
+    }
+
+    public ExprOP getE2() {
+        return e2;
+    }
+
+    public void setE2(ExprOP e2) {
+        this.e2 = e2;
+    }
+
+    public String getStr() {
+        return str;
+    }
+
+    public void setStr(String str) {
+        this.str = str;
     }
 
     public IOArgsExpr(ConstOP strConst) {
@@ -28,29 +52,6 @@ public class IOArgsExpr extends ExprOP implements Visitable {
         this.e2 = null;
     }
 
-    public IOArgsExpr getE1() {
-        return e1;
-    }
-
-    public void setE1(IOArgsExpr e1) {
-        this.e1 = e1;
-    }
-
-    public IOArgsExpr getE2() {
-        return e2;
-    }
-
-    public void setE2(IOArgsExpr e2) {
-        this.e2 = e2;
-    }
-
-    public String getStr() {
-        return str;
-    }
-
-    public void setStr(String str) {
-        this.str = str;
-    }
 
     @Override
     public String toString() {

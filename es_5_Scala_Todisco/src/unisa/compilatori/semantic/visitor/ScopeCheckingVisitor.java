@@ -521,7 +521,6 @@ public class ScopeCheckingVisitor implements Visitor {
             stat.accept(this);
         }
 
-
         return null;
     }
 

@@ -1,27 +1,6 @@
-func stampa(messaggio: string)-> string, integer:
-    var i ^= 0;\
-    while i < 4 do
-    -->! ;
-    endwhile;
-
-     --> $(messaggio);
-    return "ok";
-endfunc
-
-
-proc prova(pippo: string, s:string, p: integer, out lm:integer):
-
-endproc
-
 proc sommac():
-var
-    a, b ^= 1, 2.2; x ^= 3;
-    taglia, ans1 : string;
-    ans ^= "no";
-    risultato ^= 0;\
-    var intero ^= 12;\
-
-    prova("pippo", stampa("ciao"), @a);
+    var taglia, ans1 : string;\
+    var c : integer;\
 
 
 endproc
