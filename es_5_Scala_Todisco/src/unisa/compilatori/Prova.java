@@ -21,7 +21,7 @@ public class Prova {
             parser p = new parser(prova);
 
             DefaultMutableTreeNode root = (DefaultMutableTreeNode) p.parse().value;
-            //tree=new JTree(root);
+            tree=new JTree(root);
             ((ProgramOp) root).accept(new ScopeCheckingVisitor());
             ((ProgramOp) root).accept(new TypeCheckingVisitor());
             int a = 0;

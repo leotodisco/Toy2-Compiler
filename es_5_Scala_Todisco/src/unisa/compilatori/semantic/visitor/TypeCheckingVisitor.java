@@ -199,7 +199,7 @@ public class TypeCheckingVisitor implements Visitor {
         //in tipi dichiarati ho delle stringhe con i tipi dei parametri dichiarati
         tipiDichiarati = funzione.getReturnTypes()
                 .stream()
-                .map(type -> type.toString())
+                .map(type -> type.getTipo().toString())
                 .collect(Collectors.toCollection(ArrayList::new));
 
 
@@ -209,9 +209,9 @@ public class TypeCheckingVisitor implements Visitor {
                 tipiRestituiti = stmt
                         .getEspressioniList()
                         .stream()
-                        .map(stat -> {
+                        .map(expr -> {
                             try {
-                                return (String) stat.accept(this); //TODO assicurarsi che questo return non causa problemi
+                                return (String) expr.accept(this); //TODO assicurarsi che questo return non causa problemi
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
@@ -256,9 +256,6 @@ public class TypeCheckingVisitor implements Visitor {
         if(statement instanceof IfStat) {
             ((WhileStat) statement).accept(this);
         }
-        if(statement instanceof IOArgsOp) {
-            ((IOArgsOp) statement).accept(this);
-        }
         if(statement instanceof ProcCall) {
             ((ProcCall) statement).accept(this);
         }
@@ -276,7 +273,6 @@ public class TypeCheckingVisitor implements Visitor {
                 var actualExpression = iteratoreRightSide.next();
 
                 String tipoId = (String) actualId.accept(this);
-                tipoId = tipoId.substring(0, tipoId.length()-6);
                 String tipoEspressione = "";
                 try {
                     tipoEspressione = (String) actualExpression.accept(this);
@@ -303,7 +299,7 @@ public class TypeCheckingVisitor implements Visitor {
          */
         if(statement.getTipo().equals(Stat.Mode.READ)) {
             //uno statement di questo tipo ha degli ioArgs
-            statement.getIoArgsOp().accept(this);
+            statement.getEspressioniList();
         }
 
         if(statement.getTipo().equals(Stat.Mode.RETURN)) {
@@ -510,7 +506,6 @@ public class TypeCheckingVisitor implements Visitor {
 
                 // ora si vede se i tipi matchano
                 String tipoParametroInTable = parametroInTable.getTipo().getTipo();
-                tipoParametroInTable = tipoParametroInTable.substring(0, tipoParametroInTable.length()-6);
                 if (!tipoParametroInTable.equals(parametroUtilizzatoCorrente_string)) {
                     throw new Exception("type mismatch nella procedura: " + procCall.getIdentifier().getLessema()
                             + "parametro: " + parametroInTable + " è stato dichiarato con tipo: " + parametroInTable.getTipo() +
@@ -542,34 +537,6 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
-    /**
-     * Delega al giusto visit
-     * @param ioArgsOp
-     * @return
-     */
-    @Override
-    public Object visit(IOArgsOp ioArgsOp) {
-        var expressionsList = ioArgsOp.getEspressioniList();
-
-        for(ExprOP exp : expressionsList) {
-            try {
-                exp.accept(this);
-            } catch(Exception e){
-                e.printStackTrace();
-            }
-        }
-
-        var ioArgsExpr = ioArgsOp.getListaIOArgsExpr();
-        for(IOArgsExpr exp : ioArgsExpr) {
-            try {
-                exp.accept(this);
-            } catch(Exception e){
-                e.printStackTrace();
-            }
-        }
-
-        return null;
-    }
 
     @Override
     public Object visit(Body body) {
@@ -636,7 +603,7 @@ public class TypeCheckingVisitor implements Visitor {
                 int lunghezza1 = costanteAttuale.getType().toString().length();
 
                 var tipoId = (String) idAttuale.accept(this);
-                var tipoCostante = costanteAttuale.getType().toString().substring(0, lunghezza1 - "_CONST".length());
+                var tipoCostante = costanteAttuale.getType().toString();
 
                 if(!tipoId.equalsIgnoreCase(tipoCostante)){
                     throw new RuntimeException("I tipi dichiarati ed effettivamente restituiti non matchano nella funzione"); //TODO CUSTOM EXCEPTIOP
@@ -695,7 +662,7 @@ public class TypeCheckingVisitor implements Visitor {
                 try {
                     s.accept(this);
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             });
         return null;
@@ -730,10 +697,8 @@ public class TypeCheckingVisitor implements Visitor {
         int len = "_CONST".length();
         var typeAsString = constOP.getType().toString();
         //Prendo solo la parte che mi interessa di type ossia quella senza "_CONST"
-        String type = typeAsString.substring(0, typeAsString.length()-len);
 
-
-        return type;
+        return typeAsString;
     }
 
     /**
@@ -798,47 +763,6 @@ public class TypeCheckingVisitor implements Visitor {
         return tipiDiRitorno;
     }
 
-    /**
-     * Si controlla che
-     * @param ioArgsExpr
-     * @return
-     */
-    @Override
-    public Object visit(IOArgsExpr ioArgsExpr) {
-        if(ioArgsExpr.getE1() == null && ioArgsExpr.getE2()==null && ioArgsExpr.getStr()!=null) {
-
-            return "STRING";
-        }
-
-        String risultato = "";
-        String typeExpr1 = "";
-        String typeExpr2 = "";
-
-        var exp1 = ioArgsExpr.getE1();
-        try{
-            typeExpr1 = (String) exp1.accept(this);
-            System.out.println("EXPR1 = " + typeExpr1);
-        }catch (Exception e){
-            e.printStackTrace();
-            System.out.println("EXPR1 = " + typeExpr1);
-        }
-
-
-        var exp2 = ioArgsExpr.getE2();
-        try{
-            typeExpr2 = (String) exp2.accept(this);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-        try{
-            risultato = evaluateType(typeExpr1, typeExpr2, "stringConcat");
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-
-        return risultato;
-    }
 
     /**
     /**
@@ -861,9 +785,6 @@ public class TypeCheckingVisitor implements Visitor {
         }
         else if(exprOP instanceof UnaryOP) {
             return ((UnaryOP) exprOP).accept(this);
-        }
-        else if(exprOP instanceof IOArgsExpr) {
-            return ((IOArgsExpr) exprOP).accept(this);
         }
         else if(exprOP instanceof FunCall) {
             try {

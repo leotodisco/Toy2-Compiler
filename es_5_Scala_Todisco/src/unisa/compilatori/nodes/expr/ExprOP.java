@@ -18,6 +18,7 @@ public class ExprOP extends DefaultMutableTreeNode implements Visitable {
         PROCEDUREIDENTIFIER,
         CONST,
         IOARGS,
+        IOARGSDOLLAR,
         FUNCALL,
         NONE;
     }
@@ -26,6 +27,9 @@ public class ExprOP extends DefaultMutableTreeNode implements Visitable {
         return this.mode;
     }
 
+    public void setMode(Mode mode) {
+        this.mode = mode;
+    }
 
     public ExprOP(Mode mode) {
         super();

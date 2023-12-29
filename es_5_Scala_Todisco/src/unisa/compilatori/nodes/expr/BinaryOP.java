@@ -47,6 +47,7 @@ public class BinaryOP extends ExprOP implements Visitable {
                 "name='" + name + '\'' +
                 ", expr1=" + expr1 +
                 ", expr2=" + expr2 +
+                ", mode" + super.getMode() +
                 '}';
     }
 

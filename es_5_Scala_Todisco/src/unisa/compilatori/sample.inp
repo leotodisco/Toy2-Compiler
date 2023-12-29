@@ -1,8 +1,40 @@
-proc sommac():
-    var taglia, ans1 : string;\
-    var c : integer;\
+proc lollo(result: integer, d: integer, b:real, out size: string):
 
+     result  ^=  d;
+
+    var prova : string;\
+
+    if result > 100 then
+        var valore ^= "grande";\
+         size ^= valore;
+    elseif result > 50 then
+        var valore ^= "media";\
+         size ^= valore;
+    else
+        var valore ^= "piccola";\
+         size ^= valore;
+    endif;
 
 endproc
 
+func funzioneprova(a:integer, b: string) -> integer, string:
+
+    return 12, "cavolo";
+endfunc
+
+func funzione(a:integer, b: string) -> integer, string:
+
+    return 12, "cavolo";
+endfunc
+
+proc sommac():
+    var taglia, ans1 : string;\
+    var c : integer;\
+    var messaggio : string;\
+    <-- "cavolo" + taglia +"miele" + "uzz" + "asda" + "sds" $(c+a+d+z) "pure" + "cugino";
+    taglia ^= "cavolo" + taglia +"miele";
+
+
+    lollo(12, 12, 12.2, @taglia);
+endproc
 

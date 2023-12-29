@@ -16,7 +16,6 @@ public interface Visitor<T> {
     T visit(ElseIfOP elseIfOP);
     T visit(ProcCall procCall) throws Exception;
     T visit(WhileStat whileStat) throws Exception;
-    T visit(IOArgsOp ioArgsOp);
     T visit(Body body);
     T visit(Type type);
     T visit(ProcParamDecl procParam);
@@ -28,7 +27,6 @@ public interface Visitor<T> {
     T visit(Procedure procedure);
     T visit(ConstOP constOP);
     T visit(FunCall funCall) throws Exception;
-    T visit(IOArgsExpr ioArgsExpr);
     T visit(ExprOP exprOP);
     T visit(CallableParam callableParam);
 }

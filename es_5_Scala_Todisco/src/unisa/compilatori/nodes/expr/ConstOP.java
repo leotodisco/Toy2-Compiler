@@ -20,10 +20,10 @@ public class ConstOP extends ExprOP implements Visitable {
      * enum che indica il tipo della costante
      */
     public enum Kind {
-        INTEGER_CONST, //costante intera
-        STRING_CONST,  //costante stringa
-        BOOLEAN_CONST,
-        REAL_CONST,
+        INTEGER, //costante intera
+        STRING,  //costante stringa
+        BOOLEAN,
+        REAL,
     }
 
     private Kind kind;

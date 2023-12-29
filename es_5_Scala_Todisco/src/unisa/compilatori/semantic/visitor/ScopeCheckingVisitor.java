@@ -235,7 +235,7 @@ public class ScopeCheckingVisitor implements Visitor {
                 Identifier id = itIds.next();
                 ConstOP costante = itConst.next();
                 int lunghezzaStringa = costante.getType().toString().length();
-                var substring = costante.getType().toString().substring(0, lunghezzaStringa - "_CONST".length());
+                var substring = costante.getType().toString();
                 listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(substring), costante.getLessema()));
             }
         // se il tipo di dichiarazione è del tipo var a : string;\
@@ -391,10 +391,6 @@ public class ScopeCheckingVisitor implements Visitor {
         return null;
     }
 
-    @Override
-    public Object visit(IOArgsOp ioArgsOp) {
-        return null;
-    }
 
     @Override
     public Object visit(Type type) {
@@ -478,10 +474,6 @@ public class ScopeCheckingVisitor implements Visitor {
         return null;
     }
 
-    @Override
-    public Object visit(IOArgsExpr ioArgsExpr) {
-        return null;
-    }
 
     @Override
     public Object visit(ExprOP exprOP) {
