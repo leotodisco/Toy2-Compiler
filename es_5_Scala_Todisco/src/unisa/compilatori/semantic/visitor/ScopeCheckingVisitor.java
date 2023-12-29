@@ -306,7 +306,6 @@ public class ScopeCheckingVisitor implements Visitor {
             funzione.getBody().accept(this);
             exitScope();
         }
-        System.out.println("TABLE = " + funzione.getTable());
         return null;
     }
 
@@ -317,7 +316,6 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(IfStat ifStat) {
-        System.out.println("ciao");
         //set up della symbol table
         ifStat.setSymbolTableThen(new SymbolTable());
         SymbolTable symbolTableThen = ifStat.getSymbolTableThen();
@@ -447,7 +445,6 @@ public class ScopeCheckingVisitor implements Visitor {
                     });
         }
 
-        System.out.println(procedureTable);
         if(procedure.getBody() != null) {
             try {
                 enterScope(procedure.getTable()); //entro nello scope
@@ -465,7 +462,6 @@ public class ScopeCheckingVisitor implements Visitor {
     @Override
     public Object visit(ConstOP constOP) {
         String type = constOP.getType().toString();
-        System.out.println("IL TIPO DI COSTANTE " + type);
 
         if(type.equals("INTEGER_CONST")) {
             return "integer";

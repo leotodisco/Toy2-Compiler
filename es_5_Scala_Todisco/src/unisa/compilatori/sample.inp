@@ -16,6 +16,8 @@ proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
  		size ^= valore;
 	endif;
 
+
+
 endproc
 
 
@@ -29,23 +31,25 @@ proc main():
 	ans ^= "no";
 	risultato ^= 0.5;\
 
+	risultato ^= -0.2;
+
 	sommac(a, x, b, @taglia, @risultato);
 
 	var valore ^= "nok";\
 
-	stampa("la somma di " + a +  " incrementata di "  +  " è " + taglia);
-	stampa("ed è pari a ");
+	ans ^= stampa("la somma di " + a +  " incrementata di "  +  " è " + taglia);
+	ans ^= stampa("ed è pari a ");
 
 	<-- "vuoi continuare? (si/no) - inserisci due volte la risposta" $(ans) $(ans1) ;
-	while ans = "si" do 
+	while ans = "si" do
 	    <-- "inserisci un intero:" $(a);
 	    <-- "inserisci un reale:" $(b);
 	    sommac(a, 2, 2.2, @taglia, @risultato);
-	    stampa("la somma di " + a + " e " +  " incrementata di " + " è " + taglia);
-	    stampa(" ed è pari a ");
+	    ans ^= stampa("la somma di " + a + " e " +  " incrementata di " + " è " + taglia);
+	    ans ^= stampa(" ed è pari a ");
 	    <-- "vuoi continuare? (si/no):\t" $(ans);
         endwhile;
-	
+
         -->! ;
         --> "ciao";
 
@@ -55,7 +59,7 @@ endproc
 % stampa il messaggio dopo 4 ritorni a capo %
 func stampa(messaggio: string)-> string:
     var i ^= 0;\
-    while i < 4 do 
+    while i < 4 do
 	-->! ;
     endwhile;
 

@@ -34,7 +34,6 @@ public class TypeCheckingVisitor implements Visitor {
      * @param op
      * @return
      */
-    //TODO fare controllo se fai concat fra stringa e real
     private String evaluateType(String type1, String type2, String op) throws Exception {        switch (op){
             case "plus_op", "times_op", "div_op", "minus_op":
                 if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
@@ -51,6 +50,10 @@ public class TypeCheckingVisitor implements Visitor {
                     return new String("STRING");
                 else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("INTEGER"))
                     return new String("STRING");
+                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("REAL"))
+                    return new String("STRING");
+                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("STRING"))
+                    return new String("STRING");
                 else {
                     throw new Exception("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
                 }
@@ -62,9 +65,8 @@ public class TypeCheckingVisitor implements Visitor {
                     throw new Exception("errore");
 
             case "stringConcat":
-                if(type1.equalsIgnoreCase("STRING_CONST") && type2.equalsIgnoreCase("STRING_CONST")) {
-                    System.out.println("\nHAI TROVATO UNA STRING CONCAT\n");
-                    return new String("STRING_CONST");
+                if(type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("STRING")) {
+                    return new String("STRING");
                 }
                 else
                     throw new Exception("errore");
@@ -100,17 +102,17 @@ public class TypeCheckingVisitor implements Visitor {
     private String evaluateType(String type1, String op) throws Exception {
         switch(op) {
             case "UMINUS":
-                if(type1.equals("INTEGER_CONST")) {
-                    return "INTEGER_CONST";
+                if(type1.equals("INTEGER")) {
+                    return "INTEGER";
                 }
-                else if(type1.equals("REAL_CONST")) {
-                    return "REAL_CONST";
+                else if(type1.equals("REAL")) {
+                    return "REAL";
                 }
                 else
                     throw new Exception("TIPO NON COMPATIBILE"); //TODO CUSTOM EXCEPTION
             case "NOT":
-                if(type1.equals("BOOLEAN_CONST")) {
-                    return "BOOLEAN_CONST";
+                if(type1.equals("BOOLEAN")) {
+                    return "BOOLEAN";
                 }
                 else
                     throw new Exception("TIPO NON COMPATIBILE"); //TODO CUSTOM EXCEPTION
@@ -141,7 +143,6 @@ public class TypeCheckingVisitor implements Visitor {
         String typeExpr1 = "";
         try{
             typeExpr1 = (String) operazioneBinaria.getExpr1().accept(this);
-            System.out.println("EXPR1 = " + typeExpr1);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -167,6 +168,7 @@ public class TypeCheckingVisitor implements Visitor {
         return risultato;
     }
 
+    //TODO controllare perchè uminus non funziona
     @Override
     public Object visit(UnaryOP operazioneUnaria) {
         String expr1 = "";
@@ -175,7 +177,8 @@ public class TypeCheckingVisitor implements Visitor {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        String expName = operazioneUnaria.getSimbolo(); //TODO accertarsi che UMINUS funziona altrimenti metti MINUS
+        String expName = operazioneUnaria.getSimbolo();//TODO accertarsi che UMINUS funziona altrimenti metti MINUS
+
         String risultato = "";
         try {
             risultato = evaluateType(expr1, expName);
@@ -226,9 +229,6 @@ public class TypeCheckingVisitor implements Visitor {
                 .orElseThrow(() -> new Exception("DEVI AVERE ALMENO UN RETURN"));
 
 
-
-//TODO FARE CONTROLLO CHE IL RETURN ABBIA LO STESSO TIPO DELLA FUNZIONE
-
         //mi ricavo i returns
         ArrayList<Stat> returns = funzione.getBody().getStatList()
                 .stream()
@@ -244,7 +244,7 @@ public class TypeCheckingVisitor implements Visitor {
             while(itTipiDichiarati.hasNext() && itTipiReturn.hasNext()) {
                 if(!itTipiReturn.next().equals(itTipiDichiarati.next())) {
                     throw new Exception("I tipi dei parametri usati nel return non matchano con quelli usati nella funzione,\n" +
-                            " tipi nel return" + tipiReturn +
+                            " tipi nel return" + tipiReturn + " lessema = " +
                             " tipi nella dichiarazione" + tipiDichiarati);
                 }
             }
@@ -259,7 +259,7 @@ public class TypeCheckingVisitor implements Visitor {
                         .stream()
                         .map(expr -> {
                             try {
-                                return (String) expr.accept(this); //TODO assicurarsi che questo return non causa problemi
+                                return (String) expr.accept(this);
                             } catch (Exception e) {
                                 System.exit(-1);
                                 throw new RuntimeException(e);
@@ -277,7 +277,6 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         //controllo tipo per tipo se corrispondono i tipi dichiarati con quelli restituiti
-        //TODO POTREBBE NON FUNZIONARE PER VIA DELL'ORDINE IN CUI SONO MESSI I TIPI DICHAIRATI E RESTITUITI
         Iterator<String> itTipiDichiarati = tipiDichiarati.iterator();
         Iterator<String> itTipiRestituiti = tipiRestituiti.iterator();
 
@@ -309,7 +308,7 @@ public class TypeCheckingVisitor implements Visitor {
             ((ProcCall) statement).accept(this);
         }
 
-        //TODO sistemare tenendo conto che puoi avere che funcall restituisce un'arraylist di tipi
+
         if(statement.getTipo().equals(Stat.Mode.ASSIGN)) {
             //uno statement di questo tipo ha un array di id e un array di espressioni
             var leftSide = statement.getIdsList();
@@ -322,22 +321,48 @@ public class TypeCheckingVisitor implements Visitor {
                 var actualId = iteratoreLeftSide.next();
                 var actualExpression = iteratoreRightSide.next();
 
-                String tipoId = (String) actualId.accept(this);
-                String tipoEspressione = "";
-                try {
-                    tipoEspressione = (String) actualExpression.accept(this);
-                } catch (Exception e) {
-                   e.printStackTrace();
-                }
-
-                if(!tipoId.equalsIgnoreCase(tipoEspressione)){
+                if(actualExpression instanceof FunCall) {
                     try {
-                        throw new Exception("type mismatch: "+ actualId.getLessema() + " ha tipo " + tipoId + " ma gli stai assegnando il tipo: "  + tipoEspressione); //TODO CUSTOM EXCEPTION
-                    } catch (Exception e){
-                        System.out.println("tipo id = " + tipoId + "tipo espressione = " + tipoEspressione);
+                        var listaTipiRitorno = (ArrayList<String>) ((FunCall) actualExpression).accept(this);
+                        // vediamo il numero di tipiEspressione,
+                        // in questo modo sappiamo quante volte andare avanti con iteratore degli id
+                        int numeroTipiRitorno = listaTipiRitorno.size();
+
+                        for(int i = 0; i < numeroTipiRitorno; i++) {
+                            //vediamo se ogni id matcha con il tipo di ritorno corrispondente
+                            String tipoDiId = (String) actualId.accept(this);
+                            if(!listaTipiRitorno.get(i).equals(tipoDiId)) {
+                                throw new Exception("AOOOO FRATEEEEEE I TIPI NON SI TROVANO");
+                            }
+                            //vai avanti con gli iteratori
+                            if(iteratoreLeftSide.hasNext()) {
+                                actualId = iteratoreLeftSide.next();
+                            }
+                        }
+                    } catch (Exception e) {
                         e.printStackTrace();
+                        System.exit(-1);
                     }
-                }
+                } else {
+                    //se espressione non è una funzione allora puoi agire normalmente
+                    String tipoId = (String) actualId.accept(this);
+                    String tipoEspressione = "";
+                    try {
+                        tipoEspressione = (String) actualExpression.accept(this);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.exit(-1);
+                    }
+                    if(!tipoId.equalsIgnoreCase(tipoEspressione)){
+                        try {
+                            throw new Exception("type mismatch: "+ actualId.getLessema() + " ha tipo " + tipoId + " ma gli stai assegnando il tipo: "  + tipoEspressione); //TODO CUSTOM EXCEPTION
+                        } catch (Exception e){
+                            System.out.println("tipo id = " + tipoId + "tipo espressione = " + tipoEspressione);
+                            e.printStackTrace();
+                            System.exit(-1);
+                        }
+                    }
+                }//fine else
 
             }
 
@@ -731,7 +756,6 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         var varFieldType = (VarFieldType) record.getFieldType();
-        System.out.println("LOG "+ "id = "+ id.getLessema() + " tipo = " + varFieldType.getType());
         return varFieldType.getType();
     }
 
@@ -750,7 +774,7 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
-    //TODO impementare
+
     @Override
     public Object visit(IterWithoutProcedure iterOP) {
 
@@ -806,8 +830,6 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(FunCall funCall) throws Exception {
-        System.out.println("FUNZIONEEEEEEEEE\n");
-
         //1. controlllo il numero di parametri se coincide con quello nella table
         //se record è null vuol dire che la funzione non è mai stata dichiarata
         SymbolTableRecord record;
@@ -843,16 +865,10 @@ public class TypeCheckingVisitor implements Visitor {
 
            //controlla i tipi
             if(!tipoCallableParam.equalsIgnoreCase(tipoExpr)) {
-                //System.out.println("tipo nella Dichiarazione " + tipoCallableParam + " tipo nella chiamata: " + tipoExpr);
                 throw new Exception("I TIPI NON MATCHANO NELLA FUNZIONE"); //TODO CUSTOM EXCEPTION
             }
         }
-        System.out.println("proprietà" + record.getProperties());
-
         var tipiDiRitorno = new ArrayList<>(Arrays.asList(record.getProperties().split(";")));
-
-        System.out.println(tipiDiRitorno);
-
         return tipiDiRitorno;
     }
 
