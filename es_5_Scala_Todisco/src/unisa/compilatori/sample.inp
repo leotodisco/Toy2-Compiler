@@ -1,40 +1,82 @@
-proc lollo(result: integer, d: integer, b:real, out size: string):
+%
+modifica del 6 dicembre
+1. aggiunto chiusura delle sezioni var tramite '\'
+2. eliminato il carattere errato '&'
+Ci saranno forse altre correzioni da fare per renderlo conforme alle specifiche toy2ß
+%
 
-     result  ^=  d;
 
-    var prova : string;\
 
-    if result > 100 then
-        var valore ^= "grande";\
-         size ^= valore;
-    elseif result > 50 then
-        var valore ^= "media";\
-         size ^= valore;
-    else
-        var valore ^= "piccola";\
-         size ^= valore;
-    endif;
+%
+ Programma esemplificativo del linguaggio Toy2 a volte volutamente ridondante.
+ La sua sintassi deve essere ancora attentamente verificata
+
+ Questo programma calcola e stampa la somma di due numeri, incrementata di 1.
+ Inoltre ne definisce la taglia
+%
+
+
+% fa somma e restituisce anche la taglia del numero, oltre che il risultato%
+proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
+
+    var c ^= 1;\
+	result  ^=  a + b + d;
+
+	if result > 100 then
+		var valore ^= "grande";\
+ 		size ^= valore; 
+	elseif result > 50 then 	
+		var valore ^= "media";\
+ 		size ^= valore;
+	else 	
+		var valore ^= "piccola";\
+ 		size ^= valore;
+	endif;
 
 endproc
 
-func funzioneprova(a:integer, b: string) -> integer, string:
-
-    return 12, "cavolo";
-endfunc
-
-func funzione(a:integer, b: string) -> integer, string:
-
-    return 12, "cavolo";
-endfunc
-
-proc sommac():
-    var taglia, ans1 : string;\
-    var c : integer;\
-    var messaggio : string;\
-    <-- "cavolo" + taglia +"miele" + "uzz" + "asda" + "sds" $(c+a+d+z) "pure" + "cugino";
-    taglia ^= "cavolo" + taglia +"miele";
 
 
-    lollo(12, 12, 12.2, @taglia);
+
+
+% programma principale %
+proc main():
+      var    
+	a, b ^= 1, 2.2; x ^= 3;
+	taglia, ans1 : string;
+	ans ^= "no";
+	risultato ^= 0.5;\
+
+	sommac(a, x, b, @taglia, @risultato);
+
+	var valore ^= "nok";\
+
+	stampa("la somma di " + a +  " incrementata di "  +  " è " + taglia);
+	stampa("ed è pari a ");
+
+	<-- "vuoi continuare? (si/no) - inserisci due volte la risposta" $(ans) $(ans1) ;
+	while ans = "si" do 
+	    <-- "inserisci un intero:" $(a);
+	    <-- "inserisci un reale:" $(b);
+	    sommac(a, 2, 2.2, @taglia, @risultato);
+	    stampa("la somma di " + a + " e " +  " incrementata di " + " è " + taglia);
+	    stampa(" ed è pari a ");
+	    <-- "vuoi continuare? (si/no):\t" $(ans);
+        endwhile;
+	
+        -->! ;
+        --> "ciao";
+
 endproc
 
+
+% stampa il messaggio dopo 4 ritorni a capo %
+func stampa(messaggio: string)-> string:
+    var i ^= 0;\
+    while i < 4 do 
+	-->! ;
+    endwhile;
+
+     --> $(messaggio);
+    return "ok";
+endfunc

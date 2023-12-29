@@ -21,11 +21,12 @@ public class IfStat extends Stat implements Visitable {
 
     private SymbolTable symbolTableElseIf;
 
-    public IfStat(ExprOP expr, Body body, ElseOP elseOP, ArrayList<ElseIfOP> elseIfOPList) {
+    public IfStat(ExprOP expr, Body body, ElseOP elseOP, ArrayList<ElseIfOP> elseIfOPList, Mode mode) {
         this.expr = expr;
         this.body = body;
         this.elseOP = elseOP;
         this.elseIfOPList = elseIfOPList;
+        super.setTipo(mode);
 
         super.add(expr);
         super.add(body);

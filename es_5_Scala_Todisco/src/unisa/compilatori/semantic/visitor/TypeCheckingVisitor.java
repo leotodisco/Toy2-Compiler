@@ -10,6 +10,7 @@ import unisa.compilatori.semantic.symboltable.SymbolTableRecord;
 import unisa.compilatori.semantic.symboltable.VarFieldType;
 import unisa.compilatori.utils.Exceptions;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -46,6 +47,10 @@ public class TypeCheckingVisitor implements Visitor {
                 else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
                     return new String("REAL");
                 else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("STRING"))
+                    return new String("STRING");
+                else if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("STRING"))
+                    return new String("STRING");
+                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("INTEGER"))
                     return new String("STRING");
                 else {
                     throw new Exception("errore di tipo nella evaluate type");
@@ -256,7 +261,7 @@ public class TypeCheckingVisitor implements Visitor {
             ((WhileStat) statement).accept(this);
         }
         if(statement instanceof IfStat) {
-            ((WhileStat) statement).accept(this);
+            ((IfStat) statement).accept(this);
         }
         if(statement instanceof ProcCall) {
             ((ProcCall) statement).accept(this);
@@ -279,7 +284,7 @@ public class TypeCheckingVisitor implements Visitor {
                 try {
                     tipoEspressione = (String) actualExpression.accept(this);
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                   e.printStackTrace();
                 }
 
                 if(!tipoId.equalsIgnoreCase(tipoEspressione)){
@@ -308,7 +313,17 @@ public class TypeCheckingVisitor implements Visitor {
         //devo controllare che l'espressione return abbia un tipo compatibile col tipo di ritorno di una funzione
         //devo controllare che gli ipotetici id siano dichiarati
         if(statement.getTipo().equals(Stat.Mode.RETURN)) {
-
+            //devo controllare che il tipi di ritorno della funzione matchano
+            //con i tipi effettivamente restituiti
+            ArrayList<String> tipiDiRitorno = new ArrayList<>();
+            statement.getEspressioniList().forEach(exprOP -> {
+                try {
+                    tipiDiRitorno.add((String) exprOP.accept(this));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return tipiDiRitorno;
         }
 
         if(statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
@@ -752,7 +767,6 @@ public class TypeCheckingVisitor implements Visitor {
             String tipoCallableParam = parametroInDichiarazione.getTipo().getTipo();
             String tipoExpr = (String) parametroInChiamata.accept(this);
 
-            tipoCallableParam = tipoCallableParam.substring(0, tipoCallableParam.length()-6);
            //controlla i tipi
             if(!tipoCallableParam.equalsIgnoreCase(tipoExpr)) {
                 //System.out.println("tipo nella Dichiarazione " + tipoCallableParam + " tipo nella chiamata: " + tipoExpr);

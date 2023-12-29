@@ -15,7 +15,9 @@ public class Stat extends DefaultMutableTreeNode implements Visitable {
         ASSIGN,
         RETURN,
         WRITE,
-        WRITE_RETURN
+        WRITE_RETURN,
+        WHILE,
+        IF
     }
     private Mode tipo;
     private ArrayList<ExprOP> espressioniList;

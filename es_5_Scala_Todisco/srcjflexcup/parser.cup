@@ -172,7 +172,7 @@ FunCall ::= ID:id LPAR Exprs:listaEspressioni RPAR {:RESULT = new FunCall(new Id
 ProcCall ::= ID:id LPAR ProcExprs:listaEspressioni RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni); System.out.println("procedura" + ((ArrayList<ExprOP>)listaEspressioni));:}   /* chiamata con almeno un parametro */
          | ID:id LPAR RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER)); :}  ;           /* chiamata con nessun parametro */
 
-IfStat ::= IF Expr:expr THEN Body:body Elifs:elifs Else:elseop ENDIF {:RESULT = new IfStat((ExprOP) expr, (Body) body, (ElseOP) elseop, (ArrayList<ElseIfOP>) elifs);:};
+IfStat ::= IF Expr:expr THEN Body:body Elifs:elifs Else:elseop ENDIF {:RESULT = new IfStat((ExprOP) expr, (Body) body, (ElseOP) elseop, (ArrayList<ElseIfOP>) elifs, Stat.Mode.IF);:};
 
 Elifs ::= Elif:elif Elifs:elifs {:ArrayList<ElseIfOP> temp = (ArrayList<ElseIfOP>) elifs; temp.add((ElseIfOP) elif); RESULT = temp;:}
       | /* empty */ {:RESULT = new ArrayList<ElseIfOP>();:};
@@ -182,7 +182,7 @@ Elif ::= ELIF Expr:expr THEN Body:body {:RESULT = new ElseIfOP((ExprOP) expr, (B
 Else ::= ELSE Body:body {:RESULT = new ElseOP((Body) body);:}
      | /* empty */;
 
-WhileStat ::= WHILE Expr:expr DO Body:body ENDWHILE {:RESULT = new WhileStat((ExprOP) expr, (Body) body);:};
+WhileStat ::= WHILE Expr:expr DO Body:body ENDWHILE {:RESULT = new WhileStat((ExprOP) expr, (Body) body, Stat.Mode.WHILE);:};
 
 
 IOArgs ::= IOArgsExpr:ioArgsExpr IOArgs:ioArgs {:
