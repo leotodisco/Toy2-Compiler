@@ -335,9 +335,27 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+
+    private Boolean hannoStessoNumeroDiParametri(ArrayList<CallableParam> parametriDichiarati, ArrayList<Object> parametriUtilizzati) {
+        int countParametriDichiarati = parametriDichiarati.size();
+        int countParmetriUtilizzati =  0;
+
+        for (Object param: parametriUtilizzati) {
+            if(param instanceof ArrayList<?>){
+                var lista = (ArrayList<String>) param;
+                countParmetriUtilizzati += lista.size();
+            } else {
+                countParmetriUtilizzati++;
+            }
+        }
+    
+    
+        return countParametriDichiarati==countParmetriUtilizzati;
+    }
+    
     @Override
     public Object visit(ProcCall procCall) throws Exception {
-
+        //Lookup nella tabella
         SymbolTableRecord record = new SymbolTableRecord();
         try {
             currentScope.lookup(procCall.getIdentifier().getLessema());
@@ -350,47 +368,104 @@ public class TypeCheckingVisitor implements Visitor {
             e.printStackTrace();
         }
 
-        //mi assicuro che il numero di parametri input della chiamata e della dichiarazione sono uguali
-        ArrayList<String> tipiDichiaratiOut;
-        ArrayList<String> tipiParametriRef = new ArrayList<>();
-        CallableFieldType fieldType = (CallableFieldType) record.getFieldType();
-        ArrayList<CallableParam> inputParams =  fieldType.getInputParams();
-        ArrayList<CallableParam> outputParams = fieldType.getOutputParams();
-        ArrayList<ExprOP> listaParametriNellaChiamata = (ArrayList<ExprOP>) procCall.getExprs().clone();
+        //bisogna scorrere i parametri dichiarati nella funzione e quelli effettivamente utilizzati
+        //per controllare il tipo
+
+        //prendiamoci i parametri dichiarati nel record che abbiamo preso dalla tabella dei simboli
+        ArrayList<CallableParam> parametriDichiarati = ((CallableFieldType) record.getFieldType()).getParams();
+
+        //prendiamoci i parametri utilizzati nella chiamata di procedura
+        //qui dentro ci possono essere tutti i tipi di Expr anche la chiamata a funzione che restituisce una lista di stringhe
+        //che indica i tipi di ritorno della funzione
+        ArrayList<Object> parametriUtilizzati = new ArrayList<>();
+
+        for (ExprOP exprOP: procCall.getExprs()) {
+            parametriUtilizzati.add(exprOP.accept(this));
+        }
+
+        if (!hannoStessoNumeroDiParametri(parametriDichiarati, parametriUtilizzati)) {
+            throw new Exception("il numero di parametri in procedura non matcha");
+        }
+
+        //Adesso scorriamo sia la lista dei parametri utilizzati che quelli dichiarati e confrontiamo tipo per tipo
+        Iterator<CallableParam> paramDichiaratiIterator = parametriDichiarati.iterator();
+        Iterator<Object> paramUtilizzatiIterator = parametriUtilizzati.iterator();
+        Iterator<ExprOP> itExprOPs = procCall.getExprs().iterator();
+
+        while(paramUtilizzatiIterator.hasNext() && paramDichiaratiIterator.hasNext() && itExprOPs.hasNext())
+        {
+            //vediamo il vero tipo dell'object
+            Object parametroUtilizzatoCorrente = paramUtilizzatiIterator.next();
+            ExprOP exprOPcorrente = itExprOPs.next();
+            //caso di chiamata a funzione, RICORDA la funzione restituisce un array di tipi di ritorno
+            if (parametroUtilizzatoCorrente instanceof ArrayList<?>) {
+
+                //iteratore sulla lista dei tipi di ritorno della funzione
+                ArrayList<String> tipiDiRitornoFunzione = (ArrayList<String>) parametroUtilizzatoCorrente;
+                Iterator<String> tipiDiRitornoFunzioneIt = tipiDiRitornoFunzione.iterator();
+
+                if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF)) {
+                    throw new Exception("KEYWORD @ utilizzata in corrispondenza di una funzione");
+                }
+                while (tipiDiRitornoFunzioneIt.hasNext()) {
+
+                    CallableParam paramDichiarato = paramDichiaratiIterator.next();
 
 
+                    String tipoParametroDichiarato = null;
+                    try {
+                        tipoParametroDichiarato = paramDichiarato.getTipo().getTipo();
+                    } catch (NoSuchElementException e) {
+                        throw new Exception("il numero dei parametri utilizzati sono diversi da quelli dichiarati");
+                    }
 
-        int length = procCall.getExprs().size();
-        for(int i = 0; i < length; i++) {
-            ExprOP exprOP = procCall.getExprs().get(i);
-            if (exprOP instanceof Identifier) {
-                Identifier exId = (Identifier) exprOP;
+                    String tipoParametroUtilizzato = tipiDiRitornoFunzioneIt.next();
 
-                /**RICORDA: funziona assumendo che tutto sia posizionale, quando troviamo
-                 * il primo inputParam sappiamo che abbiamo già attraversato tutti
-                 * gli output param: ecco perche facciamo i - inputParams.size()
-                 * */
-                CallableParam param = i >= inputParams.size() ? outputParams.get(i - inputParams.size()) : inputParams.get(i);
 
-                var tipoId = ((VarFieldType) currentScope.lookup(exId.getLessema())
-                        .orElseThrow(() -> new Exceptions.NoDeclarationError(exId.getLessema()))
-                        .getFieldType()).getType();
-                if (!tipoId.equals(param.getTipo().getTipo()))
-                    throw new RuntimeException("Tipi non matchano");
+                    if(!tipoParametroUtilizzato.equals(tipoParametroDichiarato)) {
+                        throw new Exception("type mismatch nella procedura: " + procCall.getIdentifier().getLessema() +
+                                " è stato dichiarato con tipo: " + tipoParametroDichiarato +
+                                "ma lo usi con tipo: " + tipoParametroUtilizzato);
+                    }
 
-            } else {
-                CallableParam parametroInDichiarazione = inputParams.get(i);
-                ExprOP parametroInChiamata = listaParametriNellaChiamata.get(length-i-1);
+                    //CONTROLLO SULLA KEYWORD OUT
+                    if(paramDichiarato.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
+                        throw new Exception("Non puoi utilizzare una funzione in corrispondenza di parametri out");
+                    }
 
-                String tipoCallableParam = parametroInDichiarazione.getTipo().getTipo();
-                String tipoExpr = (String) parametroInChiamata.accept(this);
-
-                //controlla i tipi
-                if(!tipoCallableParam.equals(tipoExpr)) {
-                    throw new Exception("I TIPI NON MATCHANO"); //TODO CUSTOM EXCEPTION
                 }
             }
+            //ogni altro caso, per exprOP
+            else if(parametroUtilizzatoCorrente instanceof String) {
+
+                //poi facciamo il confronto
+                CallableParam parametroInTable = paramDichiaratiIterator.next();
+                String parametroUtilizzatoCorrente_string = (String) parametroUtilizzatoCorrente;
+
+                if(!exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && parametroInTable.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)) {
+                    throw new Exception("type mismatch nella procedura: NON CI SIAMO CON LE OUT E I REF "); //TODO CUSTOM EXCEPTION
+                }
+
+                if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && !parametroInTable.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
+                    throw new Exception("non si trovano out e ref"); //TODO CUSTOM EXCEPTION
+
+                }
+
+                // ora si vede se i tipi matchano
+                String tipoParametroInTable = parametroInTable.getTipo().getTipo();
+                tipoParametroInTable = tipoParametroInTable.substring(0, tipoParametroInTable.length()-6);
+                if (!tipoParametroInTable.equals(parametroUtilizzatoCorrente_string)) {
+                    throw new Exception("type mismatch nella procedura: " + procCall.getIdentifier().getLessema()
+                            + "parametro: " + parametroInTable + " è stato dichiarato con tipo: " + parametroInTable.getTipo() +
+                            "ma lo usi con tipo:" + parametroUtilizzatoCorrente_string);
+                }
+            }
+
+
         }
+            if(paramUtilizzatiIterator.hasNext() || paramDichiaratiIterator.hasNext()) {
+                throw new Exception("i parametri utilizzati sono diversi da quelli dichiarati");
+            }
 
         return null;
     }
@@ -649,6 +724,7 @@ public class TypeCheckingVisitor implements Visitor {
             String tipoCallableParam = parametroInDichiarazione.getTipo().getTipo();
             String tipoExpr = (String) parametroInChiamata.accept(this);
 
+            tipoCallableParam = tipoCallableParam.substring(0, tipoCallableParam.length()-6);
            //controlla i tipi
             if(!tipoCallableParam.equalsIgnoreCase(tipoExpr)) {
                 //System.out.println("tipo nella Dichiarazione " + tipoCallableParam + " tipo nella chiamata: " + tipoExpr);
@@ -656,8 +732,13 @@ public class TypeCheckingVisitor implements Visitor {
             }
 
         }
+        System.out.println("proprietà" + record.getProperties());
 
-        return null;
+        var tipiDiRitorno = new ArrayList<>(Arrays.asList(record.getProperties().split(";")));
+
+        System.out.println(tipiDiRitorno);
+
+        return tipiDiRitorno;
     }
 
     /**

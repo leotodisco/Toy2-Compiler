@@ -34,6 +34,7 @@ public class ConstOP extends ExprOP implements Visitable {
      * @throws InvalidTypeException se l'oggetto che viene passato non è un token.
      * */
     public ConstOP(Object token, Kind type) throws InvalidTypeException {
+        super(Mode.CONST);
         if (token instanceof Token){
             Token tok = (Token) token;
             this.lessema = tok.getAttribute();

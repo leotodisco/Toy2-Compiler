@@ -8,6 +8,7 @@ public class IOArgsExpr extends ExprOP implements Visitable {
     private String str;
 
     public IOArgsExpr(IOArgsExpr e1, IOArgsExpr e2) {
+        super(Mode.IOARGS);
         this.e1 = e1;
         this.e2 = e2;
 
@@ -16,6 +17,7 @@ public class IOArgsExpr extends ExprOP implements Visitable {
     }
 
     public IOArgsExpr(ConstOP strConst) {
+        super(Mode.IOARGS);
         if(!strConst.getType().toString().equals("STRING_CONST")) {
             throw new IllegalArgumentException("This is not a String Constant");
         }

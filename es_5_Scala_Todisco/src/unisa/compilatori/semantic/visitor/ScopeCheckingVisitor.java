@@ -36,26 +36,15 @@ public class ScopeCheckingVisitor implements Visitor {
 
         CallableFieldType fieldTypeProc = new CallableFieldType();
 
-        if(proc.getProcParamDeclList() != null) {
-            //prendi i parametri output della procedura
-            var outParams = proc.getProcParamDeclList()
-                    .stream()
-                    .filter(callableParam -> callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                    .collect(Collectors.toCollection(ArrayList::new));
+        var fieldType = new CallableFieldType(proc.getProcParamDeclList());
 
-            var inputParams = proc.getProcParamDeclList()
-                    .stream()
-                    .filter(callableParam -> !callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-            var fieldType = new CallableFieldType(inputParams, outParams);
-            SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(),proc, fieldType, "");
-            try {
-                table.addEntry(recordProc);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
+        try {
+            table.addEntry(recordProc);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
 
         program.getProc().accept(this);
         program.getIterOp().accept(this);
@@ -71,7 +60,7 @@ public class ScopeCheckingVisitor implements Visitor {
     private String returnTypeListToString(ArrayList<Type> lista) {
         StringBuilder res = new StringBuilder();
         for (Type tipo : lista) {
-            res.append(tipo.toString() + "\t");
+            res.append(tipo.getTipo() + ";");
         }
 
         return res.toString();
@@ -84,7 +73,7 @@ public class ScopeCheckingVisitor implements Visitor {
                 String identificatore = function.getId().getLessema();
                 CallableFieldType fieldType = new CallableFieldType();
 
-                fieldType.setInputParams(function.getParametersList());
+                fieldType.setParams(function.getParametersList());
 
                 SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType, returnTypeListToString(function.getReturnTypes()));
 
@@ -135,7 +124,7 @@ public class ScopeCheckingVisitor implements Visitor {
                 String identificatore = function.getId().getLessema();
                 CallableFieldType fieldType = new CallableFieldType();
 
-                fieldType.setInputParams(function.getParametersList());
+                fieldType.setParams(function.getParametersList());
 
                 SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType,returnTypeListToString(function.getReturnTypes()));
 
@@ -187,25 +176,8 @@ public class ScopeCheckingVisitor implements Visitor {
                     .forEach(procedure -> procedure.accept(this));
 
             for(Procedure proc : iterOP.getProcedures()) {
-                ArrayList<CallableParam> outParams;
-                ArrayList<CallableParam> inputParams;
 
-                if(proc.getProcParamDeclList() != null) {
-                    outParams = proc.getProcParamDeclList()
-                            .stream()
-                            .filter(callableParam -> callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                            .collect(Collectors.toCollection(ArrayList::new));
-
-                    inputParams = proc.getProcParamDeclList()
-                            .stream()
-                            .filter(callableParam -> !callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                            .collect(Collectors.toCollection(ArrayList::new));
-                } else {
-                    outParams = new ArrayList<>();
-                    inputParams = new ArrayList<>();
-                }
-
-                var fieldType = new CallableFieldType(inputParams, outParams);
+                var fieldType = new CallableFieldType(proc.getProcParamDeclList());
                 SymbolTableRecord record = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
 
                 try {
@@ -312,6 +284,7 @@ public class ScopeCheckingVisitor implements Visitor {
                     });
         }
 
+        System.out.println(funzioneTable);
         if(funzione.getBody()!=null) {
             enterScope(funzione.getTable());
             funzione.getBody().accept(this);
@@ -462,6 +435,7 @@ public class ScopeCheckingVisitor implements Visitor {
                     });
         }
 
+        System.out.println(procedureTable);
         if(procedure.getBody() != null) {
             try {
                 enterScope(procedure.getTable()); //entro nello scope

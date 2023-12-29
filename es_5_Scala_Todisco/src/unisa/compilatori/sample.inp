@@ -1,5 +1,4 @@
-
-func stampa(messaggio: string, intero:integer)-> string:
+func stampa(messaggio: string)-> string, integer:
     var i ^= 0;\
     while i < 4 do
     -->! ;
@@ -9,18 +8,22 @@ func stampa(messaggio: string, intero:integer)-> string:
     return "ok";
 endfunc
 
-proc prova(s:string):
+
+proc prova(pippo: string, s:string, p: integer, out lm:integer):
 
 endproc
 
 proc sommac():
 var
-	a, b ^= 1, 2.2; x ^= 3;
-	taglia, ans1 : string;
-	ans ^= "no";
-	risultato ^= 0;\
+    a, b ^= 1, 2.2; x ^= 3;
+    taglia, ans1 : string;
+    ans ^= "no";
+    risultato ^= 0;\
+    var intero ^= 12;\
 
-	prova(stampa("ciao", 9));
+    prova("pippo", stampa("ciao"), @a);
 
 
 endproc
+
+
