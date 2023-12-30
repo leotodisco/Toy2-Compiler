@@ -10,6 +10,7 @@ import unisa.compilatori.semantic.symboltable.VarFieldType;
 import unisa.compilatori.utils.Exceptions;
 
 
+import javax.xml.crypto.dsig.spec.ExcC14NParameterSpec;
 import java.util.*;
 
 import java.util.stream.Collectors;
@@ -34,7 +35,7 @@ public class TypeCheckingVisitor implements Visitor {
      * @param op
      * @return
      */
-    private String evaluateType(String type1, String type2, String op) throws Exception {
+    private String evaluateType(String type1, String type2, String op){
         switch (op){
             case "plus_op", "times_op", "div_op", "minus_op":
                 if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
@@ -56,21 +57,21 @@ public class TypeCheckingVisitor implements Visitor {
                 else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("STRING"))
                     return new String("STRING");
                 else {
-                    throw new Exception("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
+                    throw new RuntimeException("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
                 }
 
             case "OR", "AND":
                 if(type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("BOOLEAN"))
                     return new String("bool");
                 else
-                    throw new Exception("errore");
+                    throw new RuntimeException("errore");
 
             case "stringConcat":
                 if(type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("STRING")) {
                     return new String("STRING");
                 }
                 else
-                    throw new Exception("errore");
+                    throw new RuntimeException("errore");
 
             case "gt_op", "ge_op", "lt_op", "le_op":
                 if(type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
@@ -82,13 +83,13 @@ public class TypeCheckingVisitor implements Visitor {
                 else if(type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
                     return new String("BOOLEAN");
                 else
-                    throw new Exception("errore 11111");
+                    throw new RuntimeException("errore 11111");
 
             case "eq_op", "ne_op":
                 if(type1.equals(type2))
                     return new String("BOOLEAN");
                 else
-                    throw new Exception("errore");
+                    throw new RuntimeException("errore");
         }
         return null;
     }
@@ -100,7 +101,7 @@ public class TypeCheckingVisitor implements Visitor {
      * @return
      * @throws Exception
      */
-    private String evaluateType(String type1, String op) throws Exception {
+    private String evaluateType(String type1, String op) {
         switch(op) {
             case "UMINUS":
                 if(type1.equals("INTEGER")) {
@@ -118,7 +119,7 @@ public class TypeCheckingVisitor implements Visitor {
                 else
                     throw new Exceptions.InvalidOperation(op, type1);
             default:
-                throw new Exception("ERRORE COI TIPI");
+                throw new RuntimeException("ERRORE COI TIPI");
         }
     }
 
@@ -129,17 +130,12 @@ public class TypeCheckingVisitor implements Visitor {
         currentScope = program.getTable();
 
         //controllo che ci sia uno e un solo main
-        try {
-            SymbolTableRecord main = currentScope.lookup("main").orElseThrow(Exceptions.LackOfMain::new);
-            // controllo che sia una procedura e non una funzione
-            if ( main.getNodo() instanceof Function) {
-                throw new Exception("Il main è una funzione");
-            }
-            //TODO Dobbiamo controllare se il main ha dei parametri?
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(-1);
+        SymbolTableRecord main = currentScope.lookup("main").orElseThrow(Exceptions.LackOfMain::new);
+        // controllo che sia una procedura e non una funzione
+        if ( main.getNodo() instanceof Function) {
+            throw new RuntimeException("Il main è una funzione");
         }
+            //TODO Dobbiamo controllare se il main ha dei parametri?
 
         program.getIterWithoutProcedure().accept(this);
 
@@ -155,13 +151,7 @@ public class TypeCheckingVisitor implements Visitor {
         //faccio il lookup di expr1
         String typeExpr1 = (String) operazioneBinaria.getExpr1().accept(this);
         //faccio il lookup di expr2
-        String typeExpr2 = "";
-        try {
-            typeExpr2 = (String) operazioneBinaria.getExpr2().accept(this);
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-
+        String typeExpr2 = (String) operazioneBinaria.getExpr2().accept(this);
         //faccio il lookup dell'operazione
         String typeOp = operazioneBinaria.getName();
         //controllo di che tipo l'operazione binaria
@@ -342,7 +332,7 @@ public class TypeCheckingVisitor implements Visitor {
 
 
     @Override
-    public Object visit(Stat statement) {
+    public Object visit(Stat statement) throws RuntimeException {
         if (statement instanceof WhileStat) {
             ((WhileStat) statement).accept(this);
         }
@@ -366,51 +356,33 @@ public class TypeCheckingVisitor implements Visitor {
                 var actualExpression = iteratoreRightSide.next();
 
                 if(actualExpression instanceof FunCall) {
-                    try {
-                        var listaTipiRitorno = (ArrayList<String>) ((FunCall) actualExpression).accept(this);
-                        // vediamo il numero di tipiEspressione,
-                        // in questo modo sappiamo quante volte andare avanti con iteratore degli id
-                        int numeroTipiRitorno = listaTipiRitorno.size();
+                    var listaTipiRitorno = (ArrayList<String>) ((FunCall) actualExpression).accept(this);
+                    // vediamo il numero di tipiEspressione,
+                    // in questo modo sappiamo quante volte andare avanti con iteratore degli id
+                    int numeroTipiRitorno = listaTipiRitorno.size();
 
-                        for(int i = 0; i < numeroTipiRitorno; i++) {
-                            //vediamo se ogni id matcha con il tipo di ritorno corrispondente
-                            String tipoDiId = (String) actualId.accept(this);
-                            if(!listaTipiRitorno.get(i).equals(tipoDiId)) {
-                                throw new Exception("AOOOO FRATEEEEEE I TIPI NON SI TROVANO");
-                            }
-                            //vai avanti con gli iteratori
-                            if(iteratoreLeftSide.hasNext()) {
-                                actualId = iteratoreLeftSide.next();
-                            }
+                    for(int i = 0; i < numeroTipiRitorno; i++) {
+                        //vediamo se ogni id matcha con il tipo di ritorno corrispondente
+                        String tipoDiId = (String) actualId.accept(this);
+                        if(!listaTipiRitorno.get(i).equals(tipoDiId)) {
+                            throw new RuntimeException("AOOOO FRATEEEEEE I TIPI NON SI TROVANO");
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        System.exit(-1);
+                        //vai avanti con gli iteratori
+                        if(iteratoreLeftSide.hasNext()) {
+                            actualId = iteratoreLeftSide.next();
+                        }
                     }
                 } else {
                     //se espressione non è una funzione allora puoi agire normalmente
                     String tipoId = (String) actualId.accept(this);
-                    String tipoEspressione = "";
-                    try {
-                        tipoEspressione = (String) actualExpression.accept(this);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        System.exit(-1);
-                    }
+                    String tipoEspressione = (String) actualExpression.accept(this);
+
                     if(!tipoId.equalsIgnoreCase(tipoEspressione)){
-                        try {
                             throw new Exceptions.TypesMismatch(actualId.getLessema(), tipoId, tipoEspressione);
-                        } catch (Exception e){
-                            System.out.println("tipo id = " + tipoId + "tipo espressione = " + tipoEspressione);
-                            e.printStackTrace();
-                            System.exit(-1);
-                        }
                     }
                 }//fine else
 
             }
-
-
         }
 
         /**
@@ -439,38 +411,25 @@ public class TypeCheckingVisitor implements Visitor {
             //devo controllare che il tipi di ritorno della funzione matchano con i tipi effettivamente restituiti
             ArrayList<String> tipiDiRitorno = new ArrayList<>();
             statement.getEspressioniList().forEach(exprOP -> {
-                try {
                     Object resultAccept = exprOP.accept(this);
                     if( resultAccept instanceof ArrayList<?>){
                         ((ArrayList<String>) resultAccept).forEach(tipo -> tipiDiRitorno.add(tipo));
                     } else {
                         tipiDiRitorno.add((String)resultAccept);
                     }
-
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
             });
             return tipiDiRitorno;
         }
 
         if(statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
             statement.getEspressioniList().forEach(exprOP -> {
-                try {
                     exprOP.accept(this);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
             });
         }
 
         if(statement.getTipo().equals(Stat.Mode.WRITE)) {
             statement.getEspressioniList().forEach(exprOP -> {
-                try {
                     exprOP.accept(this);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
             });
         }
 
@@ -478,21 +437,12 @@ public class TypeCheckingVisitor implements Visitor {
     }
 
     @Override
-    public Object visit(IfStat ifStat) {
+    public Object visit(IfStat ifStat) throws RuntimeException{
         String tipoExpr = "";
-        try {
-            tipoExpr = (String) ifStat.getExpr().accept(this);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+        tipoExpr = (String) ifStat.getExpr().accept(this);
 
         if (!tipoExpr.equalsIgnoreCase("boolean")) {
-            try {
-                throw new Exceptions.InvalidCondition(tipoExpr);
-            } catch(Exception e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            throw new Exceptions.InvalidCondition(tipoExpr);
         }
 
         //Controllo nel body di if stat
@@ -520,7 +470,7 @@ public class TypeCheckingVisitor implements Visitor {
     }
 
     @Override
-    public Object visit(ElseOP elseOP) {
+    public Object visit(ElseOP elseOP) throws RuntimeException {
         //entro nello scope dell'else op
         enterScope(elseOP.getSymbolTableElseOp());
         //controllo il body dell'else
@@ -531,22 +481,13 @@ public class TypeCheckingVisitor implements Visitor {
     }
 
     @Override
-    public Object visit(ElseIfOP elseIfOP) {
+    public Object visit(ElseIfOP elseIfOP) throws RuntimeException{
         String tipoExpr = "";
         //controllo sulla condizione
-        try {
-            tipoExpr = (String) elseIfOP.getExpr().accept(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        tipoExpr = (String) elseIfOP.getExpr().accept(this);
 
         if (!tipoExpr.equalsIgnoreCase("boolean"))
-            try {
-                throw new Exceptions.InvalidCondition(tipoExpr);
-            } catch(Exception e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            throw new Exceptions.InvalidCondition(tipoExpr);
 
         enterScope(elseIfOP.getSymbolTableElseIF());
         elseIfOP.getBody().accept(this);
@@ -571,19 +512,14 @@ public class TypeCheckingVisitor implements Visitor {
     }
     
     @Override
-    public Object visit(ProcCall procCall) throws Exception {
+    public Object visit(ProcCall procCall) throws RuntimeException {
         //Lookup nella tabella
         SymbolTableRecord record = new SymbolTableRecord();
-        try {
             currentScope.lookup(procCall.getIdentifier().getLessema());
 
-            record = currentScope
-                    .lookup(procCall.getIdentifier().getLessema())
-                    .orElseThrow(() -> new Exceptions.NoDeclarationError(procCall.getIdentifier().getLessema()));
-
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+        record = currentScope
+                .lookup(procCall.getIdentifier().getLessema())
+                .orElseThrow(() -> new Exceptions.NoDeclarationError(procCall.getIdentifier().getLessema()));
 
         //bisogna scorrere i parametri dichiarati nella funzione e quelli effettivamente utilizzati
         //per controllare il tipo
@@ -601,7 +537,7 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         if (!hannoStessoNumeroDiParametri(parametriDichiarati, parametriUtilizzati)) {
-            throw new Exception("il numero di parametri in procedura non matcha"); //TODO custom exception
+            throw new RuntimeException("il numero di parametri in procedura non matcha"); //TODO custom exception
         }
 
         //Adesso scorriamo sia la lista dei parametri utilizzati che quelli dichiarati e confrontiamo tipo per tipo
@@ -622,7 +558,7 @@ public class TypeCheckingVisitor implements Visitor {
                 Iterator<String> tipiDiRitornoFunzioneIt = tipiDiRitornoFunzione.iterator();
 
                 if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF)) {
-                    throw new Exception("KEYWORD @ utilizzata in corrispondenza di una funzione");
+                    throw new RuntimeException("KEYWORD @ utilizzata in corrispondenza di una funzione");
                 }
                 while (tipiDiRitornoFunzioneIt.hasNext()) {
 
@@ -633,7 +569,7 @@ public class TypeCheckingVisitor implements Visitor {
                     try {
                         tipoParametroDichiarato = paramDichiarato.getTipo().getTipo();
                     } catch (NoSuchElementException e) {
-                        throw new Exception("il numero dei parametri utilizzati sono diversi da quelli dichiarati");
+                        throw new RuntimeException("il numero dei parametri utilizzati sono diversi da quelli dichiarati");
                     }
 
                     String tipoParametroUtilizzato = tipiDiRitornoFunzioneIt.next();
@@ -645,7 +581,7 @@ public class TypeCheckingVisitor implements Visitor {
 
                     //CONTROLLO SULLA KEYWORD OUT
                     if(paramDichiarato.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
-                        throw new Exception("Non puoi utilizzare una funzione in corrispondenza di parametri out");
+                        throw new RuntimeException("Non puoi utilizzare una funzione in corrispondenza di parametri out");
                     }
 
                 }
@@ -657,12 +593,11 @@ public class TypeCheckingVisitor implements Visitor {
                 String parametroUtilizzatoCorrente_string = (String) parametroUtilizzatoCorrente;
 
                 if(!exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && parametroInTable.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)) {
-                    throw new Exception("type mismatch nella procedura: NON CI SIAMO CON LE OUT E I REF "); //TODO CUSTOM EXCEPTION
+                    throw new RuntimeException("type mismatch nella procedura: NON CI SIAMO CON LE OUT E I REF "); //TODO CUSTOM EXCEPTION
                 }
 
                 if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && !parametroInTable.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
-                    throw new Exception("non si trovano out e ref"); //TODO CUSTOM EXCEPTION
-
+                    throw new RuntimeException("non si trovano out e ref"); //TODO CUSTOM EXCEPTION
                 }
 
                 // ora si vede se i tipi matchano
@@ -685,17 +620,13 @@ public class TypeCheckingVisitor implements Visitor {
         String condition = (String) whileStat.getExpr().accept(this);
 
         if( !condition.equalsIgnoreCase("boolean")){
-            try {
-                throw new Exceptions.InvalidCondition(condition);
-            } catch(Exception e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            throw new Exceptions.InvalidCondition(condition);
         }
 
         enterScope(whileStat.getTable());
         whileStat.getBody().accept(this);
         exitScope();
+
         return null;
     }
 
@@ -772,12 +703,8 @@ public class TypeCheckingVisitor implements Visitor {
         else if(decl.getTipoDecl().toString().equals("TYPE")) {
             for(Identifier id : decl.getIds()) {
                 var tipoInTable = (String) id.accept(this);
-                try {
-                    if (!tipoInTable.equalsIgnoreCase(decl.getTipo().getTipo())) {
-                        throw new Exception("TYPE MISMATCH KING");
-                    }
-                } catch(Exception e){
-                    e.printStackTrace();
+                if (!tipoInTable.equalsIgnoreCase(decl.getTipo().getTipo())) {
+                    throw new RuntimeException("TYPE MISMATCH KING");
                 }
             }
         }
@@ -796,15 +723,9 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(Identifier id) {
         SymbolTableRecord record = new SymbolTableRecord();
-
-        try{
         record = currentScope
                 .lookup(id.getLessema())
                 .orElseThrow(() -> new Exceptions.NoDeclarationError(id.getLessema()));
-        } catch(Exception e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
 
         var varFieldType = (VarFieldType) record.getFieldType();
         return varFieldType.getType();
@@ -814,44 +735,29 @@ public class TypeCheckingVisitor implements Visitor {
     public Object visit(IterOp iterOP) {
         iterOP.getProcedures().forEach(procedure -> procedure.accept(this));
         iterOP.getDeclarations().forEach(s->s.accept(this));
-        iterOP.getFunctions().forEach(s -> {
-                try {
-                    s.accept(this);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+        iterOP.getFunctions().forEach(s -> s.accept(this));
+
         return null;
     }
 
 
     @Override
-    public Object visit(IterWithoutProcedure iterOP) {
+    public Object visit(IterWithoutProcedure iterOP) throws RuntimeException{
         iterOP.getDeclarations().forEach(s->s.accept(this));
-        iterOP.getFunctions().forEach(s -> {
-            try {
-                s.accept(this);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        iterOP.getFunctions().forEach(s -> s.accept(this));
 
         return null;
     }
 
 
     @Override
-    public Object visit(Procedure procedure) {
+    public Object visit(Procedure procedure) throws RuntimeException{
         ArrayList<Stat> listaReturnStatementProcedura =  new ArrayList<>();
         getAllFunctionReturns(procedure.getBody(), listaReturnStatementProcedura);
 
         //controlliamo che la procedura non abbia dei returns
         if(!listaReturnStatementProcedura.isEmpty()) {
-            try {
-                throw new Exceptions.SemanticError();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            throw new Exceptions.SemanticError();
         }
 
         //entro nello scope di procedure
@@ -870,7 +776,7 @@ public class TypeCheckingVisitor implements Visitor {
      * @return il tipo della costante senza "_CONST"
      */
     @Override
-    public Object visit(ConstOP constOP) {
+    public Object visit(ConstOP constOP) throws RuntimeException{
         var typeAsString = constOP.getType().toString();
         //Prendo solo la parte che mi interessa di type ossia quella senza "_CONST"
         return typeAsString;
@@ -972,7 +878,7 @@ public class TypeCheckingVisitor implements Visitor {
     }
 
     @Override
-    public Object visit(CallableParam callableParam) {
+    public Object visit(CallableParam callableParam) throws RuntimeException{
         return null;
     }
 }

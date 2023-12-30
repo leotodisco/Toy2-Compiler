@@ -38,13 +38,7 @@ public class ScopeCheckingVisitor implements Visitor {
         CallableFieldType fieldTypeProc = new CallableFieldType();
         var fieldType = new CallableFieldType(proc.getProcParamDeclList());
         SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
-        try {
-            table.addEntry(recordProc);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
+        table.addEntry(recordProc);
         program.getProc().accept(this);
         program.getIterOp().accept(this);
 
@@ -74,13 +68,8 @@ public class ScopeCheckingVisitor implements Visitor {
 
                 fieldType.setParams(function.getParametersList());
                 SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType, returnTypeListToString(function.getReturnTypes()));
-
-                try {
-                    table.addEntry(record);
-                    function.accept(this);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                table.addEntry(record);
+                function.accept(this);
 
             });
         }
@@ -91,11 +80,7 @@ public class ScopeCheckingVisitor implements Visitor {
             for (VarDecl var : iterOP.getDeclarations()) {
                 listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
                 for ( SymbolTableRecord record: listaVar) {
-                    try{
-                        table.addEntry(record);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    table.addEntry(record);
                 }
             }
         }
@@ -113,13 +98,9 @@ public class ScopeCheckingVisitor implements Visitor {
                 fieldType.setParams(function.getParametersList());
                 SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType,returnTypeListToString(function.getReturnTypes()));
 
-                try {
-                    table.addEntry(record);
-                    function.accept(this);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                
+                table.addEntry(record);
+                function.accept(this);
+
             });
 
         }
@@ -131,11 +112,7 @@ public class ScopeCheckingVisitor implements Visitor {
                 listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
 
                 for ( SymbolTableRecord record: listaVar) {
-                    try{
-                        table.addEntry(record);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    table.addEntry(record);
                 }
             }
         }
@@ -151,11 +128,7 @@ public class ScopeCheckingVisitor implements Visitor {
                 var fieldType = new CallableFieldType(proc.getProcParamDeclList());
                 SymbolTableRecord record = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
 
-                try {
-                    this.table.addEntry(record);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                this.table.addEntry(record);
             }
         }
 
@@ -164,23 +137,17 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(BinaryOP operazioneBinaria) {
-        try {
 
-            operazioneBinaria.getExpr1().accept(this);
-            operazioneBinaria.getExpr2().accept(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        operazioneBinaria.getExpr1().accept(this);
+        operazioneBinaria.getExpr2().accept(this);
+
         return null;
     }
 
     @Override
     public Object visit(UnaryOP operazioneUnaria) {
-        try {
-            operazioneUnaria.getExpr().accept(this);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        operazioneUnaria.getExpr().accept(this);
+
         return null;
     }
 
@@ -218,7 +185,6 @@ public class ScopeCheckingVisitor implements Visitor {
             itIds = decl.getIds().iterator();
             while(itIds.hasNext()) {
                 Identifier id = itIds.next();
-                //System.out.println("nel vecchio e caro scope il lexema = " + id.getLessema() + "= " + decl.getTipo().getTipo());
                 listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(decl.getTipo().getTipo()), ""));
             }
         }
@@ -250,16 +216,9 @@ public class ScopeCheckingVisitor implements Visitor {
             funzione.getParametersList()
                     .stream()
                     .map(mapperFunctionParamToEntry)
-                    .forEach(symbolTableRecord -> {
-                        try {
-                            funzioneTable.addEntry(symbolTableRecord);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                    .forEach(symbolTableRecord -> funzioneTable.addEntry(symbolTableRecord));
         }
 
-        System.out.println(funzioneTable);
         if(funzione.getBody()!=null) {
             enterScope(funzione.getTable());
             funzione.getBody().accept(this);
@@ -344,13 +303,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(ProcCall procCall) {
-        procCall.getExprs().forEach(exprOP -> {
-            try {
-                exprOP.accept(this);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        procCall.getExprs().forEach(exprOP -> exprOP.accept(this));
 
         return null;
     }
@@ -402,13 +355,7 @@ public class ScopeCheckingVisitor implements Visitor {
             procedure.getProcParamDeclList()
                     .stream()
                     .map(mapProcParamToEntry)
-                    .forEach(symbolTableRecord -> {
-                        try {
-                            procedureTable.addEntry(symbolTableRecord);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
+                    .forEach(symbolTableRecord -> procedureTable.addEntry(symbolTableRecord));
         }
 
         if(procedure.getBody() != null) {
@@ -445,13 +392,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(FunCall funCall) {
-        funCall.getExprs().forEach(exprOP -> {
-            try {
-                exprOP.accept(this);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        funCall.getExprs().forEach(exprOP -> exprOP.accept(this));
         return null;
     }
 

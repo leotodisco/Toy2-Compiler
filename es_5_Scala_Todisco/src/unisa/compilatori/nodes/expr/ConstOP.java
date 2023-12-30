@@ -38,7 +38,6 @@ public class ConstOP extends ExprOP implements Visitable {
         if (token instanceof Token){
             Token tok = (Token) token;
             this.lessema = tok.getAttribute();
-            System.out.println(token);
             this.kind = type;
             super.add(new DefaultMutableTreeNode(lessema));
             super.add(new DefaultMutableTreeNode(kind));
