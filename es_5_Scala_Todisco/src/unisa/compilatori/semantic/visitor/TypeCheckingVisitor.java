@@ -231,8 +231,7 @@ public class TypeCheckingVisitor implements Visitor {
                 .toList();
 
         //mi ricavo gli ids utilizzati nei parametri della funzione
-        List<Identifier> statAssign = paramsFunzione.stream().map(callableParam -> callableParam.getId()).toList();
-
+        List<Identifier> callableParams = paramsFunzione.stream().map(callableParam -> callableParam.getId()).toList();
 
         //controllo che ogni statement assign non utilizzi un parametro immutable
         for (Stat stat : statsAssign) {
