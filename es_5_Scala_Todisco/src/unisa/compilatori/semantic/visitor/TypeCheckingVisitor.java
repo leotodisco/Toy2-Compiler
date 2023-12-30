@@ -128,6 +128,19 @@ public class TypeCheckingVisitor implements Visitor {
     public Object visit(ProgramOp program) {
         currentScope = program.getTable();
 
+        //controllo che ci sia uno e un solo main
+        try {
+            SymbolTableRecord main = currentScope.lookup("main").orElseThrow(() -> new Exception("main non trovato"));
+            // controllo che sia una procedura e non una funzione
+            if ( main.getNodo() instanceof Function) {
+                throw new Exception("Il main è una funzione");
+            }
+            //TODO Dobbiamo controllare se il main ha dei parametri?
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
         program.getIterWithoutProcedure().accept(this);
 
         program.getProc().accept(this);
@@ -229,11 +242,14 @@ public class TypeCheckingVisitor implements Visitor {
                 .orElseThrow(() -> new Exception("DEVI AVERE ALMENO UN RETURN"));
 
 
+        ArrayList<Stat> returns = new ArrayList<>();
+
+        getAllFunctionReturns(funzione.getBody(), returns);
         //mi ricavo i returns
-        ArrayList<Stat> returns = funzione.getBody().getStatList()
-                .stream()
-                .filter(stat -> stat.getTipo().equals(Stat.Mode.RETURN))
-                .collect(Collectors.toCollection(ArrayList::new));
+        //ArrayList<Stat> returns = funzione.getBody().getStatList()
+        //        .stream()
+        //        .filter(stat -> stat.getTipo().equals(Stat.Mode.RETURN))
+        //        .collect(Collectors.toCollection(ArrayList::new));
 
         //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
         for (Stat returnStat: returns) {
@@ -247,44 +263,6 @@ public class TypeCheckingVisitor implements Visitor {
                             " tipi nel return" + tipiReturn + " lessema = " +
                             " tipi nella dichiarazione" + tipiDichiarati);
                 }
-            }
-        }
-
-
-        //prendo i tipi effettivamente restituiti
-        for(Stat stmt: funzione.getBody().getStatList()) {
-            if (stmt.getTipo().equals(Stat.Mode.RETURN)){
-                tipiRestituiti = stmt
-                        .getEspressioniList()
-                        .stream()
-                        .map(expr -> {
-                            try {
-                                return (String) expr.accept(this);
-                            } catch (Exception e) {
-                                System.exit(-1);
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .collect(Collectors.toCollection(ArrayList<String>::new));
-                //c'è solo un return in tutto il body della funzione
-                break;
-            }
-        }
-
-        //controllo sulla lunghezza dei tipi dichiarati e restituiti
-        if(tipiDichiarati.size() != tipiRestituiti.size()){
-            throw new RuntimeException("I tipi dichiarati ed effettivamente restituiti non matchano nella funzione");
-        }
-
-        //controllo tipo per tipo se corrispondono i tipi dichiarati con quelli restituiti
-        Iterator<String> itTipiDichiarati = tipiDichiarati.iterator();
-        Iterator<String> itTipiRestituiti = tipiRestituiti.iterator();
-
-        while(itTipiDichiarati.hasNext() && itTipiRestituiti.hasNext()) {
-            String tipoRestituito = itTipiRestituiti.next();
-            String tipoDichiarato = itTipiDichiarati.next();
-            if(!tipoDichiarato.equals(tipoRestituito)){
-                throw new RuntimeException("I tipi dichiarati ed effettivamente restituiti non matchano nella funzione");
             }
         }
 
@@ -393,7 +371,13 @@ public class TypeCheckingVisitor implements Visitor {
             ArrayList<String> tipiDiRitorno = new ArrayList<>();
             statement.getEspressioniList().forEach(exprOP -> {
                 try {
-                    tipiDiRitorno.add((String) exprOP.accept(this));
+                    Object resultAccept = exprOP.accept(this);
+                    if( resultAccept instanceof ArrayList<?>){
+                        ((ArrayList<String>) resultAccept).forEach(tipo -> tipiDiRitorno.add(tipo));
+                    } else {
+                        tipiDiRitorno.add((String)resultAccept);
+                    }
+
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

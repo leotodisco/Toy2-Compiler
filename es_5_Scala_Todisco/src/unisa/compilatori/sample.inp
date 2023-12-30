@@ -1,4 +1,15 @@
-var c ^= 1;\
+
+% stampa il messaggio dopo 4 ritorni a capo %
+func stampac(messaggio: string)-> string, integer:
+    var i ^= 0;\
+    while i < 4 do
+	-->! ;
+    endwhile;
+
+     --> $(messaggio);
+    return stampaccc("culo");
+endfunc
+
 
 proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
 
@@ -11,15 +22,13 @@ proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
 	elseif result > 50 then 	
 		var valore ^= "media";\
  		size ^= valore;
-	else 	
+
+	else
 		var valore ^= "piccola";\
  		size ^= valore;
+
 	endif;
-
-
-
 endproc
-
 
 
 
@@ -56,13 +65,47 @@ proc main():
 endproc
 
 
+
 % stampa il messaggio dopo 4 ritorni a capo %
 func stampa(messaggio: string)-> string:
     var i ^= 0;\
     while i < 4 do
-	-->! ;
+	    return "12";
     endwhile;
 
      --> $(messaggio);
     return "ok";
 endfunc
+
+
+% stampa il messaggio dopo 4 ritorni a capo %
+func stampaccc(messaggio: string)-> string, integer:
+    var i ^= 0;\
+    var result ^= 10;\
+    var size : string;\
+    while i < 4 do
+        if result > 100 then
+        		var valore ^= "grande";\
+         		size ^= valore;
+         		return "ciao", 6;
+        	elseif result > 50 then
+        		var valore ^= "media";\
+         		size ^= valore;
+         		return "ciao", 6;
+        	else
+        		var valore ^= "piccola";\
+         		size ^= valore;
+         		return "ciao", 6;
+        	endif;
+        return "pippo", 14;
+    endwhile;
+
+     --> $(messaggio);
+    return "ok", 12;
+endfunc
+
+ var
+	a, b ^= 1, 2.2; x ^= 3;
+	taglia, ans1 : string;
+	ans ^= "no";
+	risultato ^= 0.5;\
