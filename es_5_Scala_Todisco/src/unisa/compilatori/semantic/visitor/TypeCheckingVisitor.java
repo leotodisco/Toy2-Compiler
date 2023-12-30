@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 public class TypeCheckingVisitor implements Visitor {
 
     private SymbolTable currentScope;
-    //TODO fare che nelle funzioni i parametri sono immutable e non puoi assegnargli un nuovo valore
 
     public void enterScope(SymbolTable scope) {
         this.currentScope= scope;
@@ -292,12 +291,12 @@ public class TypeCheckingVisitor implements Visitor {
 
         //controlla che il body non sia vuoto
         if(checkEmptyBody(funzione.getBody())) {
-            throw new RuntimeException("HAI UN BODY SENZA STATEMENT");
+            throw new Exceptions.EmptyBodyError();
         }
 
         //CONTROLLA CHE CI SIA ALMENO UN RETURN
         if(checkNoReturn(funzione.getBody()))
-            throw new RuntimeException("DEVI AVERE ALMENO UN RETURN");
+            throw new Exceptions.NoReturnError(funzione.getId().getLessema());
 
         ArrayList<Stat> returns = new ArrayList<>();
         getAllFunctionReturns(funzione.getBody(), returns);
@@ -345,7 +344,6 @@ public class TypeCheckingVisitor implements Visitor {
             ((ProcCall) statement).accept(this);
         }
 
-        //TODO FARE UNA SOLA GRANDE LISTA CON TUTTI I TIPI (SIA FUNCALL CHE NON FUNCALL) E POI VEDI SE MATCHANO
         if(statement.getTipo().equals(Stat.Mode.ASSIGN)) {
             //1. prendiamo i tipi di ritorno di una possibile funzione
             //2. prendiamo i tipi dei
@@ -375,8 +373,7 @@ public class TypeCheckingVisitor implements Visitor {
                 String tipoRightSide = itRightSide.next();
 
                 if(!tipoRightSide.equals(tipoLeftSide)) {
-
-                    throw new RuntimeException("type mismatch");
+                    throw new Exceptions.TypesMismatch(tipoLeftSide,tipoRightSide);
                 }
             }
 
@@ -400,7 +397,7 @@ public class TypeCheckingVisitor implements Visitor {
                         }
                 }
                 else {
-                    throw new RuntimeException("solo un id puoi usare nella read");
+                    throw new RuntimeException("Una Read richiede che si usino ID");
                 }
             });
         }
