@@ -83,7 +83,7 @@ public class TypeCheckingVisitor implements Visitor {
                 else if(type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
                     return new String("BOOLEAN");
                 else
-                    throw new RuntimeException("errore 11111");
+                    throw new RuntimeException("tipo1 = " + type1 + "tipo2 = " + type2 + " op name = " + op);
 
             case "eq_op", "ne_op":
                 if(type1.equals(type2))
@@ -345,46 +345,45 @@ public class TypeCheckingVisitor implements Visitor {
             ((ProcCall) statement).accept(this);
         }
 
+        //TODO FARE UNA SOLA GRANDE LISTA CON TUTTI I TIPI (SIA FUNCALL CHE NON FUNCALL) E POI VEDI SE MATCHANO
         if(statement.getTipo().equals(Stat.Mode.ASSIGN)) {
-            //uno statement di questo tipo ha un array di id e un array di espressioni
-            var leftSide = statement.getIdsList();
-            var rightSide = statement.getEspressioniList();
+            //1. prendiamo i tipi di ritorno di una possibile funzione
+            //2. prendiamo i tipi dei
+            ArrayList<String> leftSide = statement.getIdsList()
+                    .stream()
+                    .map(id -> (String) id.accept(this))
+                    .collect(Collectors.toCollection(ArrayList<String>::new));
 
-            var iteratoreLeftSide = leftSide.iterator();
-            var iteratoreRightSide = rightSide.iterator();
 
-            while(iteratoreLeftSide.hasNext() && iteratoreRightSide.hasNext())  {
-                var actualId = iteratoreLeftSide.next();
-                var actualExpression = iteratoreRightSide.next();
+            ArrayList<String> rightSide = new ArrayList<>();
+            statement.getEspressioniList().forEach(exprOP -> {
+                Object resultAccept = exprOP.accept(this);
 
-                if(actualExpression instanceof FunCall) {
-                    var listaTipiRitorno = (ArrayList<String>) ((FunCall) actualExpression).accept(this);
-                    // vediamo il numero di tipiEspressione,
-                    // in questo modo sappiamo quante volte andare avanti con iteratore degli id
-                    int numeroTipiRitorno = listaTipiRitorno.size();
 
-                    for(int i = 0; i < numeroTipiRitorno; i++) {
-                        //vediamo se ogni id matcha con il tipo di ritorno corrispondente
-                        String tipoDiId = (String) actualId.accept(this);
-                        if(!listaTipiRitorno.get(i).equals(tipoDiId)) {
-                            throw new RuntimeException("AOOOO FRATEEEEEE I TIPI NON SI TROVANO");
-                        }
-                        //vai avanti con gli iteratori
-                        if(iteratoreLeftSide.hasNext()) {
-                            actualId = iteratoreLeftSide.next();
-                        }
-                    }
+                if(resultAccept instanceof ArrayList<?>){
+                    ((ArrayList<String>) resultAccept).forEach(tipo -> rightSide.add(tipo));
                 } else {
-                    //se espressione non è una funzione allora puoi agire normalmente
-                    String tipoId = (String) actualId.accept(this);
-                    String tipoEspressione = (String) actualExpression.accept(this);
+                    rightSide.add((String)resultAccept);
+                }
+            });
 
-                    if(!tipoId.equalsIgnoreCase(tipoEspressione)){
-                            throw new Exceptions.TypesMismatch(actualId.getLessema(), tipoId, tipoEspressione);
-                    }
-                }//fine else
+            Iterator<String> itLeftSide = leftSide.iterator();
+            Iterator<String> itRightSide = rightSide.iterator();
 
+            while(itLeftSide.hasNext() && itRightSide.hasNext()) {
+                String tipoLeftSide = itLeftSide.next();
+                String tipoRightSide = itRightSide.next();
+
+                if(!tipoRightSide.equals(tipoLeftSide)) {
+
+                    throw new RuntimeException("type mismatch");
+                }
             }
+
+            if(itLeftSide.hasNext() || itRightSide.hasNext()) {
+                throw new RuntimeException("Numero di elementi a destra e sinistra di assign non è uguale");
+            }
+
         }
 
         /**
@@ -801,6 +800,10 @@ public class TypeCheckingVisitor implements Visitor {
         record = currentScope
                 .lookup(funCall.getIdentifier().getLessema())
                 .orElseThrow(() -> new Exceptions.NoDeclarationError(funCall.getIdentifier().getLessema()));
+
+        if(record.getProperties().equals("")) {
+            throw new RuntimeException("sTAi chiamando una procedura quando non dovresti");
+        }
 
 
         var fieldType = (CallableFieldType) record.getFieldType();
