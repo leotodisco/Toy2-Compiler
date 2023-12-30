@@ -105,7 +105,7 @@ public class IfStat extends Stat implements Visitable {
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
+    public <T> T accept(Visitor<T> visitor) throws RuntimeException {
         return visitor.visit(this);
     }
 }

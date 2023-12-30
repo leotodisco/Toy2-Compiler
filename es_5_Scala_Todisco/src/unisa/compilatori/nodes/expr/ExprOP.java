@@ -43,7 +43,7 @@ public class ExprOP extends DefaultMutableTreeNode implements Visitable {
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) throws Exception {
+    public <T> T accept(Visitor<T> visitor) {
 
         return visitor.visit(this);
     }

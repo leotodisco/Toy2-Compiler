@@ -51,12 +51,7 @@ public class ProcCall extends Stat implements Visitable {
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-        try {
+    public <T> T accept(Visitor<T> visitor) throws RuntimeException {
             return visitor.visit(this);
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 }

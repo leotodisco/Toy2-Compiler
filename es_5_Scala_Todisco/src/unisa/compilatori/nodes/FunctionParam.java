@@ -42,7 +42,7 @@ public class FunctionParam extends DefaultMutableTreeNode implements Visitable {
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
+    public <T> T accept(Visitor<T> visitor)  {
         return visitor.visit(this);
     }
 }

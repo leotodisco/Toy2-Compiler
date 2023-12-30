@@ -48,6 +48,20 @@ public class ConstOP extends ExprOP implements Visitable {
 
     }
 
+    public ConstOP(Object token, Kind type, Mode mode) throws InvalidTypeException {
+        super(mode);
+        if (token instanceof Token){
+            Token tok = (Token) token;
+            this.lessema = tok.getAttribute();
+            this.kind = type;
+            super.add(new DefaultMutableTreeNode(lessema));
+            super.add(new DefaultMutableTreeNode(kind));
+        } else {
+            throw new InvalidTypeException();
+        }
+
+    }
+
     public String getLessema() {
         return lessema;
     }

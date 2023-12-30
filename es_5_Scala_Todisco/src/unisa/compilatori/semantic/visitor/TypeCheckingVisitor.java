@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class TypeCheckingVisitor implements Visitor {
 
     private SymbolTable currentScope;
+    //TODO fare che nelle funzioni i parametri sono immutable e non puoi assegnargli un nuovo valore
 
     public void enterScope(SymbolTable scope) {
         this.currentScope= scope;
@@ -152,12 +153,7 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(BinaryOP operazioneBinaria) {
         //faccio il lookup di expr1
-        String typeExpr1 = "";
-        try{
-            typeExpr1 = (String) operazioneBinaria.getExpr1().accept(this);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+        String typeExpr1 = (String) operazioneBinaria.getExpr1().accept(this);
         //faccio il lookup di expr2
         String typeExpr2 = "";
         try {
@@ -168,35 +164,19 @@ public class TypeCheckingVisitor implements Visitor {
 
         //faccio il lookup dell'operazione
         String typeOp = operazioneBinaria.getName();
-        String risultato = "";
-        try {
-            //controllo di che tipo l'operazione binaria
-            risultato = evaluateType(typeExpr1, typeExpr2, typeOp);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //controllo di che tipo l'operazione binaria
+        String risultato = risultato = evaluateType(typeExpr1, typeExpr2, typeOp);
 
-        //restituisco il tipo dell'operazione binaria
         return risultato;
     }
 
-    //TODO controllare perchè uminus non funziona
+
     @Override
     public Object visit(UnaryOP operazioneUnaria) {
-        String expr1 = "";
-        try {
-            expr1 = (String) operazioneUnaria.getExpr().accept(this);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+        String tipoExpr1 = (String) operazioneUnaria.getExpr().accept(this);
         String expName = operazioneUnaria.getSimbolo();//TODO accertarsi che UMINUS funziona altrimenti metti MINUS
-
         String risultato = "";
-        try {
-            risultato = evaluateType(expr1, expName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        risultato = evaluateType(tipoExpr1, expName);
 
         return risultato;
     }
@@ -241,47 +221,99 @@ public class TypeCheckingVisitor implements Visitor {
         }
     }
 
-    @Override
-    public Object visit(Function funzione) throws Exception {
-        ArrayList<String> tipiDichiarati;
-        ArrayList<String> tipiRestituiti = new ArrayList<>();
+    /**
+     * Questo metodo ci dice se i parametri di una funzione sono stati usati in modo illegale, ossia se vengono cambiati.
+     * @param bodyStatements
+     * @param paramsFunzione
+     * @return True se i parametri sono usati in modo illegale
+     * @return False se i parametri sono usati in modo corretto
+     */
+    private Boolean controlloSugliAssign(ArrayList<Stat> bodyStatements, ArrayList<CallableParam> paramsFunzione) {
+        //1. itero su tutti gli statement
+        //2. trovo uno statement di tipo assign
+        //3. controllo che al lato sinistro di una assign non ci sia un parametro della funzione
+        Boolean modificatoMutable = false;
 
-
-
-        //in tipi dichiarati ho delle stringhe con i tipi dei parametri dichiarati
-        tipiDichiarati = funzione.getReturnTypes()
+        //mi ricavo gli statement di tipo assign
+        List<Stat> statsAssign = bodyStatements
                 .stream()
-                .map(type -> type.getTipo().toString())
-                .collect(Collectors.toCollection(ArrayList::new));
+                .filter(stat -> stat.getTipo().equals(Stat.Mode.ASSIGN))
+                .toList();
+
+        //mi ricavo gli ids utilizzati nei parametri della funzione
+        List<Identifier> statAssign = paramsFunzione.stream().map(callableParam -> callableParam.getId()).toList();
 
 
-        //CONTROLLA CHE CI SIA UN RETURN
-        if(funzione.getBody().getStatList()==null || funzione.getBody().getStatList().isEmpty()){
-            try {
-                throw new Exception("HAI UN BODY SENZA STATEMENT");
-            } catch(Exception e){
-                e.printStackTrace();
-                System.exit(-1);
+        //controllo che ogni statement assign non utilizzi un parametro immutable
+        for (Stat stat : statsAssign) {
+            for(Identifier id : stat.getIdsList()) {
+                modificatoMutable = statAssign.stream().filter( idParamFunzione -> id.equals(idParamFunzione)).findAny().isEmpty();
             }
         }
 
-        //CONTROLLA CHE CI SIA ALMENO UN RETURN
-        funzione.getBody()
-                .getStatList()
-                .stream().
-                filter(stat -> stat.getTipo().equals(Stat.Mode.RETURN))
-                        .findFirst()
-                .orElseThrow(() -> new Exception("DEVI AVERE ALMENO UN RETURN"));
+        return modificatoMutable;
+    }
 
+    /**
+     * Metodo che dice se il body è vuoto
+     * @param body
+     * @return true se il body è vuoto
+     * @return se il body non è vuoto
+     */
+    private Boolean checkEmptyBody(Body body) {
+        return (body.getStatList()==null || body.getStatList().isEmpty());
+    }
+
+    /**
+     * Metodo che ci dice se il body non ha almeno un return.
+     * @param body
+     * @return true se il body non ha return
+     * @return false se il body ha almeno un return
+     */
+    private Boolean checkNoReturn(Body body) {
+        return body.getStatList()
+                .stream()
+                .filter(stat -> stat.getTipo().equals(Stat.Mode.RETURN))
+                .findFirst()
+                .isEmpty();
+    }
+
+    /**
+     * Data una funzione restituisce una lista di stringhe con i tipi dichiarati
+     * @param funzione
+     * @return
+     */
+    private static ArrayList<String> getTipiDichiarati(Function funzione) {
+        return funzione.getReturnTypes()
+                .stream()
+                .map(type -> type.getTipo().toString())
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public Object visit(Function funzione) {
+        ArrayList<String> tipiDichiarati;
+        ArrayList<String> tipiRestituiti = new ArrayList<>();
+
+        //Ottieni i tipi di ritorno
+        tipiDichiarati = getTipiDichiarati(funzione);
+
+        //controlla che il body non sia vuoto
+        if(checkEmptyBody(funzione.getBody())) {
+            throw new RuntimeException("HAI UN BODY SENZA STATEMENT");
+        }
+
+        //CONTROLLA CHE CI SIA ALMENO UN RETURN
+        if(checkNoReturn(funzione.getBody()))
+            throw new RuntimeException("DEVI AVERE ALMENO UN RETURN");
 
         ArrayList<Stat> returns = new ArrayList<>();
-
         getAllFunctionReturns(funzione.getBody(), returns);
-        //mi ricavo i returns
-        //ArrayList<Stat> returns = funzione.getBody().getStatList()
-        //        .stream()
-        //        .filter(stat -> stat.getTipo().equals(Stat.Mode.RETURN))
-        //        .collect(Collectors.toCollection(ArrayList::new));
+
+        //Controlla che i parametri sono usati in modo legale nella funzione
+        if(controlloSugliAssign(funzione.getBody().getStatList(), funzione.getParametersList())) {
+            throw new RuntimeException("I parametri di una funzione sono immutabili");
+        }
 
         //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
         enterScope(funzione.getTable());
@@ -292,7 +324,7 @@ public class TypeCheckingVisitor implements Visitor {
 
             while(itTipiDichiarati.hasNext() && itTipiReturn.hasNext()) {
                 if(!itTipiReturn.next().equals(itTipiDichiarati.next())) {
-                    throw new Exception("I tipi dei parametri usati nel return non matchano con quelli usati nella funzione,\n" +
+                    throw new RuntimeException("I tipi dei parametri usati nel return non matchano con quelli usati nella funzione,\n" +
                             " tipi nel return" + tipiReturn + " lessema = " +
                             " tipi nella dichiarazione" + tipiDichiarati);
                 }
@@ -307,6 +339,8 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+
+
     @Override
     public Object visit(Stat statement) {
         if (statement instanceof WhileStat) {
@@ -318,7 +352,6 @@ public class TypeCheckingVisitor implements Visitor {
         if(statement instanceof ProcCall) {
             ((ProcCall) statement).accept(this);
         }
-
 
         if(statement.getTipo().equals(Stat.Mode.ASSIGN)) {
             //uno statement di questo tipo ha un array di id e un array di espressioni
@@ -384,13 +417,17 @@ public class TypeCheckingVisitor implements Visitor {
          * Si controlla che gli id nella read siano stati tutti dichiarati precedentemente
          */
         if(statement.getTipo().equals(Stat.Mode.READ)) {
-
-            //TODO TESTARE
             statement.getEspressioniList().forEach(exprOP -> {
-                try {
-                    exprOP.accept(this);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                if(exprOP instanceof Identifier) {
+                        exprOP.accept(this);
+                } else if(exprOP instanceof ConstOP || exprOP instanceof BinaryOP) {
+                        String tipoCostante = (String) exprOP.accept(this);
+                        if(!tipoCostante.equalsIgnoreCase("String")){
+                            throw new RuntimeException("puoi usare solo un id o Stringhe in una read");
+                        }
+                }
+                else {
+                    throw new RuntimeException("solo un id puoi usare nella read");
                 }
             });
         }
@@ -399,8 +436,7 @@ public class TypeCheckingVisitor implements Visitor {
         //devo controllare che l'espressione return abbia un tipo compatibile col tipo di ritorno di una funzione
         //devo controllare che gli ipotetici id siano dichiarati
         if(statement.getTipo().equals(Stat.Mode.RETURN)) {
-            //devo controllare che il tipi di ritorno della funzione matchano
-            //con i tipi effettivamente restituiti
+            //devo controllare che il tipi di ritorno della funzione matchano con i tipi effettivamente restituiti
             ArrayList<String> tipiDiRitorno = new ArrayList<>();
             statement.getEspressioniList().forEach(exprOP -> {
                 try {
@@ -437,7 +473,6 @@ public class TypeCheckingVisitor implements Visitor {
                 }
             });
         }
-
 
         return null;
     }
@@ -617,7 +652,6 @@ public class TypeCheckingVisitor implements Visitor {
             }
             //ogni altro caso, per exprOP
             else if(parametroUtilizzatoCorrente instanceof String) {
-
                 //poi facciamo il confronto
                 CallableParam parametroInTable = paramDichiaratiIterator.next();
                 String parametroUtilizzatoCorrente_string = (String) parametroUtilizzatoCorrente;
@@ -634,23 +668,20 @@ public class TypeCheckingVisitor implements Visitor {
                 // ora si vede se i tipi matchano
                 String tipoParametroInTable = parametroInTable.getTipo().getTipo();
                 if (!tipoParametroInTable.equals(parametroUtilizzatoCorrente_string)) {
-                    throw new Exception("type mismatch nella procedura: " + procCall.getIdentifier().getLessema()
-                            + "parametro: " + parametroInTable + " è stato dichiarato con tipo: " + parametroInTable.getTipo() +
-                            "ma lo usi con tipo:" + parametroUtilizzatoCorrente_string);
+                    throw new Exceptions.TypesMismatch(procCall.getIdentifier().getLessema(), parametroInTable.getTipo().toString(), parametroUtilizzatoCorrente_string);
+
                 }
             }
-
-
         }
             if(paramUtilizzatiIterator.hasNext() || paramDichiaratiIterator.hasNext()) {
-                throw new Exception("i parametri utilizzati sono diversi da quelli dichiarati");
+                throw new RuntimeException("i parametri utilizzati sono diversi da quelli dichiarati");
             }
 
         return null;
     }
 
     @Override
-    public Object visit(WhileStat whileStat) throws Exception {
+    public Object visit(WhileStat whileStat) {
         String condition = (String) whileStat.getExpr().accept(this);
 
         if( !condition.equalsIgnoreCase("boolean")){
@@ -706,13 +737,12 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(Decl decl) {
-        //var tipo = decl.getTipo().getTipo();
-        var tipo = "";
+        String tipo = "";
 
         // se il tipo di dichiarazione è del tipo var a ^=2;\
         if(decl.getTipoDecl().toString().equals("ASSIGN")) {
             /**
-             * fatti 2 classi: una per le const e una per gli id
+             * fatti 2 liste: una per le const e una per gli id
              * fatti 2 iteratori uno per la lista di const e uno per la lista di id
              * itera su entrambe le liste e vedi se i tipi sono uguali
              */
@@ -856,7 +886,7 @@ public class TypeCheckingVisitor implements Visitor {
      * @return
      */
     @Override
-    public Object visit(FunCall funCall) throws Exception {
+    public Object visit(FunCall funCall) {
         //1. controlllo il numero di parametri se coincide con quello nella table
         //se record è null vuol dire che la funzione non è mai stata dichiarata
         SymbolTableRecord record;
@@ -876,7 +906,7 @@ public class TypeCheckingVisitor implements Visitor {
         var isEqual = (nParamsChiamata == nParamsDichiarati) ? true : false ;
 
         if(!isEqual) {
-            throw new Exception("NUMERO DI PARAMETRI DIVERSO DALLA DECL"); //TODO CUSTOM EXC
+            throw new RuntimeException("NUMERO DI PARAMETRI DIVERSO DALLA DECL"); //TODO CUSTOM EXC
         }
 
         //2. per ogni expr controllo che il tipo sia uguale a quello nella decl
@@ -892,13 +922,12 @@ public class TypeCheckingVisitor implements Visitor {
 
            //controlla i tipi
             if(!tipoCallableParam.equalsIgnoreCase(tipoExpr)) {
-                throw new Exception("I TIPI NON MATCHANO NELLA FUNZIONE"); //TODO CUSTOM EXCEPTION
+                throw new RuntimeException("I TIPI NON MATCHANO NELLA FUNZIONE"); //TODO CUSTOM EXCEPTION
             }
         }
         var tipiDiRitorno = new ArrayList<>(Arrays.asList(record.getProperties().split(";")));
         return tipiDiRitorno;
     }
-
 
     /**
     /**
@@ -911,23 +940,32 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(ExprOP exprOP) {
         if(exprOP instanceof ConstOP) {
+            if(exprOP.getMode().equals(ExprOP.Mode.IOARGSDOLLAR)) {
+                throw new RuntimeException("IO ARGS DOLLAR VUOLE SOLO UN ID");
+            }
             return ((ConstOP) exprOP).accept(this);
         }
         else if(exprOP instanceof BinaryOP) {
+            if(exprOP.getMode().equals(ExprOP.Mode.IOARGSDOLLAR)) {
+                throw new RuntimeException("IO ARGS DOLLAR VUOLE SOLO UN ID");
+            }
             return ((BinaryOP) exprOP).accept(this);
         }
         else if(exprOP instanceof Identifier) {
             return ((Identifier) exprOP).accept(this);
         }
         else if(exprOP instanceof UnaryOP) {
+            if(exprOP.getMode().equals(ExprOP.Mode.IOARGSDOLLAR)) {
+                throw new RuntimeException("IO ARGS DOLLAR VUOLE SOLO UN ID");
+            }
             return ((UnaryOP) exprOP).accept(this);
         }
         else if(exprOP instanceof FunCall) {
-            try {
-                return ((FunCall) exprOP).accept(this);
-            } catch(Exception e) {
-                e.printStackTrace();
+            if(exprOP.getMode().equals(ExprOP.Mode.IOARGSDOLLAR)) {
+                throw new RuntimeException("IO ARGS DOLLAR VUOLE SOLO UN ID");
             }
+
+            return ((FunCall) exprOP).accept(this);
         }
 
         return null;

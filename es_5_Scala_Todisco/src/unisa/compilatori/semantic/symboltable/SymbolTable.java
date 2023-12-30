@@ -89,7 +89,7 @@ public class SymbolTable implements ISymbolTable {
      * @throws Exception
      */
     @Override
-    public void addEntry(SymbolTableRecord record) throws Exception {
+    public void addEntry(SymbolTableRecord record) throws RuntimeException {
 
         if(shadowing) {
             if(isRecordDeclared(record)) {

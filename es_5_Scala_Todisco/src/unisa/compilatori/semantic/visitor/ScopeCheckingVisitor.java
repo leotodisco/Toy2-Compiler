@@ -34,13 +34,9 @@ public class ScopeCheckingVisitor implements Visitor {
         program.setTable(table);
 
         program.getIterWithoutProcedure().accept(this);
-
         Procedure proc = program.getProc();
-
         CallableFieldType fieldTypeProc = new CallableFieldType();
-
         var fieldType = new CallableFieldType(proc.getProcParamDeclList());
-
         SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
         try {
             table.addEntry(recordProc);
@@ -77,7 +73,6 @@ public class ScopeCheckingVisitor implements Visitor {
                 CallableFieldType fieldType = new CallableFieldType();
 
                 fieldType.setParams(function.getParametersList());
-
                 SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType, returnTypeListToString(function.getReturnTypes()));
 
                 try {
@@ -95,7 +90,6 @@ public class ScopeCheckingVisitor implements Visitor {
             ArrayList<SymbolTableRecord> listaVar;
             for (VarDecl var : iterOP.getDeclarations()) {
                 listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
-
                 for ( SymbolTableRecord record: listaVar) {
                     try{
                         table.addEntry(record);
@@ -117,7 +111,6 @@ public class ScopeCheckingVisitor implements Visitor {
                 CallableFieldType fieldType = new CallableFieldType();
 
                 fieldType.setParams(function.getParametersList());
-
                 SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType,returnTypeListToString(function.getReturnTypes()));
 
                 try {
@@ -129,7 +122,6 @@ public class ScopeCheckingVisitor implements Visitor {
                 
             });
 
-        //su tutte le funzioni chiami accept
         }
 
         if(!iterOP.getDeclarations().isEmpty()) {
@@ -247,7 +239,7 @@ public class ScopeCheckingVisitor implements Visitor {
 };
 
     @Override
-    public Object visit(Function funzione) throws Exception {
+    public Object visit(Function funzione) {
         funzione.setTable(new SymbolTable());
         SymbolTable funzioneTable = funzione.getTable();
         funzioneTable.setFather(this.table);
@@ -300,7 +292,6 @@ public class ScopeCheckingVisitor implements Visitor {
         if(!ifStat.getElseIfOPList().isEmpty()) {
             for (ElseIfOP elseIfOP : ifStat.getElseIfOPList() ) {
                 //set up della symbol table
-
                 elseIfOP.setSymbolTableElseIF(new SymbolTable());
                 SymbolTable symbolTableElseIf = elseIfOP.getSymbolTableElseIF();
                 symbolTableElseIf.setScope("IF-ELIF");
@@ -421,13 +412,9 @@ public class ScopeCheckingVisitor implements Visitor {
         }
 
         if(procedure.getBody() != null) {
-            try {
-                enterScope(procedure.getTable()); //entro nello scope
-                procedure.getBody().accept(this);
-                exitScope(); //esce dallo scope
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            enterScope(procedure.getTable()); //entro nello scope
+            procedure.getBody().accept(this);
+            exitScope(); //esce dallo scope
         }
 
         return null;
@@ -507,22 +494,17 @@ public class ScopeCheckingVisitor implements Visitor {
             stat.accept(this);
         }
 
-        if(s.getTipo().equals(Stat.Mode.ASSIGN) ||
-                s.getTipo().equals(Stat.Mode.WRITE) ||
-                s.getTipo().equals(Stat.Mode.READ) ||
-                s.getTipo().equals(Stat.Mode.WRITE_RETURN) ||
-                s.getTipo().equals(Stat.Mode.RETURN)) {
-            if (s.getIdsList() !=null) {
+        if(s.getTipo().equals(Stat.Mode.ASSIGN)
+            || s.getTipo().equals(Stat.Mode.WRITE)
+            || s.getTipo().equals(Stat.Mode.READ)
+            || s.getTipo().equals(Stat.Mode.WRITE_RETURN)
+            || s.getTipo().equals(Stat.Mode.RETURN)) {
+
+            if (s.getIdsList() != null) {
                 s.getIdsList().forEach(id -> id.accept(this));
             }
 
-            s.getEspressioniList().forEach(exprOP -> {
-                try {
-                    exprOP.accept(this);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            s.getEspressioniList().forEach(exprOP -> {exprOP.accept(this);});
         }
 
 
@@ -530,46 +512,15 @@ public class ScopeCheckingVisitor implements Visitor {
     }
 
     @Override
-    public Object visit(Body body) {
-        //se il body ha una lista di dichiarazioni non vuota
-        //mettiamo nella symbol table le variabili
-        /*
-        if(body.getVarDeclList() != null) {
-            ArrayList<SymbolTableRecord> listaVar;
-            for (VarDecl var : body.getVarDeclList()) {
-                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
-                for ( SymbolTableRecord record: listaVar) {
-                    try{
-                    table.addEntry(record);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-        }
-
-
-        //per ogni statement si chiama la accept corretta
-        if(body.getStatList() != null) {
-            for(Stat s : body.getStatList()) {
-                s.accept(this);
-            }
-        }
-        */
+    public Object visit(Body body) throws RuntimeException {
         int a = 0;
-        for(int i=body.getChildCount()-1; i>=0; i--)
+        for(int i = body.getChildCount()-1; i>=0; i--)
         {
             var figlio = body.getChildAt(i);
-
             if(figlio instanceof VarDecl) {
                 var records = (ArrayList<SymbolTableRecord>) ((VarDecl) figlio).accept(this);
                 for ( SymbolTableRecord record: records) {
-                    try{
                         table.addEntry(record);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
                 }
             } else if (figlio instanceof Stat) {
                 ((Stat) figlio).accept(this);
