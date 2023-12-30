@@ -507,8 +507,15 @@ public class ScopeCheckingVisitor implements Visitor {
             stat.accept(this);
         }
 
-        if(s.getTipo().equals(Stat.Mode.ASSIGN)) {
-            s.getIdsList().forEach(id -> id.accept(this));
+        if(s.getTipo().equals(Stat.Mode.ASSIGN) ||
+                s.getTipo().equals(Stat.Mode.WRITE) ||
+                s.getTipo().equals(Stat.Mode.READ) ||
+                s.getTipo().equals(Stat.Mode.WRITE_RETURN) ||
+                s.getTipo().equals(Stat.Mode.RETURN)) {
+            if (s.getIdsList() !=null) {
+                s.getIdsList().forEach(id -> id.accept(this));
+            }
+
             s.getEspressioniList().forEach(exprOP -> {
                 try {
                     exprOP.accept(this);

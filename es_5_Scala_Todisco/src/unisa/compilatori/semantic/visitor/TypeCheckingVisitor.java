@@ -246,6 +246,8 @@ public class TypeCheckingVisitor implements Visitor {
         ArrayList<String> tipiDichiarati;
         ArrayList<String> tipiRestituiti = new ArrayList<>();
 
+
+
         //in tipi dichiarati ho delle stringhe con i tipi dei parametri dichiarati
         tipiDichiarati = funzione.getReturnTypes()
                 .stream()
@@ -282,6 +284,7 @@ public class TypeCheckingVisitor implements Visitor {
         //        .collect(Collectors.toCollection(ArrayList::new));
 
         //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
+        enterScope(funzione.getTable());
         for (Stat returnStat: returns) {
             ArrayList<String> tipiReturn = (ArrayList<String>) returnStat.accept(this);
             Iterator<String> itTipiReturn = tipiReturn.iterator();
@@ -297,8 +300,8 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         //controlli sul body della funzione
-        enterScope(funzione.getTable());
         funzione.getBody().accept(this);
+
         exitScope();
 
         return null;
@@ -781,7 +784,7 @@ public class TypeCheckingVisitor implements Visitor {
     public Object visit(IterOp iterOP) {
         iterOP.getProcedures().forEach(procedure -> procedure.accept(this));
         iterOP.getDeclarations().forEach(s->s.accept(this));
-            iterOP.getFunctions().forEach(s -> {
+        iterOP.getFunctions().forEach(s -> {
                 try {
                     s.accept(this);
                 } catch (Exception e) {
