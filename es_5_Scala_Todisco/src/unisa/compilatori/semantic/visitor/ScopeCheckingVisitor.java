@@ -6,8 +6,10 @@ import unisa.compilatori.nodes.stat.*;
 import unisa.compilatori.semantic.symboltable.*;
 import unisa.compilatori.utils.Exceptions;
 
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -182,7 +184,11 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(UnaryOP operazioneUnaria) {
-        operazioneUnaria.accept(this);
+        try {
+            operazioneUnaria.getExpr().accept(this);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return null;
     }
 
@@ -347,6 +353,14 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(ProcCall procCall) {
+        procCall.getExprs().forEach(exprOP -> {
+            try {
+                exprOP.accept(this);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
         return null;
     }
 
@@ -444,6 +458,13 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(FunCall funCall) {
+        funCall.getExprs().forEach(exprOP -> {
+            try {
+                exprOP.accept(this);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
         return null;
     }
 
@@ -486,6 +507,18 @@ public class ScopeCheckingVisitor implements Visitor {
             stat.accept(this);
         }
 
+        if(s.getTipo().equals(Stat.Mode.ASSIGN)) {
+            s.getIdsList().forEach(id -> id.accept(this));
+            s.getEspressioniList().forEach(exprOP -> {
+                try {
+                    exprOP.accept(this);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+
         return null;
     }
 
@@ -493,6 +526,7 @@ public class ScopeCheckingVisitor implements Visitor {
     public Object visit(Body body) {
         //se il body ha una lista di dichiarazioni non vuota
         //mettiamo nella symbol table le variabili
+        /*
         if(body.getVarDeclList() != null) {
             ArrayList<SymbolTableRecord> listaVar;
             for (VarDecl var : body.getVarDeclList()) {
@@ -515,14 +549,33 @@ public class ScopeCheckingVisitor implements Visitor {
                 s.accept(this);
             }
         }
-        
+        */
+        int a = 0;
+        for(int i=body.getChildCount()-1; i>=0; i--)
+        {
+            var figlio = body.getChildAt(i);
+
+            if(figlio instanceof VarDecl) {
+                var records = (ArrayList<SymbolTableRecord>) ((VarDecl) figlio).accept(this);
+                for ( SymbolTableRecord record: records) {
+                    try{
+                        table.addEntry(record);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else if (figlio instanceof Stat) {
+                ((Stat) figlio).accept(this);
+            }
+        }
+
         return null;
     }
 
     @Override
     public Object visit(Identifier id) {
         if(table.lookup(id.getLessema()).isEmpty()){
-            //TODO CUSTOM EXCEPTION
+            throw  new RuntimeException("id non dichairato");
         }
         return null;
     }
