@@ -33,7 +33,8 @@ public class TypeCheckingVisitor implements Visitor {
      * @param op
      * @return
      */
-    private String evaluateType(String type1, String type2, String op) throws Exception {        switch (op){
+    private String evaluateType(String type1, String type2, String op) throws Exception {
+        switch (op){
             case "plus_op", "times_op", "div_op", "minus_op":
                 if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
                     return "integer";
@@ -128,7 +129,7 @@ public class TypeCheckingVisitor implements Visitor {
 
         //controllo che ci sia uno e un solo main
         try {
-            SymbolTableRecord main = currentScope.lookup("main").orElseThrow(() -> new Exception("main non trovato"));
+            SymbolTableRecord main = currentScope.lookup("main").orElseThrow(Exceptions.LackOfMain::new);
             // controllo che sia una procedura e non una funzione
             if ( main.getNodo() instanceof Function) {
                 throw new Exception("Il main è una funzione");
@@ -362,7 +363,7 @@ public class TypeCheckingVisitor implements Visitor {
                     }
                     if(!tipoId.equalsIgnoreCase(tipoEspressione)){
                         try {
-                            throw new Exception("type mismatch: "+ actualId.getLessema() + " ha tipo " + tipoId + " ma gli stai assegnando il tipo: "  + tipoEspressione); //TODO CUSTOM EXCEPTION
+                            throw new Exceptions.TypesMismatch(actualId.getLessema(), tipoId, tipoEspressione);
                         } catch (Exception e){
                             System.out.println("tipo id = " + tipoId + "tipo espressione = " + tipoEspressione);
                             e.printStackTrace();
@@ -448,8 +449,12 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         if (!tipoExpr.equalsIgnoreCase("boolean")) {
-            //TODO ECCEZZIONE;
-            throw new RuntimeException("tipo condizione non valido");
+            try {
+                throw new Exceptions.InvalidCondition(tipoExpr);
+            } catch(Exception e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
         }
 
         //Controllo nel body di if stat
@@ -498,7 +503,12 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         if (!tipoExpr.equalsIgnoreCase("boolean"))
-            throw new RuntimeException("condizione nell'expr dell'else if errata");//TODO ECCEZIONE CUSTOM
+            try {
+                throw new Exceptions.InvalidCondition(tipoExpr);
+            } catch(Exception e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
 
         enterScope(elseIfOP.getSymbolTableElseIF());
         elseIfOP.getBody().accept(this);
@@ -553,7 +563,7 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         if (!hannoStessoNumeroDiParametri(parametriDichiarati, parametriUtilizzati)) {
-            throw new Exception("il numero di parametri in procedura non matcha");
+            throw new Exception("il numero di parametri in procedura non matcha"); //TODO custom exception
         }
 
         //Adesso scorriamo sia la lista dei parametri utilizzati che quelli dichiarati e confrontiamo tipo per tipo
@@ -592,9 +602,7 @@ public class TypeCheckingVisitor implements Visitor {
 
 
                     if(!tipoParametroUtilizzato.equals(tipoParametroDichiarato)) {
-                        throw new Exception("type mismatch nella procedura: " + procCall.getIdentifier().getLessema() +
-                                " è stato dichiarato con tipo: " + tipoParametroDichiarato +
-                                "ma lo usi con tipo: " + tipoParametroUtilizzato);
+                        throw new Exceptions.TypesMismatch(procCall.getIdentifier().getLessema(), tipoParametroDichiarato, tipoParametroUtilizzato);
                     }
 
                     //CONTROLLO SULLA KEYWORD OUT
@@ -643,8 +651,12 @@ public class TypeCheckingVisitor implements Visitor {
         String condition = (String) whileStat.getExpr().accept(this);
 
         if( !condition.equalsIgnoreCase("boolean")){
-            //TODO ECCEZIONE
-            throw new Exception("Errore, tipo della condizione in while stat non corretto");
+            try {
+                throw new Exceptions.InvalidCondition(condition);
+            } catch(Exception e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
         }
 
         enterScope(whileStat.getTable());
@@ -661,7 +673,7 @@ public class TypeCheckingVisitor implements Visitor {
             body.getVarDeclList().forEach(var -> var.accept(this));
         }
 
-        //se il body ha degli statement, controllali
+        //se il body ha degli statement, controllalit
         if(body.getStatList()!=null) {
             body.getStatList().forEach(stat -> stat.accept(this));
         }
@@ -714,8 +726,6 @@ public class TypeCheckingVisitor implements Visitor {
             while(iteratoreConsts.hasNext() && iteratoreIds.hasNext()) {
                 var costanteAttuale = iteratoreConsts.next();
                 var idAttuale = iteratoreIds.next();
-
-                int lunghezza1 = costanteAttuale.getType().toString().length();
 
                 var tipoId = (String) idAttuale.accept(this);
                 var tipoCostante = costanteAttuale.getType().toString();
@@ -805,7 +815,7 @@ public class TypeCheckingVisitor implements Visitor {
         //controlliamo che la procedura non abbia dei returns
         if(!listaReturnStatementProcedura.isEmpty()) {
             try {
-                throw new Exception("LA PROCEDURA NON DEVE AVERE RETURNS");
+                throw new Exceptions.SemanticError();
             } catch (Exception e) {
                 e.printStackTrace();
             }

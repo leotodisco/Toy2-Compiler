@@ -20,4 +20,32 @@ public class Exceptions {
     }
 
 
+    public static class TypesMismatch extends Exception {
+        public TypesMismatch(String id, String tipo1, String tipo2) {
+            super("Type Mismatch per id: " + id + "\nL'hai dichiarato con tipo " + tipo1 +" ma gli assegni " + tipo2);
+        }
+    }
+
+    public static class InvalidOperation extends Exception {
+        public InvalidOperation(String op, String tipo1, String tipo2) {
+            super("Operazione binaria " + op +   " non consentita tra il tipo : " + tipo1 + "e il tipo : " + tipo2);
+        }
+
+        public InvalidOperation(String op, String tipo) {
+            super("Operazione unaria " + op + " non consentita con il tipo : " + tipo);
+        }
+    }
+
+    public static class InvalidCondition extends Exception {
+        public InvalidCondition(String tipoCondizione) {
+            super("Condizione non valida, tipo previsto: Boolean, tipo ottenuto: " + tipoCondizione);
+        }
+    }
+
+    public static class SemanticError extends Exception {
+        public SemanticError() {
+            super("Errore semantico: hai dichiarato una procedura con un return");
+        }
+    }
+
 }
