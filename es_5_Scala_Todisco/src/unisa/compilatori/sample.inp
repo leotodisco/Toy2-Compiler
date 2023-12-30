@@ -18,8 +18,8 @@ proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
 
 	if result > 100 then
 		var valore ^= "grande";\
- 		size ^= valore; 
-	elseif result > 50 then 	
+ 		size ^= valore;
+	elseif result > 50 then
 		var valore ^= "media";\
  		size ^= valore;
 
@@ -32,9 +32,10 @@ endproc
 
 
 
+
 % programma principale %
 proc main():
-      var    
+      var
 	a, b ^= 1, 2.2; x ^= 3;
 	taglia, ans1 : string;
 	ans ^= "no";

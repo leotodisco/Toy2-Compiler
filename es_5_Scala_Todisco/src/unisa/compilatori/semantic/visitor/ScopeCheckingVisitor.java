@@ -90,10 +90,6 @@ public class ScopeCheckingVisitor implements Visitor {
 
         if(!iterOP.getDeclarations().isEmpty()) {
             //per ogni decl dobbiamo chiamare accept e addentry
-            /*iterOP.getDeclarations()
-                    .stream()
-                    .forEach(varDecl -> varDecl.accept(this));
-*/
             ArrayList<SymbolTableRecord> listaVar;
             for (VarDecl var : iterOP.getDeclarations()) {
                 listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
@@ -105,34 +101,12 @@ public class ScopeCheckingVisitor implements Visitor {
                         e.printStackTrace();
                     }
                 }
-
             }
-
-            /*for(VarDecl varDecl : iterOP.getDeclarations()) {
-                for(Decl decl : varDecl.getDecls()) {
-                    VarFieldType varFieldType = new VarFieldType(decl.getTipo().getTipo());
-                    //per ogni id fai un record, poi aggiungi tutti i record alla tabella
-                    decl.getIds()
-                            .stream()
-                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, ""))
-                            .forEach(record -> {
-                                try {
-                                    //System.out.println("\n\n\nRECORD IN ITER \n\n");
-                                    table.addEntry(record);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            });
-
-                }
-            }
-*/
         }
 
         return null;
     }
 
-    //TODO controllare le dichiarazioni
     @Override
     public Object visit(IterOp iterOP) {
         if(!iterOP.getFunctions().isEmpty()) {
@@ -158,29 +132,16 @@ public class ScopeCheckingVisitor implements Visitor {
 
         if(!iterOP.getDeclarations().isEmpty()) {
             //per ogni decl dobbiamo chiamare accept e addentry
-            iterOP.getDeclarations()
-                    .stream()
-                    .forEach(varDecl -> varDecl.accept(this));
+            ArrayList<SymbolTableRecord> listaVar;
+            for (VarDecl var : iterOP.getDeclarations()) {
+                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
 
-            for(VarDecl varDecl : iterOP.getDeclarations()) {
-                for(Decl decl : varDecl.getDecls()) {
-                   VarFieldType varFieldType = new VarFieldType(decl.getTipo().getTipo());
-                   //per ogni id fai un record, poi aggiungi tutti i record alla tabella
-                    decl.getIds()
-                            .stream()
-                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, ""))
-                            .forEach(record -> {
-                                try {
-                                    //System.out.println("\n\n\nRECORD IN ITER \n\n");
-                                    table.addEntry(record);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            });
-
-                   //per ogni costante devo fare un record, poi aggiungi tutti i record alla tabella
-
-
+                for ( SymbolTableRecord record: listaVar) {
+                    try{
+                        table.addEntry(record);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

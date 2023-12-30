@@ -1,6 +1,5 @@
 package unisa.compilatori.semantic.visitor;
 
-import unisa.compilatori.Token;
 import unisa.compilatori.nodes.*;
 import unisa.compilatori.nodes.expr.*;
 import unisa.compilatori.nodes.stat.*;
@@ -10,9 +9,9 @@ import unisa.compilatori.semantic.symboltable.SymbolTableRecord;
 import unisa.compilatori.semantic.symboltable.VarFieldType;
 import unisa.compilatori.utils.Exceptions;
 
-import java.lang.reflect.Array;
+
 import java.util.*;
-import java.util.function.BiConsumer;
+
 import java.util.stream.Collectors;
 public class TypeCheckingVisitor implements Visitor {
 
@@ -209,6 +208,37 @@ public class TypeCheckingVisitor implements Visitor {
             vars.accept(this);
         }
         return null;
+    }
+
+    /**
+     * In questo metodo ricorsivo si ottengono tutti i return di un body.
+     * @param body indica il body da esaminare
+     * @param listaReturn tail-recursion, il metodo viene invocato con questa lista vuota
+     *                   e al termine avrà tutti gli statement di tipo return
+     * @return void perchè usiamo la tail recursion
+     */
+    private void getAllFunctionReturns(Body body, ArrayList<Stat> listaReturn) {
+        if(body==null || body.getStatList().isEmpty()) {
+            return;
+        }
+        else{
+            ArrayList<Stat> listaStatements = body.getStatList();
+            for(Stat statement : listaStatements) {
+                if(statement instanceof WhileStat) {
+                    getAllFunctionReturns(((WhileStat) statement).getBody(), listaReturn);
+                }
+                else if(statement instanceof IfStat) {
+                    IfStat ifStat = (IfStat) statement;
+                    getAllFunctionReturns((ifStat).getBody(), listaReturn);
+                    getAllFunctionReturns(ifStat.getElseOP().getBody(), listaReturn);
+                    ifStat.getElseIfOPList().forEach(elseIfOP -> getAllFunctionReturns(elseIfOP.getBody(), listaReturn));
+                }
+                else if (statement.getTipo().equals(Stat.Mode.RETURN)){
+                    listaReturn.add(statement);
+                }
+
+            }
+        }
     }
 
     @Override
@@ -449,7 +479,6 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(ElseOP elseOP) {
-
         //entro nello scope dell'else op
         enterScope(elseOP.getSymbolTableElseOp());
         //controllo il body dell'else
@@ -483,7 +512,6 @@ public class TypeCheckingVisitor implements Visitor {
     private Boolean hannoStessoNumeroDiParametri(ArrayList<CallableParam> parametriDichiarati, ArrayList<Object> parametriUtilizzati) {
         int countParametriDichiarati = parametriDichiarati.size();
         int countParmetriUtilizzati =  0;
-
         for (Object param: parametriUtilizzati) {
             if(param instanceof ArrayList<?>){
                 var lista = (ArrayList<String>) param;
@@ -492,8 +520,6 @@ public class TypeCheckingVisitor implements Visitor {
                 countParmetriUtilizzati++;
             }
         }
-    
-    
         return countParametriDichiarati==countParmetriUtilizzati;
     }
     
@@ -631,7 +657,6 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(Body body) {
-
         //se il body ha delle dichiarazioni di variabili, controllale
         if(body.getVarDeclList()!=null) {
             body.getVarDeclList().forEach(var -> var.accept(this));
@@ -746,7 +771,6 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(IterOp iterOP) {
         iterOP.getProcedures().forEach(procedure -> procedure.accept(this));
-
         iterOP.getDeclarations().forEach(s->s.accept(this));
             iterOP.getFunctions().forEach(s -> {
                 try {
@@ -761,7 +785,6 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(IterWithoutProcedure iterOP) {
-
         iterOP.getDeclarations().forEach(s->s.accept(this));
         iterOP.getFunctions().forEach(s -> {
             try {
@@ -774,9 +797,20 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
-    //TODO fare che non ci devono essere return in una procedura
+
     @Override
     public Object visit(Procedure procedure) {
+        ArrayList<Stat> listaReturnStatementProcedura =  new ArrayList<>();
+        getAllFunctionReturns(procedure.getBody(), listaReturnStatementProcedura);
+
+        //controlliamo che la procedura non abbia dei returns
+        if(!listaReturnStatementProcedura.isEmpty()) {
+            try {
+                throw new Exception("LA PROCEDURA NON DEVE AVERE RETURNS");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         //entro nello scope di procedure
         enterScope(procedure.getTable());
@@ -795,11 +829,8 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(ConstOP constOP) {
-
-        int len = "_CONST".length();
         var typeAsString = constOP.getType().toString();
         //Prendo solo la parte che mi interessa di type ossia quella senza "_CONST"
-
         return typeAsString;
     }
 
