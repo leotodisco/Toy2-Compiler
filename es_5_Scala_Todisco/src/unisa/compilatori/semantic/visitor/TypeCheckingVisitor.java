@@ -837,6 +837,9 @@ public class TypeCheckingVisitor implements Visitor {
             }
         }
         var tipiDiRitorno = new ArrayList<>(Arrays.asList(record.getProperties().split(";")));
+
+
+
         return tipiDiRitorno;
     }
 
