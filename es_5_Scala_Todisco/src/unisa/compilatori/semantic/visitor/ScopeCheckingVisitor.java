@@ -221,6 +221,11 @@ public class ScopeCheckingVisitor implements Visitor {
                 var substring = costante.getType().toString();
                 listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(substring), costante.getLessema()));
             }
+
+            //*[[Nell’inizializzazione il numero delle costanti deve essere pari al numero degli id]]*
+            if(itConst.hasNext() || itIds.hasNext()) {
+                throw new RuntimeException("Errore"); //TODO ECCEZIONE
+            }
         // se il tipo di dichiarazione è del tipo var a : string;\
         } else {
             itIds = decl.getIds().iterator();
