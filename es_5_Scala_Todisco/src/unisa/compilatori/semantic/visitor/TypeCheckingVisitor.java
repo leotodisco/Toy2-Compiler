@@ -108,16 +108,15 @@ public class TypeCheckingVisitor implements Visitor {
                     return "REAL";
                 }
                 else
-                    throw new Exception("TIPO NON COMPATIBILE"); //TODO CUSTOM EXCEPTION
+                    throw new Exceptions.InvalidOperation(op, type1);
             case "NOT":
                 if(type1.equals("BOOLEAN")) {
                     return "BOOLEAN";
                 }
                 else
-                    throw new Exception("TIPO NON COMPATIBILE"); //TODO CUSTOM EXCEPTION
-
+                    throw new Exceptions.InvalidOperation(op, type1);
             default:
-                throw new Exception("ERRORE COI TIPI"); //TODO custom exception
+                throw new Exception("ERRORE COI TIPI");
         }
     }
 
