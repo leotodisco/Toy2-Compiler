@@ -6,6 +6,118 @@ func stampac(messaggio: string)-> integer:
    return 2;
 endfunc
 
+% stampa il messaggio dopo 4 ritorni a capo %
+func stampaccc(messaggio: string)-> string, integer:
+    var i ^= 0;\
+    var result ^= 10;\
+    var size : string;\
+    while i < 4 do
+        if result > 100 then
+        		var valore ^= "grande";\
+         		size ^= valore;
+         		return "ciao", 6;
+        	elseif result > 50 then
+        		var valore ^= "media";\
+         		size ^= valore;
+         		return "ciao", 6;
+        	else
+        		var valore ^= "piccola";\
+         		size ^= valore;
+         		return "ciao", 6;
+        	endif;
+        return "pippo", 14;
+    endwhile;
+
+
+    return "ok", 12;
+
+endfunc
+
+proc stampacc(messaggio: string):
+    var i ^= 0;\
+    while i < 4 do
+	-->! ;
+    endwhile;
+
+
+endproc
+
+
+proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
+    var c ^= 1;\
+	result  ^=  a + b + d;
+
+
+    var provastring^="pippo";\
+    stampacc(provastring);
+
+
+	if result > 100 then
+        var valore: string;\
+		valore ^= "grande";
+
+ 		size ^= valore;
+	elseif result > 50 then
+        var valore: string;\
+		valore ^= "media";
+ 		size ^= valore;
+	else
+	var valore: string;\
+		valore ^= "piccola";
+ 		size ^= valore;
+
+	endif;
+
+endproc
+
+
+
+
+% programma principale %
+proc main():
+    var
+                	a, b ^= 1, 2.2; x ^= 3;
+                	taglia, ans1 : string;
+                	ans ^= "no";
+                	risultato ^= 0.5;\
+
+	risultato ^= -0.2;
+
+	sommac(a, x, b, @taglia, @risultato);
+
+	var valore ^= "nok";\
+
+	ans ^= stampa("la somma di " + a +  " incrementata di "  +  " è " + taglia);
+	ans ^= stampa("ed è pari a ");
+
+	<-- "vuoi continuare? (si/no) - inserisci due volte la risposta" $(ans) $(ans1) ;
+	while ans = "si" do
+	    <-- "inserisci un intero:" $(b);
+	    <-- "inserisci un reale:" $(b);
+	    sommac(a, 2, 2.2, @taglia, @risultato);
+	    ans ^= stampa("la somma di " + a + " e " +  " incrementata di " + " è " + taglia);
+	    ans ^= stampa(" ed è pari a ");
+	    <-- "vuoi continuare? (si/no):\t" $(ans);
+        endwhile;
+
+        -->! ;
+        --> "ciao";
+
+endproc
+
+
+
+% stampa il messaggio dopo 4 ritorni a capo %
+func stampa(messaggio: string)-> string:
+    var i ^= 0;\
+    while i < 4 do
+	    return "12";
+    endwhile;
+
+     --> $(messaggio);
+    return "ok";
+endfunc
+
 
 
 proc main():

@@ -237,7 +237,10 @@ public class TypeCheckingVisitor implements Visitor {
         //controllo che ogni statement assign non utilizzi un parametro immutable
         for (Stat stat : statsAssign) {
             for(Identifier id : stat.getIdsList()) {
-                modificatoMutable = statAssign.stream().filter( idParamFunzione -> id.equals(idParamFunzione)).findAny().isEmpty();
+                modificatoMutable = callableParams
+                        .stream()
+                        .anyMatch(param -> param.getLessema()
+                                .equals(id.getLessema()));
             }
         }
 
