@@ -177,7 +177,7 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(UnaryOP operazioneUnaria) {
         String tipoExpr1 = (String) operazioneUnaria.getExpr().accept(this);
-        String expName = operazioneUnaria.getSimbolo();//TODO accertarsi che UMINUS funziona altrimenti metti MINUS
+        String expName = operazioneUnaria.getSimbolo();
         String risultato = "";
         risultato = evaluateType(tipoExpr1, expName);
 
@@ -200,7 +200,7 @@ public class TypeCheckingVisitor implements Visitor {
      *                   e al termine avrà tutti gli statement di tipo return
      * @return void perchè usiamo la tail recursion
      */
-    private void getAllFunctionReturns(Body body, ArrayList<Stat> listaReturn) {
+    private void getAllFunctionReturns(Body body, HashMap<Stat, SymbolTable> listaReturn) {
         if(body==null || body.getStatList().isEmpty()) {
             return;
         }
@@ -224,17 +224,46 @@ public class TypeCheckingVisitor implements Visitor {
             ArrayList<Stat> listaStatements = body.getStatList();
             for(Stat statement : listaStatements) {
                 if(statement instanceof WhileStat) {
-                    getAllFunctionReturns(((WhileStat) statement).getBody(), listaReturn);
+                    WhileStat whileStat = (WhileStat) statement;
+
+                    enterScope(whileStat.getTable());
+
+                    getAllFunctionReturns(whileStat.getBody(), listaReturn);
+
+                    exitScope();
                 }
                 else if(statement instanceof IfStat) {
                     IfStat ifStat = (IfStat) statement;
+
+                    enterScope(ifStat.getSymbolTableThen());
+
                     getAllFunctionReturns((ifStat).getBody(), listaReturn);
-                    ifStat.getElseIfOPList().forEach(elseIfOP -> getAllFunctionReturns(elseIfOP.getBody(), listaReturn));
-                    getAllFunctionReturns(ifStat.getElseOP().getBody(), listaReturn);
+
+                    exitScope();
+
+                    if(!ifStat.getElseIfOPList().isEmpty()) {
+                        ifStat.getElseIfOPList().forEach(elseIfOP -> {
+                            enterScope(elseIfOP.getSymbolTableElseIF());
+
+                            getAllFunctionReturns(elseIfOP.getBody(), listaReturn);
+
+                            exitScope();
+                        });
+                    }
+
+                    if(ifStat.getElseOP()!=null) {
+                        enterScope(ifStat.getElseOP().getSymbolTableElseOp());
+
+                        getAllFunctionReturns(ifStat.getElseOP().getBody(), listaReturn);
+
+                        exitScope();
+                    }
+
+
 
                 }
                 else if (statement.getTipo().equals(Stat.Mode.RETURN)){
-                    listaReturn.add(statement);
+                    listaReturn.put(statement, this.currentScope);
                 }
 
             }
@@ -294,9 +323,13 @@ public class TypeCheckingVisitor implements Visitor {
      * @return false se il body ha almeno un return
      */
     private Boolean checkNoReturn(Function funz) {
-        var listaReturns = new ArrayList<Stat>(); // è la lista che ottengo da getALLFunctionsReturns
+        var listaReturns = new HashMap<Stat, SymbolTable>(); // è la lista che ottengo da getALLFunctionsReturns
+
+        enterScope(funz.getTable());
 
         getAllFunctionReturns(funz.getBody(), listaReturns);
+
+        exitScope();
 
         return listaReturns.isEmpty();
 
@@ -332,30 +365,48 @@ public class TypeCheckingVisitor implements Visitor {
         if(checkNoReturn(funzione))
             throw new Exceptions.NoReturnError(funzione.getId().getLessema());
 
-        ArrayList<Stat> returns = new ArrayList<>();
+        var returns = new HashMap<Stat, SymbolTable>();
+
+        enterScope(funzione.getTable());
+
         getAllFunctionReturns(funzione.getBody(), returns);
+
+        exitScope();
 
         //Controlla che i parametri sono usati in modo legale nella funzione
         if(controlloSugliAssign(funzione.getBody().getStatList(), funzione.getParametersList())) {
             throw new RuntimeException("I parametri di una funzione sono immutabili");
         }
 
-        enterScope(funzione.getTable());
+
         //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
-        for (Stat returnStat: returns) {
+        for (Stat returnStat: returns.keySet()) {
+
+            enterScope(returns.get(returnStat));
+
             ArrayList<String> tipiReturn = (ArrayList<String>) returnStat.accept(this);
+
+            exitScope();
+
             Iterator<String> itTipiReturn = tipiReturn.iterator();
             Iterator<String> itTipiDichiarati = tipiDichiarati.iterator();
 
             while(itTipiDichiarati.hasNext() && itTipiReturn.hasNext()) {
                 if(!itTipiReturn.next().equalsIgnoreCase(itTipiDichiarati.next())) {
                     throw new RuntimeException("I tipi dei parametri usati nel return non matchano con quelli usati nella funzione,\n" +
-                            " tipi nel return" + tipiReturn + " lessema = " +
+                            " tipi nel return" + tipiReturn +
                             " tipi nella dichiarazione" + tipiDichiarati);
                 }
             }
+
+            if(itTipiDichiarati.hasNext() || itTipiReturn.hasNext()) {
+                throw new RuntimeException("I tipi dei parametri usati nel return non matchano con quelli usati nella funzione,\n" +
+                        " tipi nel return " + tipiReturn +
+                        " tipi nella dichiarazione" + tipiDichiarati);
+            }
         }
 
+        enterScope(funzione.getTable());
         //controlli sul body della funzione
         funzione.getBody().accept(this);
 
@@ -432,6 +483,7 @@ public class TypeCheckingVisitor implements Visitor {
         if(statement.getTipo().equals(Stat.Mode.RETURN)) {
             //devo controllare che il tipi di ritorno della funzione matchano con i tipi effettivamente restituiti
             ArrayList<String> tipiDiRitorno = new ArrayList<>();
+
             statement.getEspressioniList().forEach(exprOP -> {
                     Object resultAccept = exprOP.accept(this);
                     if( resultAccept instanceof ArrayList<?>){
@@ -789,7 +841,7 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(Procedure procedure) throws RuntimeException{
-        ArrayList<Stat> listaReturnStatementProcedura =  new ArrayList<>();
+        var listaReturnStatementProcedura =  new HashMap<Stat, SymbolTable>();
         getAllFunctionReturns(procedure.getBody(), listaReturnStatementProcedura);
 
         //controlliamo che la procedura non abbia dei returns
