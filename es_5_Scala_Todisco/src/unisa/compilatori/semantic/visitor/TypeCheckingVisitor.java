@@ -36,7 +36,7 @@ public class TypeCheckingVisitor implements Visitor {
      */
     private String evaluateType(String type1, String type2, String op){
         switch (op){
-            case "plus_op", "times_op", "div_op", "minus_op":
+            case "plus_op", "times_op", "minus_op":
                 if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
                     return "integer";
                 else if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("REAL"))
@@ -59,9 +59,9 @@ public class TypeCheckingVisitor implements Visitor {
                     throw new RuntimeException("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
                 }
 
-            case "OR", "AND":
+            case "or_op", "and_op":
                 if(type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("BOOLEAN"))
-                    return new String("bool");
+                    return new String("boolean");
                 else
                     throw new RuntimeException("errore");
 
@@ -71,6 +71,20 @@ public class TypeCheckingVisitor implements Visitor {
                 }
                 else
                     throw new RuntimeException("errore");
+
+            case "div_op":
+                if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
+                    return "real";
+                else if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("REAL"))
+                    return new String("REAL");
+                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("INTEGER"))
+                    return new String("REAL");
+                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
+                    return new String("REAL");
+                else {
+                    throw new RuntimeException("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
+                }
+
 
             case "gt_op", "ge_op", "lt_op", "le_op":
                 if(type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
@@ -190,6 +204,23 @@ public class TypeCheckingVisitor implements Visitor {
         if(body==null || body.getStatList().isEmpty()) {
             return;
         }
+
+        //TODO trovato bug che se hai solo un if nella funzione
+        // con un return e non metti un return al termine della funzione non ti dà errore
+        /*
+        PER LUI QUESTO VA BENE:
+
+            var risultato:integer;\
+            risultato ^= a+b;
+
+            if (risultato > 20) && (risultato < 40) then
+
+                return risultato;
+            endif;
+
+        endfunc
+         */
+
         else{
             ArrayList<Stat> listaStatements = body.getStatList();
             for(Stat statement : listaStatements) {
@@ -209,6 +240,7 @@ public class TypeCheckingVisitor implements Visitor {
             }
         }
     }
+
 
     /**
      * Questo metodo ci dice se i parametri di una funzione sono stati usati in modo illegale, ossia se vengono cambiati.
@@ -257,16 +289,18 @@ public class TypeCheckingVisitor implements Visitor {
 
     /**
      * Metodo che ci dice se il body non ha almeno un return.
-     * @param body
+     * @param funz
      * @return true se il body non ha return
      * @return false se il body ha almeno un return
      */
-    private Boolean checkNoReturn(Body body) {
-        return body.getStatList()
-                .stream()
-                .filter(stat -> stat.getTipo().equals(Stat.Mode.RETURN))
-                .findFirst()
-                .isEmpty();
+    private Boolean checkNoReturn(Function funz) {
+        var listaReturns = new ArrayList<Stat>(); // è la lista che ottengo da getALLFunctionsReturns
+
+        getAllFunctionReturns(funz.getBody(), listaReturns);
+
+        return listaReturns.isEmpty();
+
+        //return result;
     }
 
     /**
@@ -295,7 +329,7 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         //CONTROLLA CHE CI SIA ALMENO UN RETURN
-        if(checkNoReturn(funzione.getBody()))
+        if(checkNoReturn(funzione))
             throw new Exceptions.NoReturnError(funzione.getId().getLessema());
 
         ArrayList<Stat> returns = new ArrayList<>();
@@ -306,15 +340,15 @@ public class TypeCheckingVisitor implements Visitor {
             throw new RuntimeException("I parametri di una funzione sono immutabili");
         }
 
-        //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
         enterScope(funzione.getTable());
+        //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
         for (Stat returnStat: returns) {
             ArrayList<String> tipiReturn = (ArrayList<String>) returnStat.accept(this);
             Iterator<String> itTipiReturn = tipiReturn.iterator();
             Iterator<String> itTipiDichiarati = tipiDichiarati.iterator();
 
             while(itTipiDichiarati.hasNext() && itTipiReturn.hasNext()) {
-                if(!itTipiReturn.next().equals(itTipiDichiarati.next())) {
+                if(!itTipiReturn.next().equalsIgnoreCase(itTipiDichiarati.next())) {
                     throw new RuntimeException("I tipi dei parametri usati nel return non matchano con quelli usati nella funzione,\n" +
                             " tipi nel return" + tipiReturn + " lessema = " +
                             " tipi nella dichiarazione" + tipiDichiarati);
@@ -353,17 +387,7 @@ public class TypeCheckingVisitor implements Visitor {
                     .collect(Collectors.toCollection(ArrayList<String>::new));
 
 
-            ArrayList<String> rightSide = new ArrayList<>();
-            statement.getEspressioniList().forEach(exprOP -> {
-                Object resultAccept = exprOP.accept(this);
-
-
-                if(resultAccept instanceof ArrayList<?>){
-                    ((ArrayList<String>) resultAccept).forEach(tipo -> rightSide.add(tipo));
-                } else {
-                    rightSide.add((String)resultAccept);
-                }
-            });
+            ArrayList<String> rightSide = getStringArrayList(statement);
 
             Iterator<String> itLeftSide = leftSide.iterator();
             Iterator<String> itRightSide = rightSide.iterator();
@@ -372,7 +396,7 @@ public class TypeCheckingVisitor implements Visitor {
                 String tipoLeftSide = itLeftSide.next();
                 String tipoRightSide = itRightSide.next();
 
-                if(!tipoRightSide.equals(tipoLeftSide)) {
+                if(!tipoRightSide.equalsIgnoreCase(tipoLeftSide)) {
                     throw new Exceptions.TypesMismatch(tipoLeftSide,tipoRightSide);
                 }
             }
@@ -434,6 +458,20 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
+    private ArrayList<String> getStringArrayList(Stat statement) {
+        ArrayList<String> rightSide = new ArrayList<>();
+        statement.getEspressioniList().forEach(exprOP -> {
+            Object resultAccept = exprOP.accept(this);
+
+            if(resultAccept instanceof ArrayList<?>){
+                ((ArrayList<String>) resultAccept).forEach(tipo -> rightSide.add(tipo));
+            } else {
+                rightSide.add((String)resultAccept);
+            }
+        });
+        return rightSide;
+    }
+
     @Override
     public Object visit(IfStat ifStat) throws RuntimeException{
         String tipoExpr = "";
@@ -446,6 +484,7 @@ public class TypeCheckingVisitor implements Visitor {
         //Controllo nel body di if stat
         //entro nello scope del body di ifstat
         enterScope(ifStat.getSymbolTableThen());
+
         ifStat.getBody().accept(this);
         //esco dallo scope del body di ifStat
         exitScope();

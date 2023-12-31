@@ -57,7 +57,7 @@ UnclosedComment = \%([^\"\\]|\\.)*\%
 ClosedComment = \%([^\"\\]|\\.)*\%
 InputCharacter = [^\r\n]
 WhiteSpace = {LineTerminator} | [ \t\f]
-Identifier = [A-Za-z][A-Za-z0-9]*
+Identifier = [A-Za-z_][A-Za-z0-9_]*
 
 %state BLK_COMMENT
 %state STRING_STATE

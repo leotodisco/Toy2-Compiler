@@ -479,7 +479,7 @@ public class ScopeCheckingVisitor implements Visitor {
     @Override
     public Object visit(Identifier id) {
         if(table.lookup(id.getLessema()).isEmpty()){
-            throw  new RuntimeException("id non dichairato");
+            throw  new RuntimeException("id non dichairato " + id.getLessema());
         }
         return null;
     }
