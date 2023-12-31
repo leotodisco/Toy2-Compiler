@@ -270,6 +270,34 @@ public class TypeCheckingVisitor implements Visitor {
         }
     }
 
+    public void getAllAssignStatement(ArrayList<Stat> statements, ArrayList<Stat> assignStatements) {
+        if(statements == null ||statements.isEmpty()) {
+            return;
+        }
+
+        for (Stat stat : statements) {
+            if( stat instanceof WhileStat) {
+                WhileStat whileStat = (WhileStat) stat;
+                getAllAssignStatement(whileStat.getBody().getStatList(), assignStatements);
+            }
+            if( stat instanceof IfStat) {
+                IfStat IfStat = (IfStat) stat;
+                getAllAssignStatement(IfStat.getBody().getStatList(), assignStatements);
+
+                if(IfStat.getElseOP() != null) {
+                    getAllAssignStatement(IfStat.getElseOP().getBody().getStatList(), assignStatements);
+                }
+
+                for( ElseIfOP elseif : IfStat.getElseIfOPList()) {
+                    getAllAssignStatement(elseif.getBody().getStatList(), assignStatements);
+                }
+            }
+            if(stat.getTipo().equals(Stat.Mode.ASSIGN)) {
+                assignStatements.add(stat);
+            }
+        }
+
+    }
 
     /**
      * Questo metodo ci dice se i parametri di una funzione sono stati usati in modo illegale, ossia se vengono cambiati.
@@ -284,11 +312,11 @@ public class TypeCheckingVisitor implements Visitor {
         //3. controllo che al lato sinistro di una assign non ci sia un parametro della funzione
         Boolean modificatoMutable = false;
 
+
+        ArrayList<Stat> statsAssign = new ArrayList<>();
+
         //mi ricavo gli statement di tipo assign
-        List<Stat> statsAssign = bodyStatements
-                .stream()
-                .filter(stat -> stat.getTipo().equals(Stat.Mode.ASSIGN))
-                .toList();
+        getAllAssignStatement(bodyStatements, statsAssign);
 
         //mi ricavo gli ids utilizzati nei parametri della funzione
         List<Identifier> callableParams = paramsFunzione.stream().map(callableParam -> callableParam.getId()).toList();
@@ -296,10 +324,15 @@ public class TypeCheckingVisitor implements Visitor {
         //controllo che ogni statement assign non utilizzi un parametro immutable
         for (Stat stat : statsAssign) {
             for(Identifier id : stat.getIdsList()) {
+
                 modificatoMutable = callableParams
                         .stream()
                         .anyMatch(param -> param.getLessema()
                                 .equals(id.getLessema()));
+
+                if(modificatoMutable) {
+                    return modificatoMutable;
+                }
             }
         }
 
@@ -373,10 +406,11 @@ public class TypeCheckingVisitor implements Visitor {
 
         exitScope();
 
-        //Controlla che i parametri sono usati in modo legale nella funzione
         if(controlloSugliAssign(funzione.getBody().getStatList(), funzione.getParametersList())) {
             throw new RuntimeException("I parametri di una funzione sono immutabili");
         }
+        //Controlla che i parametri sono usati in modo legale nella funzione
+
 
 
         //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
@@ -816,7 +850,13 @@ public class TypeCheckingVisitor implements Visitor {
                 .lookup(id.getLessema())
                 .orElseThrow(() -> new Exceptions.NoDeclarationError(id.getLessema()));
 
-        var varFieldType = (VarFieldType) record.getFieldType();
+        VarFieldType varFieldType;
+        try {
+            varFieldType = (VarFieldType) record.getFieldType();
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Stai usando una procedura come una variabile");
+        }
         return varFieldType.getType();
     }
 
@@ -899,7 +939,10 @@ public class TypeCheckingVisitor implements Visitor {
         var listaParametriNellaChiamata = funCall.getExprs();
         var listaParametriDichiarazione = fieldType.getParams();
 
-        var nParamsChiamata = listaParametriNellaChiamata.size();
+        Integer nParamsChiamata = 0;
+        if ( listaParametriNellaChiamata != null) {
+            nParamsChiamata = listaParametriNellaChiamata.size();
+        }
         var nParamsDichiarati = listaParametriDichiarazione.size();
 
         var isEqual = (nParamsChiamata == nParamsDichiarati) ? true : false ;

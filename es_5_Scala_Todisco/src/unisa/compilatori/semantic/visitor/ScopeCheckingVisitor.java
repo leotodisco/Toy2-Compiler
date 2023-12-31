@@ -397,7 +397,10 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(FunCall funCall) {
-        funCall.getExprs().forEach(exprOP -> exprOP.accept(this));
+        if(funCall.getExprs() != null) {
+            funCall.getExprs().forEach(exprOP -> exprOP.accept(this));
+        }
+
         return null;
     }
 
