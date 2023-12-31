@@ -14,9 +14,6 @@ func somma_con_commento(a:integer, b:integer) -> integer:
         return risultato;
     endif;
 
-
-
-
 endfunc
 
 func sottrazione(a:integer, b:integer) -> integer:

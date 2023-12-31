@@ -220,7 +220,6 @@ public class TypeCheckingVisitor implements Visitor {
 
         endfunc
          */
-
         else{
             ArrayList<Stat> listaStatements = body.getStatList();
             for(Stat statement : listaStatements) {
@@ -230,8 +229,9 @@ public class TypeCheckingVisitor implements Visitor {
                 else if(statement instanceof IfStat) {
                     IfStat ifStat = (IfStat) statement;
                     getAllFunctionReturns((ifStat).getBody(), listaReturn);
-                    getAllFunctionReturns(ifStat.getElseOP().getBody(), listaReturn);
                     ifStat.getElseIfOPList().forEach(elseIfOP -> getAllFunctionReturns(elseIfOP.getBody(), listaReturn));
+                    getAllFunctionReturns(ifStat.getElseOP().getBody(), listaReturn);
+
                 }
                 else if (statement.getTipo().equals(Stat.Mode.RETURN)){
                     listaReturn.add(statement);
