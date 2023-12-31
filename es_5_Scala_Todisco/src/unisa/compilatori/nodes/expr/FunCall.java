@@ -21,7 +21,7 @@ public class FunCall extends ExprOP implements Visitable {
     public FunCall(Identifier identifier) {
         super(Mode.FUNCALL);
         this.identifier = identifier;
-        this.exprs = null;
+        this.exprs = new ArrayList<>();
 
         super.add(identifier);
     }

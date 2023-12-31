@@ -42,6 +42,7 @@ public class Procedure extends DefaultMutableTreeNode implements Visitable {
         this.id = id;
         this.body = body;
 
+        this.procParamDeclList = new ArrayList<>();
         super.add(id);
         super.add(body);
     }

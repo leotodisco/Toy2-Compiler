@@ -23,6 +23,7 @@ public class ProcCall extends Stat implements Visitable {
 
     public ProcCall(Identifier identifier, Mode mode) {
         this.identifier = identifier;
+        this.exprs = new ArrayList<>();
         super.add(identifier);
         super.setTipo(mode);
     }
