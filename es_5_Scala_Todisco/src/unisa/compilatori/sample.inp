@@ -17,7 +17,17 @@ func somma_con_commento(a:integer, b:integer) -> integer:
 endfunc
 
 func sottrazione(a:integer, b:integer) -> integer:
-    return a-b;
+    if a > 5 then
+        return a;
+    elseif a < 4 then
+    else
+        return a - b;
+    endif;
+
+endfunc
+
+func foo(a : real, b:boolean) -> integer, real:
+    return 12, 12.2;
 endfunc
 
 func divisione(a:integer, b:integer) -> real:

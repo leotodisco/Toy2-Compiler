@@ -2,6 +2,7 @@ package unisa.compilatori;
 
 
 import unisa.compilatori.nodes.ProgramOp;
+import unisa.compilatori.semantic.visitor.CodeGeneratorVisitor;
 import unisa.compilatori.semantic.visitor.ScopeCheckingVisitor;
 import unisa.compilatori.semantic.visitor.TypeCheckingVisitor;
 
@@ -24,6 +25,7 @@ public class Prova {
             tree=new JTree(root);
             ((ProgramOp) root).accept(new ScopeCheckingVisitor());
             ((ProgramOp) root).accept(new TypeCheckingVisitor());
+            ((ProgramOp) root).accept(new CodeGeneratorVisitor());
             int a = 0;
             //JFrame framePannello=new JFrame();
             //framePannello.setSize(400, 400);
