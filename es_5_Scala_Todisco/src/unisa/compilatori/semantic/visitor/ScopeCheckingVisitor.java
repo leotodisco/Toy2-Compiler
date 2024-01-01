@@ -33,13 +33,13 @@ public class ScopeCheckingVisitor implements Visitor {
         table.setFather(null);
         program.setTable(table);
 
-        program.getIterWithoutProcedure().accept(this);
-        Procedure proc = program.getProc();
-        CallableFieldType fieldTypeProc = new CallableFieldType();
-        var fieldType = new CallableFieldType(proc.getProcParamDeclList());
-        SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
-        table.addEntry(recordProc);
-        program.getProc().accept(this);
+        //program.getIterWithoutProcedure().accept(this);
+        //Procedure proc = program.getProc();
+        //CallableFieldType fieldTypeProc = new CallableFieldType();
+        //var fieldType = new CallableFieldType(proc.getProcParamDeclList());
+        //SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
+        //table.addEntry(recordProc);
+        //program.getProc().accept(this);
         program.getIterOp().accept(this);
 
         return null;

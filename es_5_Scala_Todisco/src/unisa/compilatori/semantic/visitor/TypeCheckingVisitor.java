@@ -150,9 +150,9 @@ public class TypeCheckingVisitor implements Visitor {
         }
             //TODO Dobbiamo controllare se il main ha dei parametri?
 
-        program.getIterWithoutProcedure().accept(this);
+        //program.getIterWithoutProcedure().accept(this);
 
-        program.getProc().accept(this);
+        //program.getProc().accept(this);
 
         program.getIterOp().accept(this);
 
@@ -939,10 +939,8 @@ public class TypeCheckingVisitor implements Visitor {
         var listaParametriNellaChiamata = funCall.getExprs();
         var listaParametriDichiarazione = fieldType.getParams();
 
-        Integer nParamsChiamata = 0;
-        if ( listaParametriNellaChiamata != null) {
-            nParamsChiamata = listaParametriNellaChiamata.size();
-        }
+
+        var nParamsChiamata = listaParametriNellaChiamata.size();
         var nParamsDichiarati = listaParametriDichiarazione.size();
 
         var isEqual = (nParamsChiamata == nParamsDichiarati) ? true : false ;

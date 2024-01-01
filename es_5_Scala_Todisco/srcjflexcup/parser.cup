@@ -19,18 +19,18 @@ precedence nonassoc EQ, NE, LT, LE, GT, GE;
 precedence left PLUS, MINUS;
 precedence left TIMES, DIV;
 
-Program ::= IterWithoutProcedure:iterNoProc Procedure:proc Iter:it {: RESULT = new ProgramOp((Procedure) proc, (IterWithoutProcedure) iterNoProc, (IterOp)it);
+Program ::= IterWithoutProcedure:iterNoProc Procedure:proc Iter:it {: RESULT = new ProgramOp( (Procedure) proc,(IterOp) iterNoProc, (IterOp)it);
 :};
 
-IterWithoutProcedure ::= VarDecl:attr IterWithoutProcedure:it {:IterWithoutProcedure iter = (IterWithoutProcedure)it;
+IterWithoutProcedure ::= VarDecl:attr IterWithoutProcedure:it {:IterOp iter = (IterOp)it;
                                                                iter.addDecl((VarDecl)attr);
                                                                RESULT = iter;:}
       | Function:attr IterWithoutProcedure:it {:
-    IterWithoutProcedure iter = (IterWithoutProcedure)it;
+    IterOp iter = (IterOp)it;
                                    iter.addFunction((Function)attr);
                                    RESULT = iter;
       :}
-      | /* empty */ {:RESULT = new IterWithoutProcedure(); :};
+      | /* empty */ {:RESULT = new IterOp(); :};
 
 Iter ::= VarDecl:declaration Iter:it {:
                                        IterOp iter = (IterOp)it;

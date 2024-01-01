@@ -22,14 +22,22 @@ public class ProgramOp extends DefaultMutableTreeNode implements Visitable {
         return this.table;
 }
     public ProgramOp(Procedure proc,
-                     IterWithoutProcedure iterWithoutProcedure,
+                     IterOp iterWithoutProcedure,
+                     IterOp iterOp) {
+        //this.proc = proc;
+        //this.iterWithoutProcedure = iterWithoutProcedure;
+        //iterOp.getProcedures().add(proc);
+        this.iterOp = IterOp.mergeIterOps(iterOp,proc, iterWithoutProcedure);
+
+        super.add(this.iterOp);
+    }
+
+    public ProgramOp(Procedure proc,
                      IterOp iterOp) {
         this.proc = proc;
-        this.iterWithoutProcedure = iterWithoutProcedure;
         this.iterOp = iterOp;
 
         super.add(proc);
-        super.add(iterWithoutProcedure);
         super.add(iterOp);
     }
 

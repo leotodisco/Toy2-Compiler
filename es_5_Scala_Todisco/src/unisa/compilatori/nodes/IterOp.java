@@ -5,6 +5,7 @@ import unisa.compilatori.semantic.visitor.Visitor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class IterOp extends DefaultMutableTreeNode implements Visitable {
@@ -82,6 +83,23 @@ public class IterOp extends DefaultMutableTreeNode implements Visitable {
                 ", procedures=" + procedures +
                 ", declarations=" + declarations +
                 '}';
+    }
+
+    public static IterOp mergeIterOps (IterOp iterOp1,Procedure proc,  IterOp iterOp2) {
+        ArrayList<Function> functions = new ArrayList<>();
+        functions.addAll(iterOp1.functions);
+        functions.addAll(iterOp2.functions);
+
+        ArrayList<Procedure> procedures = new ArrayList<>();
+        procedures.addAll(iterOp1.procedures);
+        procedures.add(proc);
+        procedures.addAll(iterOp2.procedures);
+
+        ArrayList<VarDecl> varDecls = new ArrayList<VarDecl>();
+        varDecls.addAll(iterOp1.declarations);
+        varDecls.addAll(iterOp2.declarations);
+
+        return new IterOp(functions, procedures, varDecls);
     }
 
     @Override
