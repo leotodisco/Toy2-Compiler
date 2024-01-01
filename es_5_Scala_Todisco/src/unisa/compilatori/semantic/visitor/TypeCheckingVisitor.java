@@ -395,7 +395,7 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         //CONTROLLA CHE CI SIA ALMENO UN RETURN
-        if(checkNoReturn(funzione))
+        if(checkNoReturn(funzione)) //TODO CONTROLLARE I RETURN NEL CASO DEGLI IFSTAT
             throw new Exceptions.NoReturnError(funzione.getId().getLessema());
 
         var returns = new HashMap<Stat, SymbolTable>();
