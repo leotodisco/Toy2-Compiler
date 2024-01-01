@@ -10,41 +10,32 @@ import java.util.concurrent.Callable;
  * Questa classe mantiene le informazioni su Procedure e Function
  */
 public class CallableFieldType implements FieldType {
-    private ArrayList<CallableParam> inputParams;
+    private ArrayList<CallableParam> params;
 
-    private ArrayList<CallableParam> outputParams;
 
-    public CallableFieldType() {
-        inputParams = new ArrayList<CallableParam>();
-        outputParams = new ArrayList<CallableParam>();
+    public CallableFieldType(){
+
+    }
+    public CallableFieldType(ArrayList<CallableParam> params) {
+        if(params == null){
+            this.params = new ArrayList<>();
+        }else {
+            this.params = params;
+        }
     }
 
-    public CallableFieldType(ArrayList<CallableParam> inputParams, ArrayList<CallableParam> outputParams){
-        this.inputParams = inputParams;
-        this.outputParams = outputParams;
+    public ArrayList<CallableParam> getParams() {
+        return params;
     }
 
-    public ArrayList<CallableParam> getInputParams() {
-        return inputParams;
-    }
-
-    public void setInputParams(ArrayList<CallableParam> inputParams) {
-        this.inputParams = inputParams;
-    }
-
-    public ArrayList<CallableParam> getOutputParams() {
-        return outputParams;
-    }
-
-    public void setOutputParams(ArrayList<CallableParam> outputParams) {
-        this.outputParams = outputParams;
+    public void setParams(ArrayList<CallableParam> params) {
+        this.params = params;
     }
 
     @Override
     public String toString() {
         return "CallableFieldType{" +
-                "inputParam=" + inputParams +
-                ", outputParam=" + outputParams +
+                "params=" + params +
                 '}';
     }
 }

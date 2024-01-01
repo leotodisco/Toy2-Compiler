@@ -10,7 +10,7 @@ public class UnaryOP extends ExprOP implements Visitable {
     private ExprOP expr;
 
     public UnaryOP(String simbolo, ExprOP expr) {
-        super();
+        super(Mode.UNARY);
         this.simbolo = simbolo;
         this.expr = expr;
 

@@ -6,17 +6,22 @@ import unisa.compilatori.semantic.visitor.Visitable;
 import unisa.compilatori.semantic.visitor.Visitor;
 import unisa.compilatori.semantic.symboltable.*;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+
 public class WhileStat extends Stat implements Visitable {
 
     private ExprOP expr;
     private Body body;
 
+
     private SymbolTable table;
 
-    public WhileStat(ExprOP expr, Body body) {
+    public WhileStat(ExprOP expr, Body body, Mode mode) {
         this.expr = expr;
         this.body = body;
+        super.setTipo(mode);
 
+        super.add(new DefaultMutableTreeNode(mode.toString()));
         super.add(body);
         super.add(expr);
     }
@@ -46,8 +51,13 @@ public class WhileStat extends Stat implements Visitable {
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-        return visitor.visit(this);
+    public <T> T accept(Visitor<T> visitor) throws RuntimeException {
+        try {
+            return visitor.visit(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override

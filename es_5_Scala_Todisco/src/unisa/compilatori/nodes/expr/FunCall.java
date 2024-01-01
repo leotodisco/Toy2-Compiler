@@ -10,6 +10,7 @@ public class FunCall extends ExprOP implements Visitable {
     private ArrayList<ExprOP> exprs;
 
     public FunCall(Identifier identifier, ArrayList<ExprOP> exprs) {
+        super(Mode.FUNCALL);
         this.identifier = identifier;
         this.exprs = exprs;
 
@@ -18,8 +19,9 @@ public class FunCall extends ExprOP implements Visitable {
     }
 
     public FunCall(Identifier identifier) {
+        super(Mode.FUNCALL);
         this.identifier = identifier;
-        this.exprs = null;
+        this.exprs = new ArrayList<>();
 
         super.add(identifier);
     }

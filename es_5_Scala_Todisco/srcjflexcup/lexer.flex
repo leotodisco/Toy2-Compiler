@@ -57,7 +57,7 @@ UnclosedComment = \%([^\"\\]|\\.)*\%
 ClosedComment = \%([^\"\\]|\\.)*\%
 InputCharacter = [^\r\n]
 WhiteSpace = {LineTerminator} | [ \t\f]
-Identifier = [A-Za-z][A-Za-z0-9]*
+Identifier = [A-Za-z_][A-Za-z0-9_]*
 
 %state BLK_COMMENT
 %state STRING_STATE
@@ -79,10 +79,10 @@ Identifier = [A-Za-z][A-Za-z0-9]*
 ","   { return symbol(sym.COMMA, new Token("COMMA", yytext())); }
 "true"    { return symbol(sym.TRUE, new Token("TRUE", yytext())); }
 "false"   { return symbol(sym.FALSE, new Token("FALSE", yytext())); }
-"real"    { return symbol(sym.REAL, new Token("REAL","REAL_CONST")); }
-"integer" { return symbol(sym.INTEGER, new Token("INTEGER","INTEGER_CONST")); }
-"string"  { return symbol(sym.STRING, new Token("STRING", "STRING_CONST")); }
-"boolean" { return symbol(sym.BOOLEAN, new Token("BOOLEAN", "BOOLEAN_CONST")); }
+"real"    { return symbol(sym.REAL, new Token("REAL","REAL")); }
+"integer" { return symbol(sym.INTEGER, new Token("INTEGER","INTEGER")); }
+"string"  { return symbol(sym.STRING, new Token("STRING", "STRING")); }
+"boolean" { return symbol(sym.BOOLEAN, new Token("BOOLEAN", "BOOLEAN")); }
 "return"  { return symbol(sym.RETURN, new Token("RETURN", yytext())); }
 "func" { return symbol(sym.FUNCTION, new Token("FUNCTION", yytext())); }
 "->" { return symbol(sym.TYPERETURN, new Token("TYPERETURN", yytext())); }
@@ -118,8 +118,8 @@ Identifier = [A-Za-z][A-Za-z0-9]*
 "||"      { return symbol(sym.OR, new Token("OR", yytext())); }
 "!"     { return symbol(sym.NOT, new Token("NOT", yytext())); }
 "@"     { return symbol(sym.REF, new Token("REF", yytext())); }
-{IntegerConst} { return symbol(sym.INTEGER_CONST, new Token("INTEGER_CONST", yytext())); }
-{RealConst} { return symbol(sym.REAL_CONST, new Token("REAL_CONST", yytext())); }
+{IntegerConst} { return symbol(sym.INTEGER_CONST, new Token("INTEGER", yytext())); }
+{RealConst} { return symbol(sym.REAL_CONST, new Token("REAL", yytext())); }
  "%" {yybegin(BLK_COMMENT);}
 "\"" {yybegin(STRING_STATE);}
 }
@@ -148,7 +148,7 @@ Identifier = [A-Za-z][A-Za-z0-9]*
           String result = stringBuilder.toString();
           //pulisco lo stringBuilder
           stringBuilder.setLength(0);
-          return symbol(sym.STRING_CONST, new Token("STRING_CONST", result));
+          return symbol(sym.STRING_CONST, new Token("STRING", result));
     }
     [^\"]* {
             if(!firstCharacter) {

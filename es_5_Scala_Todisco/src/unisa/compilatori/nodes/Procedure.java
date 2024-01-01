@@ -42,6 +42,7 @@ public class Procedure extends DefaultMutableTreeNode implements Visitable {
         this.id = id;
         this.body = body;
 
+        this.procParamDeclList = new ArrayList<>();
         super.add(id);
         super.add(body);
     }
@@ -80,7 +81,7 @@ public class Procedure extends DefaultMutableTreeNode implements Visitable {
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
+    public <T> T accept(Visitor<T> visitor) throws RuntimeException {
         return visitor.visit(this);
     }
 }

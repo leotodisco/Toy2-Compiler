@@ -45,16 +45,42 @@ public class SymbolTable implements ISymbolTable {
 
     /**
      * Controlla nella lista delle symbol table se esiste già il lessema da qualche parte
-     * @param symbol
-     * @return
+     * @param sym
+     * @retur
      */
     @Override
     public Optional<SymbolTableRecord> lookup(String symbol) {
-        return this.recordsList
-                .stream()
-                .filter(record -> record.getSimbolo().equals(symbol))
-                .findFirst();
+        SymbolTable symbolTable = this;
+        Optional<SymbolTableRecord> result = Optional.ofNullable(null);
+
+        while (symbolTable != null) {
+            for (SymbolTableRecord r : symbolTable.recordsList) {
+                if (r.getSimbolo().equals(symbol)){
+                    result = Optional.ofNullable(r);
+
+                    symbolTable = (SymbolTable) symbolTable.father;
+                    return result;
+                }
+            }
+            symbolTable = (SymbolTable) symbolTable.father;
+        }
+        return result;
     }
+        /**
+         *SymbolTable symbolTable=this;
+         *         while (symbolTable!=null){
+         *             for(TableRow r:symbolTable.listRow) {
+         *                 if (r.getSymbol().equals(id))
+         *                     return r;
+         *             }
+         *             symbolTable=symbolTable.father;
+         *         }
+         *         return null;
+         *
+         * ;
+         *
+         */
+
 
     /**
      *
@@ -63,7 +89,7 @@ public class SymbolTable implements ISymbolTable {
      * @throws Exception
      */
     @Override
-    public void addEntry(SymbolTableRecord record) throws Exception {
+    public void addEntry(SymbolTableRecord record) throws RuntimeException {
 
         if(shadowing) {
             if(isRecordDeclared(record)) {

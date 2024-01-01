@@ -20,10 +20,10 @@ public class ConstOP extends ExprOP implements Visitable {
      * enum che indica il tipo della costante
      */
     public enum Kind {
-        INTEGER_CONST, //costante intera
-        STRING_CONST,  //costante stringa
-        BOOLEAN_CONST,
-        REAL_CONST,
+        INTEGER, //costante intera
+        STRING,  //costante stringa
+        BOOLEAN,
+        REAL,
     }
 
     private Kind kind;
@@ -34,10 +34,24 @@ public class ConstOP extends ExprOP implements Visitable {
      * @throws InvalidTypeException se l'oggetto che viene passato non è un token.
      * */
     public ConstOP(Object token, Kind type) throws InvalidTypeException {
+        super(Mode.CONST);
         if (token instanceof Token){
             Token tok = (Token) token;
             this.lessema = tok.getAttribute();
-            System.out.println(token);
+            this.kind = type;
+            super.add(new DefaultMutableTreeNode(lessema));
+            super.add(new DefaultMutableTreeNode(kind));
+        } else {
+            throw new InvalidTypeException();
+        }
+
+    }
+
+    public ConstOP(Object token, Kind type, Mode mode) throws InvalidTypeException {
+        super(mode);
+        if (token instanceof Token){
+            Token tok = (Token) token;
+            this.lessema = tok.getAttribute();
             this.kind = type;
             super.add(new DefaultMutableTreeNode(lessema));
             super.add(new DefaultMutableTreeNode(kind));

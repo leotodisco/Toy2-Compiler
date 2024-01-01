@@ -12,16 +12,20 @@ public class ProcCall extends Stat implements Visitable {
     private Identifier identifier;
     private ArrayList<ExprOP> exprs;
 
-    public ProcCall(Identifier identifier, ArrayList<ExprOP> exprs) {
+    public ProcCall(Identifier identifier, ArrayList<ExprOP> exprs, Mode mode) {
         this.identifier = identifier;
         this.exprs = exprs;
+        super.setTipo(mode);
 
         super.add(identifier);
         exprs.forEach(exprOP -> super.add(exprOP));
     }
 
-    public ProcCall(Identifier identifier) {
+    public ProcCall(Identifier identifier, Mode mode) {
         this.identifier = identifier;
+        this.exprs = new ArrayList<>();
+        super.add(identifier);
+        super.setTipo(mode);
     }
 
     public Identifier getIdentifier() {
@@ -48,7 +52,7 @@ public class ProcCall extends Stat implements Visitable {
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-        return visitor.visit(this);
+    public <T> T accept(Visitor<T> visitor) throws RuntimeException {
+            return visitor.visit(this);
     }
 }

@@ -9,7 +9,7 @@ public class BinaryOP extends ExprOP implements Visitable {
     private ExprOP expr1, expr2;
 
     public BinaryOP(String name, ExprOP expr1, ExprOP expr2) {
-        super();
+        super(Mode.BINARY);
         this.name = name;
         this.expr1 = expr1;
         this.expr2 = expr2;
@@ -47,6 +47,7 @@ public class BinaryOP extends ExprOP implements Visitable {
                 "name='" + name + '\'' +
                 ", expr1=" + expr1 +
                 ", expr2=" + expr2 +
+                ", mode" + super.getMode() +
                 '}';
     }
 

@@ -22,6 +22,13 @@ public class SymbolTableRecord  {
         this.properties = properties;
     }
 
+    /**
+     * empty constructor
+     */
+    public SymbolTableRecord() {
+
+    }
+
     public String getSimbolo() {
         return simbolo;
     }
@@ -53,6 +60,7 @@ public class SymbolTableRecord  {
     public String getProperties(){
         return properties;
     }
+    public FieldType getFieldType( ){return this.fieldType;}
 
     @Override
     public String toString() {

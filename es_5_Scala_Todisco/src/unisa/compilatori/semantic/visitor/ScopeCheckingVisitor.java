@@ -6,12 +6,11 @@ import unisa.compilatori.nodes.stat.*;
 import unisa.compilatori.semantic.symboltable.*;
 import unisa.compilatori.utils.Exceptions;
 
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Stack;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ScopeCheckingVisitor implements Visitor {
@@ -32,34 +31,14 @@ public class ScopeCheckingVisitor implements Visitor {
         table = new SymbolTable();
         table.setScope(SymbolTable.NAME_ROOT);
         table.setFather(null);
+        program.setTable(table);
 
         program.getIterWithoutProcedure().accept(this);
-
         Procedure proc = program.getProc();
-
         CallableFieldType fieldTypeProc = new CallableFieldType();
-
-        if(proc.getProcParamDeclList() != null) {
-            //prendi i parametri output della procedura
-            var outParams = proc.getProcParamDeclList()
-                    .stream()
-                    .filter(callableParam -> callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-            var inputParams = proc.getProcParamDeclList()
-                    .stream()
-                    .filter(callableParam -> !callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-            var fieldType = new CallableFieldType(inputParams, outParams);
-            SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(),proc, fieldType, "");
-            try {
-                table.addEntry(recordProc);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
+        var fieldType = new CallableFieldType(proc.getProcParamDeclList());
+        SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
+        table.addEntry(recordProc);
         program.getProc().accept(this);
         program.getIterOp().accept(this);
 
@@ -74,7 +53,7 @@ public class ScopeCheckingVisitor implements Visitor {
     private String returnTypeListToString(ArrayList<Type> lista) {
         StringBuilder res = new StringBuilder();
         for (Type tipo : lista) {
-            res.append(tipo.toString() + "\t");
+            res.append(tipo.getTipo() + ";");
         }
 
         return res.toString();
@@ -87,46 +66,24 @@ public class ScopeCheckingVisitor implements Visitor {
                 String identificatore = function.getId().getLessema();
                 CallableFieldType fieldType = new CallableFieldType();
 
-                fieldType.setInputParams(function.getParametersList());
-
+                fieldType.setParams(function.getParametersList());
                 SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType, returnTypeListToString(function.getReturnTypes()));
-
-                try {
-                    table.addEntry(record);
-                    function.accept(this);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                table.addEntry(record);
+                function.accept(this);
 
             });
         }
 
         if(!iterOP.getDeclarations().isEmpty()) {
             //per ogni decl dobbiamo chiamare accept e addentry
-            iterOP.getDeclarations()
-                    .stream()
-                    .forEach(varDecl -> varDecl.accept(this));
-
-            for(VarDecl varDecl : iterOP.getDeclarations()) {
-                for(Decl decl : varDecl.getDecls()) {
-                    VarFieldType varFieldType = new VarFieldType(decl.getTipoDecl().toString());
-                    //per ogni id fai un record, poi aggiungi tutti i record alla tabella
-                    decl.getIds()
-                            .stream()
-                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, ""))
-                            .forEach(record -> {
-                                try {
-                                    //System.out.println("\n\n\nRECORD IN ITER \n\n");
-                                    table.addEntry(record);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            });
-
+            ArrayList<SymbolTableRecord> listaVar;
+            for (VarDecl var : iterOP.getDeclarations()) {
+                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
+                for ( SymbolTableRecord record: listaVar) {
+                    table.addEntry(record);
                 }
             }
         }
-
 
         return null;
     }
@@ -138,47 +95,24 @@ public class ScopeCheckingVisitor implements Visitor {
                 String identificatore = function.getId().getLessema();
                 CallableFieldType fieldType = new CallableFieldType();
 
-                fieldType.setInputParams(function.getParametersList());
-
+                fieldType.setParams(function.getParametersList());
                 SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType,returnTypeListToString(function.getReturnTypes()));
 
-                try {
-                    table.addEntry(record);
-                    function.accept(this);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                
+                table.addEntry(record);
+                function.accept(this);
+
             });
 
-        //su tutte le funzioni chiami accept
         }
 
         if(!iterOP.getDeclarations().isEmpty()) {
             //per ogni decl dobbiamo chiamare accept e addentry
-            iterOP.getDeclarations()
-                    .stream()
-                    .forEach(varDecl -> varDecl.accept(this));
+            ArrayList<SymbolTableRecord> listaVar;
+            for (VarDecl var : iterOP.getDeclarations()) {
+                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
 
-            for(VarDecl varDecl : iterOP.getDeclarations()) {
-                for(Decl decl : varDecl.getDecls()) {
-                   VarFieldType varFieldType = new VarFieldType(decl.getTipoDecl().toString());
-                   //per ogni id fai un record, poi aggiungi tutti i record alla tabella
-                    decl.getIds()
-                            .stream()
-                            .map(id -> new SymbolTableRecord(id.getLessema(), id, varFieldType, ""))
-                            .forEach(record -> {
-                                try {
-                                    //System.out.println("\n\n\nRECORD IN ITER \n\n");
-                                    table.addEntry(record);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            });
-
-                   //per ogni costante devo fare un record, poi aggiungi tutti i record alla tabella
-
-
+                for ( SymbolTableRecord record: listaVar) {
+                    table.addEntry(record);
                 }
             }
         }
@@ -190,32 +124,11 @@ public class ScopeCheckingVisitor implements Visitor {
                     .forEach(procedure -> procedure.accept(this));
 
             for(Procedure proc : iterOP.getProcedures()) {
-                ArrayList<CallableParam> outParams;
-                ArrayList<CallableParam> inputParams;
 
-                if(proc.getProcParamDeclList() != null) {
-                    outParams = proc.getProcParamDeclList()
-                            .stream()
-                            .filter(callableParam -> callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                            .collect(Collectors.toCollection(ArrayList::new));
-
-                    inputParams = proc.getProcParamDeclList()
-                            .stream()
-                            .filter(callableParam -> !callableParam.getId().getMode().toString().equals("PARAMSOUT"))
-                            .collect(Collectors.toCollection(ArrayList::new));
-                } else {
-                    outParams = new ArrayList<>();
-                    inputParams = new ArrayList<>();
-                }
-
-                var fieldType = new CallableFieldType(inputParams, outParams);
+                var fieldType = new CallableFieldType(proc.getProcParamDeclList());
                 SymbolTableRecord record = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
 
-                try {
-                    this.table.addEntry(record);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                this.table.addEntry(record);
             }
         }
 
@@ -224,6 +137,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(BinaryOP operazioneBinaria) {
+
         operazioneBinaria.getExpr1().accept(this);
         operazioneBinaria.getExpr2().accept(this);
 
@@ -232,7 +146,8 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(UnaryOP operazioneUnaria) {
-        operazioneUnaria.accept(this);
+        operazioneUnaria.getExpr().accept(this);
+
         return null;
     }
 
@@ -261,14 +176,21 @@ public class ScopeCheckingVisitor implements Visitor {
             while(itConst.hasNext() && itIds.hasNext()) {
                 Identifier id = itIds.next();
                 ConstOP costante = itConst.next();
-                listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(costante.getType().toString()), costante.getLessema()));
+                int lunghezzaStringa = costante.getType().toString().length();
+                var substring = costante.getType().toString();
+                listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(substring), costante.getLessema()));
+            }
+
+            //*[[Nell’inizializzazione il numero delle costanti deve essere pari al numero degli id]]*
+            if(itConst.hasNext() || itIds.hasNext()) {
+                throw new RuntimeException("Errore"); //TODO ECCEZIONE
             }
         // se il tipo di dichiarazione è del tipo var a : string;\
         } else {
             itIds = decl.getIds().iterator();
             while(itIds.hasNext()) {
                 Identifier id = itIds.next();
-                listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(decl.getTipo().toString()), ""));
+                listaVar.add(new SymbolTableRecord(id.getLessema(), decl, new VarFieldType(decl.getTipo().getTipo()), ""));
             }
         }
 
@@ -283,12 +205,12 @@ public class ScopeCheckingVisitor implements Visitor {
     java.util.function.Function<CallableParam, SymbolTableRecord> mapperFunctionParamToEntry =  functionParam -> {
     return new SymbolTableRecord(functionParam.getId().getLessema(),
             functionParam,
-            new VarFieldType(functionParam.getTipo().toString()),
+            new VarFieldType(functionParam.getTipo().getTipo().toString()),
             "");
 };
 
     @Override
-    public Object visit(Function funzione) throws Exception {
+    public Object visit(Function funzione) {
         funzione.setTable(new SymbolTable());
         SymbolTable funzioneTable = funzione.getTable();
         funzioneTable.setFather(this.table);
@@ -299,13 +221,7 @@ public class ScopeCheckingVisitor implements Visitor {
             funzione.getParametersList()
                     .stream()
                     .map(mapperFunctionParamToEntry)
-                    .forEach(symbolTableRecord -> {
-                        try {
-                            funzioneTable.addEntry(symbolTableRecord);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                    .forEach(symbolTableRecord -> funzioneTable.addEntry(symbolTableRecord));
         }
 
         if(funzione.getBody()!=null) {
@@ -313,7 +229,6 @@ public class ScopeCheckingVisitor implements Visitor {
             funzione.getBody().accept(this);
             exitScope();
         }
-        System.out.println("TABLE = " + funzione.getTable());
         return null;
     }
 
@@ -324,7 +239,6 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(IfStat ifStat) {
-        System.out.println("ciao");
         //set up della symbol table
         ifStat.setSymbolTableThen(new SymbolTable());
         SymbolTable symbolTableThen = ifStat.getSymbolTableThen();
@@ -342,7 +256,6 @@ public class ScopeCheckingVisitor implements Visitor {
         if(!ifStat.getElseIfOPList().isEmpty()) {
             for (ElseIfOP elseIfOP : ifStat.getElseIfOPList() ) {
                 //set up della symbol table
-
                 elseIfOP.setSymbolTableElseIF(new SymbolTable());
                 SymbolTable symbolTableElseIf = elseIfOP.getSymbolTableElseIF();
                 symbolTableElseIf.setScope("IF-ELIF");
@@ -395,6 +308,8 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(ProcCall procCall) {
+        procCall.getExprs().forEach(exprOP -> exprOP.accept(this));
+
         return null;
     }
 
@@ -414,10 +329,6 @@ public class ScopeCheckingVisitor implements Visitor {
         return null;
     }
 
-    @Override
-    public Object visit(IOArgsOp ioArgsOp) {
-        return null;
-    }
 
     @Override
     public Object visit(Type type) {
@@ -432,7 +343,7 @@ public class ScopeCheckingVisitor implements Visitor {
     java.util.function.Function<CallableParam, SymbolTableRecord> mapProcParamToEntry =  param -> {
         return new SymbolTableRecord(param.getId().getLessema(),
                 param,
-                new VarFieldType(param.getTipo().toString()),
+                new VarFieldType(param.getTipo().getTipo().toString()),
                 "");
     };
 
@@ -449,23 +360,13 @@ public class ScopeCheckingVisitor implements Visitor {
             procedure.getProcParamDeclList()
                     .stream()
                     .map(mapProcParamToEntry)
-                    .forEach(symbolTableRecord -> {
-                        try {
-                            procedureTable.addEntry(symbolTableRecord);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
+                    .forEach(symbolTableRecord -> procedureTable.addEntry(symbolTableRecord));
         }
 
         if(procedure.getBody() != null) {
-            try {
-                enterScope(procedure.getTable()); //entro nello scope
-                procedure.getBody().accept(this);
-                exitScope(); //esce dallo scope
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            enterScope(procedure.getTable()); //entro nello scope
+            procedure.getBody().accept(this);
+            exitScope(); //esce dallo scope
         }
 
         return null;
@@ -475,6 +376,7 @@ public class ScopeCheckingVisitor implements Visitor {
     @Override
     public Object visit(ConstOP constOP) {
         String type = constOP.getType().toString();
+
         if(type.equals("INTEGER_CONST")) {
             return "integer";
         }
@@ -495,13 +397,13 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(FunCall funCall) {
+        if(funCall.getExprs() != null) {
+            funCall.getExprs().forEach(exprOP -> exprOP.accept(this));
+        }
+
         return null;
     }
 
-    @Override
-    public Object visit(IOArgsExpr ioArgsExpr) {
-        return null;
-    }
 
     @Override
     public Object visit(ExprOP exprOP) {
@@ -541,44 +443,46 @@ public class ScopeCheckingVisitor implements Visitor {
             stat.accept(this);
         }
 
+        if(s.getTipo().equals(Stat.Mode.ASSIGN)
+            || s.getTipo().equals(Stat.Mode.WRITE)
+            || s.getTipo().equals(Stat.Mode.READ)
+            || s.getTipo().equals(Stat.Mode.WRITE_RETURN)
+            || s.getTipo().equals(Stat.Mode.RETURN)) {
+
+            if (s.getIdsList() != null) {
+                s.getIdsList().forEach(id -> id.accept(this));
+            }
+
+            s.getEspressioniList().forEach(exprOP -> {exprOP.accept(this);});
+        }
+
 
         return null;
     }
 
     @Override
-    public Object visit(Body body) {
-        //se il body ha una lista di dichiarazioni non vuota
-        //mettiamo nella symbol table le variabili
-        if(body.getVarDeclList() != null) {
-            ArrayList<SymbolTableRecord> listaVar;
-            for (VarDecl var : body.getVarDeclList()) {
-                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
-                for ( SymbolTableRecord record: listaVar) {
-                    try{
-                    table.addEntry(record);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+    public Object visit(Body body) throws RuntimeException {
+        int a = 0;
+        for(int i = body.getChildCount()-1; i>=0; i--)
+        {
+            var figlio = body.getChildAt(i);
+            if(figlio instanceof VarDecl) {
+                var records = (ArrayList<SymbolTableRecord>) ((VarDecl) figlio).accept(this);
+                for ( SymbolTableRecord record: records) {
+                        table.addEntry(record);
                 }
-            }
-
-        }
-
-
-        //per ogni statement si chiama la accept corretta
-        if(body.getStatList() != null) {
-            for(Stat s : body.getStatList()) {
-                s.accept(this);
+            } else if (figlio instanceof Stat) {
+                ((Stat) figlio).accept(this);
             }
         }
-        
+
         return null;
     }
 
     @Override
     public Object visit(Identifier id) {
         if(table.lookup(id.getLessema()).isEmpty()){
-            //TODO CUSTOM EXCEPTION
+            throw  new RuntimeException("id non dichairato " + id.getLessema());
         }
         return null;
     }

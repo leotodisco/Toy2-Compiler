@@ -84,11 +84,11 @@ Consts ::= Const:costante COMMA Consts:listaCostanti {: ArrayList<ConstOP> temp 
 	| Const:costante {:ArrayList<ConstOP> consts = new ArrayList<ConstOP>(); consts.add ( (ConstOP)costante); RESULT = consts;:};
 
 /**NB: Aggiunti MINUS REAL_CONST che ci permettono di gestire anche UMINUS per le costanti*/
-Const ::= REAL_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.REAL_CONST); :}
-	| INTEGER_CONST:lessema {:RESULT =new ConstOP(lessema, ConstOP.Kind.INTEGER_CONST); :}
-	| STRING_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.STRING_CONST);:}
-	| TRUE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST); :}
-	| FALSE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST);:};
+Const ::= REAL_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.REAL); :}
+	| INTEGER_CONST:lessema {:RESULT =new ConstOP(lessema, ConstOP.Kind.INTEGER); :}
+	| STRING_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.STRING);:}
+	| TRUE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN); :}
+	| FALSE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN);:};
 
 Type ::= REAL:lessema {:RESULT = new Type(lessema); :}
 	| INTEGER:lessema {:RESULT = new Type(lessema); :}
@@ -159,20 +159,20 @@ Body ::= VarDecl:vardecl Body:body   {:Body bodytemp = (Body)body; bodytemp.addD
 
 Stat ::= Ids:ids ASSIGN Exprs:exprList SEMI {:Stat stat = new Stat(Stat.Mode.ASSIGN, (ArrayList<Identifier>) ids, (ArrayList<ExprOP>)exprList); RESULT = stat;:}
 	 | ProcCall:proccall SEMI {:RESULT = proccall;:}
-	 | RETURN Exprs:expList SEMI {:Stat stat = new Stat(Stat.Mode.RETURN, (ArrayList<ExprOP>)expList, null); RESULT=stat; :}
-	 | WRITE IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.WRITE, null, (IOArgsOp)ioArgs); RESULT=stat; :}
-	 | WRITERETURN IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.WRITE_RETURN, null, (IOArgsOp)ioArgs); RESULT=stat; :}
-	 | READ IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.READ, null, (IOArgsOp)ioArgs); RESULT=stat; :}
+	 | RETURN Exprs:expList SEMI {:Stat stat = new Stat(Stat.Mode.RETURN, (ArrayList<ExprOP>)expList); RESULT=stat; :}
+	 | WRITE IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.WRITE, (ArrayList<ExprOP>)ioArgs); RESULT=stat; :}
+	 | WRITERETURN IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.WRITE_RETURN, (ArrayList<ExprOP>)ioArgs); RESULT=stat; :}
+	 | READ IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.READ, (ArrayList<ExprOP>) ioArgs); RESULT=stat; :}
 	 | IfStat:IfStat SEMI {:RESULT = IfStat;:}
 	 | WhileStat:WhileStat SEMI {:RESULT = WhileStat;:};
 
 FunCall ::= ID:id LPAR Exprs:listaEspressioni RPAR {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni);:}           /* chiamata con almeno un parametro */
          | ID:id LPAR RPAR   {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER)); :}               /* chiamata con nessun parametro */;
 
-ProcCall ::= ID:id LPAR ProcExprs:listaEspressioni RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni);:}   /* chiamata con almeno un parametro */
-         | ID:id LPAR RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER)); :}  ;           /* chiamata con nessun parametro */
+ProcCall ::= ID:id LPAR ProcExprs:listaEspressioni RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni, Stat.Mode.PROCCALL);:}   /* chiamata con almeno un parametro */
+         | ID:id LPAR RPAR {:RESULT = new ProcCall(new Identifier(id, Identifier.Mode.PROCEDUREIDENTIFIER), Stat.Mode.PROCCALL); :}  ;           /* chiamata con nessun parametro */
 
-IfStat ::= IF Expr:expr THEN Body:body Elifs:elifs Else:elseop ENDIF {:RESULT = new IfStat((ExprOP) expr, (Body) body, (ElseOP) elseop, (ArrayList<ElseIfOP>) elifs);:};
+IfStat ::= IF Expr:expr THEN Body:body Elifs:elifs Else:elseop ENDIF {:RESULT = new IfStat((ExprOP) expr, (Body) body, (ElseOP) elseop, (ArrayList<ElseIfOP>) elifs, Stat.Mode.IF);:};
 
 Elifs ::= Elif:elif Elifs:elifs {:ArrayList<ElseIfOP> temp = (ArrayList<ElseIfOP>) elifs; temp.add((ElseIfOP) elif); RESULT = temp;:}
       | /* empty */ {:RESULT = new ArrayList<ElseIfOP>();:};
@@ -182,29 +182,31 @@ Elif ::= ELIF Expr:expr THEN Body:body {:RESULT = new ElseIfOP((ExprOP) expr, (B
 Else ::= ELSE Body:body {:RESULT = new ElseOP((Body) body);:}
      | /* empty */;
 
-WhileStat ::= WHILE Expr:expr DO Body:body ENDWHILE {:RESULT = new WhileStat((ExprOP) expr, (Body) body);:};
+WhileStat ::= WHILE Expr:expr DO Body:body ENDWHILE {:RESULT = new WhileStat((ExprOP) expr, (Body) body, Stat.Mode.WHILE);:};
 
 
 IOArgs ::= IOArgsExpr:ioArgsExpr IOArgs:ioArgs {:
-                                                IOArgsOp temp = (IOArgsOp) ioArgs;
-                                                temp.addIOArgsExpr((IOArgsExpr) ioArgsExpr);
+                                                ArrayList<ExprOP> temp = (ArrayList<ExprOP>) ioArgs;
+                                                temp.add((ExprOP)ioArgsExpr);
                                                 RESULT = temp;
                                                 :}    /* qui l'Expr corretta è concatenazione di stringhe o singola stringa*/
        |  DOLLARSIGN LPAR Expr:e1 RPAR IOArgs:ioArgs {:
-                                                IOArgsOp temp = (IOArgsOp) ioArgs;
-                                                //IOArgsOp temp = (IOArgsOp) ioArgs;
-                                                temp.addExpr(e1);
+                                                ArrayList<ExprOP> temp = (ArrayList<ExprOP>) ioArgs;
+                                                ExprOP tempExprOP = (ExprOP) e1;
+                                                tempExprOP.setMode(ExprOP.Mode.IOARGSDOLLAR);
+                                                temp.add( tempExprOP );
                                                 RESULT = temp;
                                                 :}
-       | /* empty */ {:IOArgsOp ioArgsOp = new IOArgsOp(); RESULT = ioArgsOp;:};
+       | /* empty */ {:ArrayList<ExprOP> listaIOArgs = new ArrayList<>(); RESULT = listaIOArgs;:};
 
-IOArgsExpr ::= STRING_CONST:strConst {:
-                                       ConstOP cons = new ConstOP(strConst, ConstOP.Kind.STRING_CONST) ;
-                                       IOArgsExpr expr = new IOArgsExpr(cons);
-                                       RESULT = expr;
+IOArgsExpr ::= ID:lessema {: Identifier id = new Identifier(lessema, ExprOP.Mode.IOARGSDOLLAR); RESULT = id;:}
+        | STRING_CONST:strConst {:
+                                       ConstOP cons = new ConstOP(strConst, ConstOP.Kind.STRING, ExprOP.Mode.IOARGSDOLLAR) ;
+                                       RESULT = cons;
                                        :}   /* Aggiunto un expr speciale per IOArgs, dato che si richiedeva soltanto la concatenazione di stringhe e null altro */
         | IOArgsExpr:e1 PLUS IOArgsExpr:e2 {:
-                                            IOArgsExpr expr = new IOArgsExpr((IOArgsExpr) e1, (IOArgsExpr) e2);
+                                            BinaryOP expr = new BinaryOP("plus_op", (ExprOP) e1, (ExprOP) e2);
+                                            expr.setMode(ExprOP.Mode.IOARGS);
                                             RESULT = expr;
                                             :};
 
@@ -239,12 +241,12 @@ Exprs ::= Expr:e COMMA Exprs:exprs {:
 	         :};
 
 Expr ::= FunCall:funcall {:RESULT = (ExprOP) funcall; :}
-	| REAL_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.REAL_CONST); :}
-    | INTEGER_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.INTEGER_CONST);   :}
-	| STRING_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.STRING_CONST);  :}
+	| REAL_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.REAL); :}
+    | INTEGER_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.INTEGER);   :}
+	| STRING_CONST:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.STRING);  :}
 	| ID:lessema {:RESULT = new Identifier(lessema, Identifier.Mode.VARIABLENAME);:}
-    | TRUE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST);  :}
-    | FALSE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN_CONST);  :}
+    | TRUE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN);  :}
+    | FALSE:lessema {:RESULT = new ConstOP(lessema, ConstOP.Kind.BOOLEAN);  :}
     | Expr:e1 PLUS Expr:e2 {:RESULT = new BinaryOP("plus_op", e1, e2); :}
 	| Expr:e1 MINUS Expr:e2 {:RESULT = new BinaryOP("minus_op", e1, e2);:}
 	| Expr:e1 TIMES Expr:e2 {:RESULT = new BinaryOP("times_op", e1, e2);:}

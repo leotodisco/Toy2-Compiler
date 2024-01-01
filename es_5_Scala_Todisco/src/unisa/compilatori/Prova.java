@@ -3,6 +3,7 @@ package unisa.compilatori;
 
 import unisa.compilatori.nodes.ProgramOp;
 import unisa.compilatori.semantic.visitor.ScopeCheckingVisitor;
+import unisa.compilatori.semantic.visitor.TypeCheckingVisitor;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -20,8 +21,9 @@ public class Prova {
             parser p = new parser(prova);
 
             DefaultMutableTreeNode root = (DefaultMutableTreeNode) p.parse().value;
-            //tree=new JTree(root);
+            tree=new JTree(root);
             ((ProgramOp) root).accept(new ScopeCheckingVisitor());
+            ((ProgramOp) root).accept(new TypeCheckingVisitor());
             int a = 0;
             //JFrame framePannello=new JFrame();
             //framePannello.setSize(400, 400);
@@ -33,7 +35,6 @@ public class Prova {
                 p.debug_parse();
             }*/
         } catch (Exception e) {
-
             e.printStackTrace();
         }
 

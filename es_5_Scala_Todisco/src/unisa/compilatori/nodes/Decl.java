@@ -1,5 +1,6 @@
 package unisa.compilatori.nodes;
 
+import unisa.compilatori.Token;
 import unisa.compilatori.nodes.expr.ConstOP;
 import unisa.compilatori.nodes.expr.Identifier;
 import unisa.compilatori.semantic.visitor.Visitable;
@@ -43,6 +44,21 @@ public class Decl extends DefaultMutableTreeNode implements Visitable {
 
         //uso un optional per gestire se il tipo viene passato o meno
         Optional.ofNullable(tipo).ifPresent(type -> super.add(tipo));
+/*
+        if(tipo == null) {
+            int len = "_CONST".length();
+            var costante = consts.get(0);
+            var typeAsString = costante.getType().toString();
+            //Prendo solo la parte che mi interessa di type ossia quella senza "_CONST"
+            String type = typeAsString.substring(0, typeAsString.length()-len);
+
+            this.tipo = new Type(new Token(type, type));
+
+
+            //1. assegna this.tipo = const.getKind();
+        }
+
+ */
 
     }
 
@@ -56,6 +72,10 @@ public class Decl extends DefaultMutableTreeNode implements Visitable {
         this.ids.forEach(identifier -> super.add(identifier));
 
         Optional.ofNullable(tipo).ifPresent(type -> super.add(tipo));
+
+        if(tipo == null) {
+            System.out.println("è null \n\n");
+        }
 
     }
 
