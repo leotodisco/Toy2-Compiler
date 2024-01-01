@@ -4,6 +4,11 @@ esegua l'operazione, restituisca il risultato e chieda se si vuol continuare
 all'input 0 oppure 1 il programma  conclude oppure mostra il menu iniziale, rispettivamente.
 %
 
+var jimmy : integer;\
+var carlo:string;\
+
+var
+    leonardo: string; carmine:integer;\
 
 func somma_con_commento(a:integer, b:integer) -> integer:
     var risultato:integer;\
@@ -29,7 +34,7 @@ endfunc
 func foo(a : real, b:boolean) -> integer, real:
     return 12, 12.2;
 endfunc
-
+var calamari : integer;\
 func divisione(a:integer, b:integer) -> real:
     return a/b;
 endfunc
@@ -37,7 +42,7 @@ endfunc
 func moltiplicazione(a:integer, b:integer) -> integer:
     return a*b;
 endfunc
-
+var jmy : integer;\
 
 proc main():
     var a, b:integer;\
@@ -85,4 +90,7 @@ proc main():
 
 endproc
 
+var
+    leonardo1: string; carmine1:integer;\
 
+var panettone : real;\

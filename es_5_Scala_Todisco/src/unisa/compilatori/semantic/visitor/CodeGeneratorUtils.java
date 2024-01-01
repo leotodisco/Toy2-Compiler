@@ -34,53 +34,53 @@ public class CodeGeneratorUtils {
     public static void addHelperFunctions(Writer writer) {
         try {
             writer.write("char* integer_to_str(int i){\n");
-            writer.write("int length= snprintf(NULL,0,\"%d\",i);\n");
-            writer.write("char* result=malloc(length+1);\n");
-            writer.write("snprintf(result,length+1,\"%d\",i);\n");
-            writer.write("return result;\n");
+            writer.write("\tint length= snprintf(NULL,0,\"%d\",i);\n");
+            writer.write("\tchar* result=malloc(length+1);\n");
+            writer.write("\tsnprintf(result,length+1,\"%d\",i);\n");
+            writer.write("\treturn result;\n");
             writer.write("}\n");
 
             writer.write("char* real_to_str(float i){\n");
-            writer.write("int length= snprintf(NULL,0,\"%f\",i);\n");
-            writer.write("char* result=malloc(length+1);\n");
-            writer.write("snprintf(result,length+1,\"%f\",i);\n");
-            writer.write("return result;\n");
+            writer.write("\tint length= snprintf(NULL,0,\"%f\",i);\n");
+            writer.write("\tchar* result=malloc(length+1);\n");
+            writer.write("\tsnprintf(result,length+1,\"%f\",i);\n");
+            writer.write("\treturn result;\n");
             writer.write("}\n");
 
             writer.write("char* char_to_str(char i){\n");
-            writer.write("int length= snprintf(NULL,0,\"%c\",i);\n");
-            writer.write("char* result=malloc(length+1);\n");
-            writer.write("snprintf(result,length+1,\"%c\",i);\n");
-            writer.write("return result;\n");
+            writer.write("\tint length= snprintf(NULL,0,\"%c\",i);\n");
+            writer.write("\tchar* result=malloc(length+1);\n");
+            writer.write("\tsnprintf(result,length+1,\"%c\",i);\n");
+            writer.write("\treturn result;\n");
             writer.write("}\n");
 
             writer.write("char* bool_to_str(bool i){\n");
-            writer.write("int length= snprintf(NULL,0,\"%d\",i);\n");
-            writer.write("char* result=malloc(length+1);\n");
-            writer.write("snprintf(result,length+1,\"%d\",i);\n");
-            writer.write("return result;\n");
+            writer.write("\tint length= snprintf(NULL,0,\"%d\",i);\n");
+            writer.write("\tchar* result=malloc(length+1);\n");
+            writer.write("\tsnprintf(result,length+1,\"%d\",i);\n");
+            writer.write("\treturn result;\n");
             writer.write("}\n");
 
             writer.write("char* str_concat(char* str1, char* str2){\n");
-            writer.write("char* result=malloc(sizeof(char)*MAXCHAR);\n");
-            writer.write("result=strcat(result,str1);\n");
-            writer.write("result=strcat(result,str2);\n");
-            writer.write("return result;}\n");
+            writer.write("\tchar* result=malloc(sizeof(char)*MAXCHAR);\n");
+            writer.write("\tresult=strcat(result,str1);\n");
+            writer.write("\tresult=strcat(result,str2);\n");
+            writer.write("\treturn result;\n}\n");
 
             writer.write("\n");
-            writer.write("char* read_str(){\n");
-            writer.write("char* str=malloc(sizeof(char)*MAXCHAR);\n");
-            writer.write("scanf(\"%s\",str);\n");
-            writer.write("return str;}\n");
+            writer.write("\tchar* read_str(){\n");
+            writer.write("\tchar* str=malloc(sizeof(char)*MAXCHAR);\n");
+            writer.write("\tscanf(\"%s\",str);\n");
+            writer.write("\treturn str;\n}\n");
 
             writer.write("\n");
-            writer.write("int str_to_bool(char* expr){\n");
-            writer.write("int i=0;\n");
-            writer.write("if ( (strcmp(expr, \"true\")==0) || (strcmp(expr, \"1\"))==0 )\n");
-            writer.write("i=1;\n");
-            writer.write("if ( (strcmp(expr, \"false\")==0) || (strcmp(expr, \"0\"))==0 )\n");
-            writer.write("i=0;\n");
-            writer.write("return i;}\n");
+            writer.write("\tint str_to_bool(char* expr){\n");
+            writer.write("\tint i=0;\n");
+            writer.write("\tif ( (strcmp(expr, \"true\")==0) || (strcmp(expr, \"1\"))==0 )\n");
+            writer.write("\t\ti=1;\n");
+            writer.write("\tif ( (strcmp(expr, \"false\")==0) || (strcmp(expr, \"0\"))==0 )\n");
+            writer.write("\t\ti=0;\n");
+            writer.write("\treturn i;\n}\n");
 
             writer.write("\n");
         } catch (Exception e){
