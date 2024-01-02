@@ -96,7 +96,7 @@ public class CodeGeneratorUtils {
      * @return
      */
     public static String convertType(String type){
-        if(type.equalsIgnoreCase("real")) type="double";
+        if(type.equalsIgnoreCase("real")) type="float";
         if(type.equalsIgnoreCase("integer")) type="int";
         if(type.equalsIgnoreCase("boolean")) type="bool";
         if(type.equalsIgnoreCase("string")) type="char*";

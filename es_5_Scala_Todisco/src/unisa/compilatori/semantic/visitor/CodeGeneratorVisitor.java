@@ -116,13 +116,118 @@ public class CodeGeneratorVisitor implements Visitor {
         String expr2 = (String) operazioneBinaria.getExpr2().accept(this);
 
         String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneBinaria.getName()); //ottieni il lessema giusto per l'operazione
-        if(lessemaOperazione.equalsIgnoreCase("strcat")) {
+        if (lessemaOperazione.equalsIgnoreCase("strcat")) {
             //todo fare controlli per vedere di che tipo sono le due espressioni
             //a quel punto puoi richiamare la funzione helper che converte quel tipo specifico
 
+            if (operazioneBinaria.getExpr1() instanceof Identifier) {
+                var id = ((Identifier) operazioneBinaria.getExpr1()).getLessema();
+                var record = this.currentScope.lookup(id).get();
+                if (record.getFieldType() instanceof VarFieldType) {
+                    VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                    if (varFieldType.getType().equalsIgnoreCase("integer")) {
+                        return "str_concat(" + "integer_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                    }
+                    if (varFieldType.getType().equalsIgnoreCase("real")) {
+                        return "str_concat(" + "real_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                    }
+                    if (varFieldType.getType().equalsIgnoreCase("boolean")) {
+                        return "str_concat(" + "bool_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                    }
+                }
+            }
 
-            return "str_concat(" + expr1 + ", "+ expr2+")";
+            if (operazioneBinaria.getExpr1() instanceof ConstOP) {
+                var tipo = ((ConstOP) operazioneBinaria.getExpr1()).getType();
+                if (tipo.toString().equalsIgnoreCase("integer")) {
+                    return "str_concat(" + "integer_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                }
+                if (tipo.toString().equalsIgnoreCase("real")) {
+                    return "str_concat(" + "real_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                }
+                if (tipo.toString().equalsIgnoreCase("boolean")) {
+                    return "str_concat(" + "bool_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                }
+            }
+
+
+            if (operazioneBinaria.getExpr2() instanceof ConstOP) {
+                var tipo = ((ConstOP) operazioneBinaria.getExpr2()).getType();
+                if (tipo.toString().equalsIgnoreCase("integer")) {
+                    return "str_concat(" + expr1 + ", " + "integer_to_str(" + expr2 + ")) ";
+                }
+                if (tipo.toString().equalsIgnoreCase("real")) {
+                    return "str_concat(" + expr1 + ", " + "real_to_str(" + expr2 + ")) ";
+                }
+                if (tipo.toString().equalsIgnoreCase("boolean")) {
+                    return "str_concat(" + expr1 + ", " + "bool_to_str(" + expr2 + ")) ";
+                }
+            }
+
+
+            if (operazioneBinaria.getExpr2() instanceof Identifier) {
+                var id = ((Identifier) operazioneBinaria.getExpr2()).getLessema();
+                var record = this.currentScope.lookup(id).get();
+                if (record.getFieldType() instanceof VarFieldType) {
+                    VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                    if (varFieldType.getType().equalsIgnoreCase("integer")) {
+                        return "str_concat(" + expr1 + ", " + "integer_to_str(" + expr2 + "))";
+                    }
+                    if (varFieldType.getType().equalsIgnoreCase("real")) {
+                        return "str_concat(" + expr1 + ", " + "real_to_str(" + expr2 + "))";
+                    }
+                    if (varFieldType.getType().equalsIgnoreCase("boolean")) {
+                        return "str_concat(" + expr1 + ", " + "bool_to_str(" + expr2 + "))";
+                    }
+                }
+            }
+
+            if (operazioneBinaria.getExpr1() instanceof FunCall) {
+                FunCall chiamataAFunzione = (FunCall) operazioneBinaria.getExpr1();
+                var record = currentScope.lookup(chiamataAFunzione.getIdentifier().getLessema());
+                var tipoRitorno = (Function) (record.get().getNodo());
+                if (tipoRitorno.getReturnTypes().size() > 1) {
+                    //gestisci più return types appena decidi che fare
+                    var tipo = tipoRitorno.getReturnTypes().get(0);
+                }
+                var tipo = tipoRitorno.getReturnTypes().get(0);
+
+                if (tipo.toString().equalsIgnoreCase("integer")) {
+                    return "str_concat(" + "integer_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                }
+                if (tipo.toString().equalsIgnoreCase("real")) {
+                    return "str_concat(" + "real_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                }
+                if (tipo.toString().equalsIgnoreCase("boolean")) {
+                    return "str_concat(" + "bool_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                }
+            }
+
+            if (operazioneBinaria.getExpr2() instanceof FunCall) {
+                FunCall chiamataAFunzione = (FunCall) operazioneBinaria.getExpr2();
+                var record = currentScope.lookup(chiamataAFunzione.getIdentifier().getLessema());
+                var tipoRitorno = (Function) (record.get().getNodo());
+                if (tipoRitorno.getReturnTypes().size() > 1) {
+                    //gestisci più return types appena decidi che fare
+                    var tipo = tipoRitorno.getReturnTypes().get(0);
+                }
+                var tipo = tipoRitorno.getReturnTypes().get(0);
+
+                if (tipo.toString().equalsIgnoreCase("integer")) {
+                    return "str_concat("  + expr1 + ", " + "integer_to_str(" + expr2 + "))";
+                }
+                if (tipo.toString().equalsIgnoreCase("real")) {
+                    return "str_concat("  + expr1 + ", " + "real_to_str(" + expr2 + "))";
+                }
+                if (tipo.toString().equalsIgnoreCase("boolean")) {
+                    return "str_concat("  + expr1 + ", " + "bool_to_str(" + expr2 + "))";
+                }
+            }
+
+
+            return "str_concat(" + expr1 + ", " + expr2 + ")";
         }
+
 
         return expr1 + " " + lessemaOperazione + " " + expr2;
     }
@@ -342,6 +447,7 @@ public class CodeGeneratorVisitor implements Visitor {
             try {
                 //PRINTF
                 for(ExprOP espressione : espressioniDaStampare) {
+                    System.out.println("exp = " + (String)espressione.accept(this));
                     if(espressione instanceof ConstOP) {
                         writer.write("printf("+(String) espressione.accept(this)+");\n");
                     }
@@ -350,7 +456,7 @@ public class CodeGeneratorVisitor implements Visitor {
                         SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
                         VarFieldType varFieldType = (VarFieldType) record.getFieldType();
                         if(varFieldType.getType().equalsIgnoreCase("real")) {
-                            writer.write("printf( \"%lf\", "+id.getLessema()+");\n" );
+                            writer.write("printf( \"%f\", "+id.getLessema()+");\n" );
                         }
                         if(varFieldType.getType().equalsIgnoreCase("integer")) {
                             writer.write("printf( \"%d\", "+id.getLessema()+");\n" );
@@ -373,7 +479,7 @@ public class CodeGeneratorVisitor implements Visitor {
                     SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
                     VarFieldType varFieldType = (VarFieldType) record.getFieldType();
                     if(varFieldType.getType().equalsIgnoreCase("real")) {
-                        writer.write("scanf( \"%lf\", &"+id.getLessema()+");\n" );
+                        writer.write("scanf( \"%f\", &"+id.getLessema()+");\n" );
                     }
                     if(varFieldType.getType().equalsIgnoreCase("integer")) {
                         writer.write("scanf( \"%d\", &"+id.getLessema()+");\n" );
