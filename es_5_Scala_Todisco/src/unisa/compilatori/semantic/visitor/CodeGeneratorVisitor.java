@@ -278,7 +278,7 @@ public class CodeGeneratorVisitor implements Visitor {
                 signature.append(",");
             }
             //elimino l'ultimo "," aggiunto alla fine dei parametri
-            if(parametri!=null && parametri.size() != 0) {
+            if( !parametri.isEmpty()) {
                 signature.deleteCharAt(signature.length()-1);
             }
 
@@ -521,16 +521,16 @@ public class CodeGeneratorVisitor implements Visitor {
                     }
 
                     for(int j = 0; j < tipiDiRitornoFunCallCorrente.size(); j++) {
-                        if(tipiDiRitornoFunCallCorrente.get(i).equalsIgnoreCase("integer")) {
-                            daRestituire.append("printf(\"%d \", daRestituire." + "result" + i +");");
+                        if(tipiDiRitornoFunCallCorrente.get(j).equalsIgnoreCase("integer")) {
+                            daRestituire.append("printf(\"%d \", daRestituire." + "result" + j +");");
                         }
-                        System.out.println(tipiDiRitornoFunCallCorrente.get(i));
-                        if(tipiDiRitornoFunCallCorrente.get(i).equalsIgnoreCase("string")) {
-                            daRestituire.append("printf(\"%s \", daRestituire." + "result" + i +");");
+                        System.out.println(tipiDiRitornoFunCallCorrente.get(j));
+                        if(tipiDiRitornoFunCallCorrente.get(j).equalsIgnoreCase("string")) {
+                            daRestituire.append("printf(\"%s \", daRestituire." + "result" + j +");");
                             System.out.println("SONO IN UNA STRINGA");
                         }
 
-                        i++;
+                        //i++;
                     }
                 } else {
                     daRestituire.append("daRestituire." + "result" + i + "=" + exprOP.accept(this)+ ";\n");
@@ -543,9 +543,6 @@ public class CodeGeneratorVisitor implements Visitor {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-
-
 
         }
         if (statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
@@ -768,51 +765,9 @@ public class CodeGeneratorVisitor implements Visitor {
     }
 
 
-    Stack<FunCall> stackFunzioni = new Stack<>();
-
     int funCallCount = 0;
     @Override
     public Object visit(FunCall funCall) throws RuntimeException {
-        //a,b,c ^= foo(), 12;
-        //
-        //result_foo r1 = foo();
-        //
-        //a = r1.result0;
-        //b = r1.result1;
-        //c = 12;
-        /*
-        String idFunCall = funCall.getIdentifier().getLessema();
-        StringBuilder resultStringFunCall = new StringBuilder();
-
-        StringBuilder exprOPStringBuilder = new StringBuilder();
-
-        try {
-            if(funCall.getExprs()!= null && !funCall.getExprs().isEmpty()) {
-                for(ExprOP exprOp: funCall.getExprs()) {
-                    String exprOpResult = (String) exprOp.accept(this);
-
-                    if(exprOp instanceof FunCall) {
-                        exprOPStringBuilder.append(exprOpResult);
-                    } else {
-                        exprOPStringBuilder.append("r = " + exprOpResult + "\n");
-                    }
-
-                    exprOPStringBuilder.append(" ");
-                }
-                exprOPStringBuilder.append(" ");
-                exprOPStringBuilder.deleteCharAt(exprOPStringBuilder.length()-1);
-            }
-
-            resultStringFunCall.append(exprOPStringBuilder.toString());
-
-            resultStringFunCall.append("result_" + idFunCall + " r" + countFunCall + " =");
-            resultStringFunCall.append(idFunCall + "(");
-
-            resultStringFunCall.append(");\n\n");
-        } catch (Exception e ) {
-            e.printStackTrace();
-        }
-        */
         funCallCount++;
         int funCallCorrente = funCallCount;
         StringBuilder stringBuilder = new StringBuilder();
@@ -826,7 +781,12 @@ public class CodeGeneratorVisitor implements Visitor {
 
         //caso senza nessun parametro con funzione all'interno tipo foo(a , 12, "pippo");
         if(!funCall.getExprs().stream().anyMatch(exprOP -> exprOP instanceof FunCall)) {
-            stringBuilder.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = ");
+            //stringBuilder.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = ");
+            if(function.getReturnTypes().size() > 1 ){
+                stringBuilder.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
+            } else {
+                stringBuilder.append(CodeGeneratorUtils.convertType(function.getReturnTypes().get(0).getTipo()) + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
+            }
 
             stringBuilder.append(funCall.getIdentifier().getLessema() + "(");
             int i = 0;
@@ -842,7 +802,12 @@ public class CodeGeneratorVisitor implements Visitor {
             stringBuilder.append(");\n");
         } else {
             StringBuilder chiamataAFunzione = new StringBuilder();
-            chiamataAFunzione.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
+            if(function.getReturnTypes().size() > 1 ){
+                chiamataAFunzione.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
+            } else {
+                chiamataAFunzione.append(CodeGeneratorUtils.convertType(function.getReturnTypes().get(0).getTipo()) + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
+            }
+
             //bisogna prepararsi i parametri da passare alla funzione nel caso di chiamata di funzione
             int j = 0;
             for(ExprOP exprOP : listaExprOp) {
@@ -852,7 +817,7 @@ public class CodeGeneratorVisitor implements Visitor {
 
                     j++;
                     if((listaExprOp.size()-1) == j) {
-                           chiamataAFunzione.deleteCharAt(chiamataAFunzione.length()-1);
+                       // chiamataAFunzione.deleteCharAt(chiamataAFunzione.length()-1);
                     }
 
 
@@ -878,16 +843,8 @@ public class CodeGeneratorVisitor implements Visitor {
         }
 
 
-
-        /*
-        for (ExprOP exprOP : listaExprOp) {
-            if(!(exprOP instanceof FunCall)) {
-
-            }
-        }
-        */
-
         return stringBuilder.toString();
+
     }
 
     @Override

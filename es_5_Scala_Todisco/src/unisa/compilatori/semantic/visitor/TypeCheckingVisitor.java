@@ -165,14 +165,33 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(BinaryOP operazioneBinaria) {
+        String typeExpr1 = null;
+        String typeExpr2 = null;
         //faccio il lookup di expr1
-        String typeExpr1 = (String) operazioneBinaria.getExpr1().accept(this);
-        //faccio il lookup di expr2
-        String typeExpr2 = (String) operazioneBinaria.getExpr2().accept(this);
+        if(operazioneBinaria.getExpr1() instanceof FunCall) {
+            ArrayList<String> tipiDiRitornoExpr1 = (ArrayList<String>) operazioneBinaria.getExpr1().accept(this);
+            if(tipiDiRitornoExpr1.size() > 1) {
+                throw new RuntimeException("Hai chiamato una funzione con più parametri di ritorno in corrispondenza di un' operazione binaria");
+            }
+            typeExpr1 = tipiDiRitornoExpr1.get(0);
+        } else {
+            typeExpr1 = (String) operazioneBinaria.getExpr1().accept(this);
+        }
+
+        if(operazioneBinaria.getExpr2() instanceof FunCall) {
+            ArrayList<String> tipiDiRitornoExpr2 = (ArrayList<String>) operazioneBinaria.getExpr2().accept(this);
+            if(tipiDiRitornoExpr2.size() > 1) {
+                throw new RuntimeException("Hai chiamato una funzione con più parametri di ritorno in corrispondenza di un' operazione binaria");
+            }
+            typeExpr2 = tipiDiRitornoExpr2.get(0);
+        } else {
+           typeExpr2 = (String) operazioneBinaria.getExpr2().accept(this);
+        }
+
         //faccio il lookup dell'operazione
         String typeOp = operazioneBinaria.getName();
         //controllo di che tipo l'operazione binaria
-        String risultato = risultato = evaluateType(typeExpr1, typeExpr2, typeOp);
+        String risultato =  evaluateType(typeExpr1, typeExpr2, typeOp);
 
         return risultato;
     }
@@ -322,7 +341,7 @@ public class TypeCheckingVisitor implements Visitor {
         //mi ricavo gli statement di tipo assign
         getAllAssignStatement(bodyStatements, statsAssign);
 
-        //mi ricavo gli ids utilizzati nei parametri della funzione
+        //mi ricavo gli ids utilizzati nefIi parametri della funzione
         List<Identifier> callableParams = paramsFunzione.stream().map(callableParam -> callableParam.getId()).toList();
 
         //controllo che ogni statement assign non utilizzi un parametro immutable
@@ -414,7 +433,6 @@ public class TypeCheckingVisitor implements Visitor {
             throw new RuntimeException("I parametri di una funzione sono immutabili");
         }
         //Controlla che i parametri sono usati in modo legale nella funzione
-
 
 
         //controllo che ogni return abbia i tipi uguali a quelli della dichiarazione
@@ -536,13 +554,27 @@ public class TypeCheckingVisitor implements Visitor {
 
         if(statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
             statement.getEspressioniList().forEach(exprOP -> {
+                if(exprOP instanceof FunCall) {
+                    ArrayList<String> resultFunCall = (ArrayList<String>) exprOP.accept(this);
+                    if (resultFunCall.size() > 1 )  {
+                        throw new RuntimeException("Stai usando una funzione con più parametri di ritorno in una WRITE operation");
+                    }
+                } else {
                     exprOP.accept(this);
+                }
             });
         }
 
         if(statement.getTipo().equals(Stat.Mode.WRITE)) {
             statement.getEspressioniList().forEach(exprOP -> {
+                if(exprOP instanceof FunCall) {
+                    ArrayList<String> resultFunCall = (ArrayList<String>) exprOP.accept(this);
+                    if (resultFunCall.size() > 1 )  {
+                        throw new RuntimeException("Stai usando una funzione con più parametri di ritorno in una WRITE operation");
+                    }
+                } else {
                     exprOP.accept(this);
+                }
             });
         }
 
@@ -569,7 +601,13 @@ public class TypeCheckingVisitor implements Visitor {
 
         Object resultExpr = ifStat.getExpr().accept(this);
         if(resultExpr instanceof ArrayList<?>) {
-            tipoExpr = ((ArrayList<String>) resultExpr).get(0);
+            ArrayList<String> funCall = ((ArrayList<String>) resultExpr);
+
+            if(funCall.size() > 1) {
+                throw  new RuntimeException("Hai chiamato una funzione con più tipi di ritorno in un IF");
+            }
+
+            tipoExpr = funCall.get(0);
         } else {
             tipoExpr = (String) ifStat.getExpr().accept(this);
         }
@@ -618,9 +656,21 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(ElseIfOP elseIfOP) throws RuntimeException{
-        String tipoExpr = "";
-        //controllo sulla condizione
-        tipoExpr = (String) elseIfOP.getExpr().accept(this);
+        String tipoExpr;
+
+        Object resultExpr = elseIfOP.getExpr().accept(this);
+        if(resultExpr instanceof ArrayList<?>) {
+            ArrayList<String> funCall = ((ArrayList<String>) resultExpr);
+
+            if(funCall.size() > 1) {
+                throw  new RuntimeException("Hai chiamato una funzione con più tipi di ritorno in un IF");
+            }
+
+            tipoExpr = funCall.get(0);
+        } else {
+            tipoExpr = (String) elseIfOP.getExpr().accept(this);
+        }
+
 
         if (!tipoExpr.equalsIgnoreCase("boolean"))
             throw new Exceptions.InvalidCondition(tipoExpr);
@@ -632,21 +682,6 @@ public class TypeCheckingVisitor implements Visitor {
         return null;
     }
 
-
-    private Boolean hannoStessoNumeroDiParametri(ArrayList<CallableParam> parametriDichiarati, ArrayList<Object> parametriUtilizzati) {
-        int countParametriDichiarati = parametriDichiarati.size();
-        int countParmetriUtilizzati =  0;
-        for (Object param: parametriUtilizzati) {
-            if(param instanceof ArrayList<?>){
-                var lista = (ArrayList<String>) param;
-                countParmetriUtilizzati += lista.size();
-            } else {
-                countParmetriUtilizzati++;
-            }
-        }
-        return countParametriDichiarati==countParmetriUtilizzati;
-    }
-    
     @Override
     public Object visit(ProcCall procCall) throws RuntimeException {
         //Lookup nella tabella
@@ -672,8 +707,8 @@ public class TypeCheckingVisitor implements Visitor {
             parametriUtilizzati.add(exprOP.accept(this));
         }
 
-        if (!hannoStessoNumeroDiParametri(parametriDichiarati, parametriUtilizzati)) {
-            throw new RuntimeException("il numero di parametri in procedura non matcha"); //TODO custom exception
+        if(parametriDichiarati.size() != parametriUtilizzati.size()) {
+            throw new RuntimeException("il numero di parametri in procedura non matcha");
         }
 
         //Adesso scorriamo sia la lista dei parametri utilizzati che quelli dichiarati e confrontiamo tipo per tipo
@@ -691,36 +726,37 @@ public class TypeCheckingVisitor implements Visitor {
 
                 //iteratore sulla lista dei tipi di ritorno della funzione
                 ArrayList<String> tipiDiRitornoFunzione = (ArrayList<String>) parametroUtilizzatoCorrente;
-                Iterator<String> tipiDiRitornoFunzioneIt = tipiDiRitornoFunzione.iterator();
+
+                if(tipiDiRitornoFunzione.size() > 1) {
+                    throw new RuntimeException("Hai chiamato una funzione con più valori di ritorno in una procedura");
+                }
 
                 if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF)) {
                     throw new RuntimeException("KEYWORD @ utilizzata in corrispondenza di una funzione");
                 }
-                while (tipiDiRitornoFunzioneIt.hasNext()) {
 
-                    CallableParam paramDichiarato = paramDichiaratiIterator.next();
-
-
-                    String tipoParametroDichiarato = null;
-                    try {
-                        tipoParametroDichiarato = paramDichiarato.getTipo().getTipo();
-                    } catch (NoSuchElementException e) {
-                        throw new RuntimeException("il numero dei parametri utilizzati sono diversi da quelli dichiarati");
-                    }
-
-                    String tipoParametroUtilizzato = tipiDiRitornoFunzioneIt.next();
+                CallableParam paramDichiarato = paramDichiaratiIterator.next();
 
 
-                    if(!tipoParametroUtilizzato.equals(tipoParametroDichiarato)) {
-                        throw new Exceptions.TypesMismatch(procCall.getIdentifier().getLessema(), tipoParametroDichiarato, tipoParametroUtilizzato);
-                    }
-
-                    //CONTROLLO SULLA KEYWORD OUT
-                    if(paramDichiarato.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
-                        throw new RuntimeException("Non puoi utilizzare una funzione in corrispondenza di parametri out");
-                    }
-
+                String tipoParametroDichiarato = null;
+                try {
+                    tipoParametroDichiarato = paramDichiarato.getTipo().getTipo();
+                } catch (NoSuchElementException e) {
+                    throw new RuntimeException("il numero dei parametri utilizzati sono diversi da quelli dichiarati");
                 }
+
+                String tipoParametroUtilizzato = tipiDiRitornoFunzione.get(0);
+
+
+                if(!tipoParametroUtilizzato.equals(tipoParametroDichiarato)) {
+                    throw new Exceptions.TypesMismatch(procCall.getIdentifier().getLessema(), tipoParametroDichiarato, tipoParametroUtilizzato);
+                }
+
+                //CONTROLLO SULLA KEYWORD OUT
+                if(paramDichiarato.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
+                    throw new RuntimeException("Non puoi utilizzare una funzione in corrispondenza di parametri out");
+                }
+
             }
             //ogni altro caso, per exprOP
             else if(parametroUtilizzatoCorrente instanceof String) {
@@ -935,58 +971,6 @@ public class TypeCheckingVisitor implements Visitor {
      */
     @Override
     public Object visit(FunCall funCall) {
-        //1. controlllo il numero di parametri se coincide con quello nella table
-        //se record è null vuol dire che la funzione non è mai stata dichiarata
-        /*
-        SymbolTableRecord record;
-        record = currentScope
-                .lookup(funCall.getIdentifier().getLessema())
-                .orElseThrow(() -> new Exceptions.NoDeclarationError(funCall.getIdentifier().getLessema()));
-
-        if(record.getProperties().equals("")) {
-            throw new RuntimeException("sTAi chiamando una procedura quando non dovresti");
-        }
-
-
-        var fieldType = (CallableFieldType) record.getFieldType();
-
-        var listaParametriNellaChiamata = funCall.getExprs();
-        var listaParametriDichiarazione = fieldType.getParams();
-
-        Integer nParamsChiamata = 0;
-        if ( listaParametriNellaChiamata != null) {
-            nParamsChiamata = listaParametriNellaChiamata.size();
-        }
-        var nParamsDichiarati = listaParametriDichiarazione.size();
-
-
-        ArrayList<Object> parametriUtilizzati = new ArrayList<>();
-
-        for (ExprOP exprOP: funCall.getExprs()) {
-            parametriUtilizzati.add(exprOP.accept(this));
-        }
-
-        if (!hannoStessoNumeroDiParametri(listaParametriDichiarazione, parametriUtilizzati)) {
-            throw new RuntimeException("il numero di parametri in procedura non matcha"); //TODO custom exception
-        }
-
-        //2. per ogni expr controllo che il tipo sia uguale a quello nella decl
-        for(int i = 0; i < nParamsChiamata; i++) {
-            //se l'i-esimo parametro nella chiamata non ha lo stesso tipo
-            //dell'i-esimo parametro nella dichiarazione
-            //fermati e throw exception
-            CallableParam parametroInDichiarazione = listaParametriDichiarazione.get(i);
-            ExprOP parametroInChiamata = listaParametriNellaChiamata.get(i);
-
-            String tipoCallableParam = parametroInDichiarazione.getTipo().getTipo();
-            String tipoExpr = (String) parametroInChiamata.accept(this);
-
-           //controlla i tipi
-            if(!tipoCallableParam.equalsIgnoreCase(tipoExpr)) {
-                throw new RuntimeException("I TIPI NON MATCHANO NELLA FUNZIONE"); //TODO CUSTOM EXCEPTION
-            }
-        }
-        */
 
         //TODO CODICE COPIATO SPUDORATAMENTE DA PROCCALL SI POTREBBE FARE UN PO' DI EXTRACTION
         //Lookup nella tabella
@@ -1012,9 +996,10 @@ public class TypeCheckingVisitor implements Visitor {
             parametriUtilizzati.add(exprOP.accept(this));
         }
 
-        if (!hannoStessoNumeroDiParametri(parametriDichiarati, parametriUtilizzati)) {
-            throw new RuntimeException("il numero di parametri in procedura non matcha"); //TODO custom exception
+        if(parametriDichiarati.size() != parametriUtilizzati.size()) {
+            throw new RuntimeException("Parametri dichiarati nella chiamata di funzione non matchano quelli utilizzati");
         }
+
 
         //Adesso scorriamo sia la lista dei parametri utilizzati che quelli dichiarati e confrontiamo tipo per tipo
         Iterator<CallableParam> paramDichiaratiIterator = parametriDichiarati.iterator();
@@ -1028,10 +1013,11 @@ public class TypeCheckingVisitor implements Visitor {
             ExprOP exprOPcorrente = itExprOPs.next();
             //caso di chiamata a funzione, RICORDA la funzione restituisce un array di tipi di ritorno
             if (parametroUtilizzatoCorrente instanceof ArrayList<?>) {
-
                 //iteratore sulla lista dei tipi di ritorno della funzione
                 ArrayList<String> tipiDiRitornoFunzione = (ArrayList<String>) parametroUtilizzatoCorrente;
-                Iterator<String> tipiDiRitornoFunzioneIt = tipiDiRitornoFunzione.iterator();
+                if(tipiDiRitornoFunzione.size() > 1) {
+                    throw new RuntimeException("Hai chiamato una funzione con più valori di ritorno in un'altra funzione");
+                }
 
                 if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF)) {
                     throw new RuntimeException("KEYWORD @ utilizzata in corrispondenza di una funzione");
@@ -1041,27 +1027,27 @@ public class TypeCheckingVisitor implements Visitor {
                     CallableParam paramDichiarato = paramDichiaratiIterator.next();
 
 
-                    String tipoParametroDichiarato = null;
-                    try {
-                        tipoParametroDichiarato = paramDichiarato.getTipo().getTipo();
-                    } catch (NoSuchElementException e) {
-                        throw new RuntimeException("il numero dei parametri utilizzati sono diversi da quelli dichiarati");
-                    }
+                String tipoParametroDichiarato = null;
+                try {
+                    tipoParametroDichiarato = paramDichiarato.getTipo().getTipo();
+                } catch (NoSuchElementException e) {
+                    throw new RuntimeException("il numero dei parametri utilizzati sono diversi da quelli dichiarati");
+                }
 
-                    String tipoParametroUtilizzato = tipiDiRitornoFunzioneIt.next();
+                String tipoParametroUtilizzato = tipiDiRitornoFunzione.get(0);
 
 
-                    if(!tipoParametroUtilizzato.equals(tipoParametroDichiarato)) {
-                        throw new Exceptions.TypesMismatch(funCall.getIdentifier().getLessema(), tipoParametroDichiarato, tipoParametroUtilizzato);
-                    }
+                if(!tipoParametroUtilizzato.equals(tipoParametroDichiarato)) {
+                    throw new Exceptions.TypesMismatch(funCall.getIdentifier().getLessema(), tipoParametroDichiarato, tipoParametroUtilizzato);
+                }
 
                     //CONTROLLO SULLA KEYWORD OUT
-                    if(paramDichiarato.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
-                        throw new RuntimeException("Non puoi utilizzare una funzione in corrispondenza di parametri out");
-                    }
-
+                if(paramDichiarato.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
+                    throw new RuntimeException("Non puoi utilizzare una funzione in corrispondenza di parametri out");
                 }
+
             }
+
             //ogni altro caso, per exprOP
             else if(parametroUtilizzatoCorrente instanceof String) {
                 //poi facciamo il confronto
@@ -1084,14 +1070,8 @@ public class TypeCheckingVisitor implements Visitor {
                 }
             }
         }
-        if(paramUtilizzatiIterator.hasNext() || paramDichiaratiIterator.hasNext()) {
-            throw new RuntimeException("i parametri utilizzati sono diversi da quelli dichiarati");
-        }
-
 
         var tipiDiRitorno = new ArrayList<>(Arrays.asList(record.getProperties().split(";")));
-
-
 
         return tipiDiRitorno;
     }
