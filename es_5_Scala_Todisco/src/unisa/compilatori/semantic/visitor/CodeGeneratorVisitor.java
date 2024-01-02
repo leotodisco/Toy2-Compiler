@@ -7,18 +7,23 @@ import unisa.compilatori.semantic.symboltable.SymbolTable;
 import unisa.compilatori.semantic.symboltable.SymbolTableRecord;
 import unisa.compilatori.semantic.symboltable.VarFieldType;
 
+
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
+
 import java.nio.file.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CodeGeneratorVisitor implements Visitor {
     private SymbolTable currentScope;
     private static File outFile;
     private FileWriter writer;
     public static String FILE_NAME = "output.c";
+
 
     public void enterScope(SymbolTable scope) {
         this.currentScope = scope;
@@ -51,8 +56,8 @@ public class CodeGeneratorVisitor implements Visitor {
             CodeGeneratorUtils.addFunctionSignatures(this.writer, program.getIterOp(), program.getIterWithoutProcedure(), program.getProc());
 
             program.getIterWithoutProcedure().accept(this);
-            program.getProc().accept(this);
             program.getIterOp().accept(this);
+            program.getProc().accept(this);
 
             writer.close();
         } catch (Exception e) {
@@ -72,6 +77,7 @@ public class CodeGeneratorVisitor implements Visitor {
     @Override
     public Object visit(IterOp iterOP) throws RuntimeException {
         iterOP.getDeclarations().forEach(varDecl -> varDecl.accept(this));
+        iterOP.getProcedures().forEach(procedure -> procedure.accept(this));
         return null;
     }
 
@@ -81,7 +87,18 @@ public class CodeGeneratorVisitor implements Visitor {
         String idProcedura = procedure.getId().getLessema();
         ArrayList<CallableParam> parametri = procedure.getProcParamDeclList();
 
+        enterScope(procedure.getTable());
+        try{
+            writer.append("\n\n");
+            CodeGeneratorUtils.scriviSingolaProceduraSignature(writer, procedure);
+            writer.append("{\n");
+            procedure.getBody().accept(this);
+            writer.append("}\n");
 
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        exitScope();
 
 
         return null;
@@ -89,12 +106,28 @@ public class CodeGeneratorVisitor implements Visitor {
 
     @Override
     public Object visit(BinaryOP operazioneBinaria) throws RuntimeException {
-        return null;
+        String expr1 = (String) operazioneBinaria.getExpr1().accept(this);
+        String expr2 = (String) operazioneBinaria.getExpr2().accept(this);
+
+        String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneBinaria.getName()); //ottieni il lessema giusto per l'operazione
+        if(lessemaOperazione.equalsIgnoreCase("strcat")) {
+            //todo fare controlli per vedere di che tipo sono le due espressioni
+            //a quel punto puoi richiamare la funzione helper che converte quel tipo specifico
+
+
+            return "str_concat(" + expr1 + ", "+ expr2+")";
+        }
+
+        return expr1 + " " + lessemaOperazione + " " + expr2;
     }
 
     @Override
     public Object visit(UnaryOP operazioneUnaria) throws RuntimeException {
-        return null;
+        String expr = (String) operazioneUnaria.getExpr().accept(this);
+
+        String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneUnaria.getSimbolo());
+
+        return lessemaOperazione + " " + expr;
     }
 
     @Override
@@ -111,6 +144,112 @@ public class CodeGeneratorVisitor implements Visitor {
 
     @Override
     public Object visit(Stat statement) throws RuntimeException {
+        if (statement instanceof WhileStat) {
+            ((WhileStat) statement).accept(this);
+        }
+        if(statement instanceof IfStat) {
+            ((IfStat) statement).accept(this);
+        }
+        if(statement instanceof ProcCall) {
+            ((ProcCall) statement).accept(this);
+        }
+        if (statement.getTipo().equals(Stat.Mode.ASSIGN)) {
+            //lo statement ha lista di id e corrispondente lista di exprs
+            var listaId = statement.getIdsList();
+            var listaEspressioni = statement.getEspressioniList();
+            for(int i = 0; i < listaId.size(); i++) {
+                Identifier id = listaId.get(i);
+                ExprOP espressione = listaEspressioni.get(i);
+
+                String lessemaId = (String) id.accept(this);
+                var lessemaOperazione = espressione.accept(this);
+
+                if(lessemaOperazione instanceof ArrayList<?>){
+                    //TODO caso funzione con più return
+                }
+                else {
+                    //Quando l' expr non è una chimaata a funzione ho solo una stringa
+                    try{
+                        writer.write(lessemaId + " = " + (String) lessemaOperazione+";\n");
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        //TODO implementare statement return, write, write-return
+        if (statement.getTipo().equals(Stat.Mode.RETURN)) {
+        }
+        if (statement.getTipo().equals(Stat.Mode.READ)) {
+            var listaEspresioni = statement.getEspressioniList();
+
+            List<ExprOP> espressioniDaStampare = listaEspresioni
+                                    .stream()
+                                    .filter(exprOP -> !exprOP.getMode().equals(ExprOP.Mode.IOARGSDOLLAR))
+                                    .collect(Collectors.toList());
+
+            List<Identifier> listaPerScanf = listaEspresioni
+                    .stream()
+                    .filter(exprOP -> exprOP.getMode().equals(ExprOP.Mode.IOARGSDOLLAR))
+                    .filter(exprOP -> exprOP instanceof Identifier)
+                    .map(exprOP -> (Identifier) exprOP)
+                    .toList();
+
+
+            //controlla se la lista per scanf va reversata
+            try {
+                //PRINTF
+                for(ExprOP espressione : espressioniDaStampare) {
+                    if(espressione instanceof ConstOP) {
+                        writer.write("printf("+(String) espressione.accept(this)+");\n");
+                    }
+                    if(espressione instanceof Identifier) {
+                        Identifier id = (Identifier) espressione;
+                        SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
+                        VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                        if(varFieldType.getType().equalsIgnoreCase("real")) {
+                            writer.write("printf( \"%lf\", "+id.getLessema()+");\n" );
+                        }
+                        if(varFieldType.getType().equalsIgnoreCase("integer")) {
+                            writer.write("printf( \"%d\", "+id.getLessema()+");\n" );
+                        }
+                        if(varFieldType.getType().equalsIgnoreCase("string")) {
+                            writer.write("printf( \"%s\", "+id.getLessema()+");\n" );
+                        }
+                    }
+                    if(espressione instanceof BinaryOP) {//se è concatenazione di stringhe
+                        BinaryOP operazione = (BinaryOP) espressione;
+
+                        if(operazione.getName().equalsIgnoreCase("stringConcat")) {
+                            writer.write("printf( \"%s\", "+(String)operazione.accept(this)+");\n" );
+                        }
+                    }
+                }
+
+                //SCANF
+                for(Identifier id : listaPerScanf) {
+                    SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
+                    VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                    if(varFieldType.getType().equalsIgnoreCase("real")) {
+                        writer.write("scanf( \"%lf\", &"+id.getLessema()+");\n" );
+                    }
+                    if(varFieldType.getType().equalsIgnoreCase("integer")) {
+                        writer.write("scanf( \"%d\", &"+id.getLessema()+");\n" );
+                    }
+                    if(varFieldType.getType().equalsIgnoreCase("string")) {
+                        writer.write("scanf( \"%s\", &"+id.getLessema()+");\n" );
+                    }
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if (statement.getTipo().equals(Stat.Mode.WRITE)) {
+
+        }
+        if (statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
+        }
+
         return null;
     }
 
@@ -137,24 +276,29 @@ public class CodeGeneratorVisitor implements Visitor {
     @Override
     public Object visit(WhileStat whileStat) throws RuntimeException {
         enterScope(whileStat.getTable()); //entro nello scope del while
-
         String condizione = (String) whileStat.getExpr().accept(this); //ottieni la condizione
 
         try {
             writer.write("while (" + condizione + ") { \n"); // while (true) {
             whileStat.getBody().accept(this); //traduci il body
-            writer.write("}");
+            writer.write("\n}\n");
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            exitScope();
         }
+        exitScope();
 
         return null;
     }
 
     @Override
     public Object visit(Body body) throws RuntimeException {
+        body.getVarDeclList().forEach(varDecl -> varDecl.accept(this));
+
+        var copiedStatList = new ArrayList<>(body.getStatList());
+        Collections.reverse(copiedStatList);
+
+        copiedStatList.forEach(stat -> stat.accept(this));
+
         return null;
     }
 
@@ -198,7 +342,6 @@ public class CodeGeneratorVisitor implements Visitor {
             }
         } else if (decl.getTipoDecl().equals(Decl.TipoDecl.ASSIGN)) {
             for (int i = 0; i < decl.getIds().size(); i++) {
-                //posso assumere che il numero di costanti sia uguale al numero di id in questa fase
                 Identifier id = decl.getIds().get(i);
                 ConstOP costante = decl.getConsts().get(i);
 
@@ -252,6 +395,17 @@ public class CodeGeneratorVisitor implements Visitor {
 
     @Override
     public Object visit(ExprOP exprOP) throws RuntimeException {
+        if(exprOP instanceof ConstOP)
+            return (String) ((ConstOP) exprOP).accept(this);
+        if(exprOP instanceof BinaryOP)
+            return (String) ((BinaryOP) exprOP).accept(this);
+        if(exprOP instanceof UnaryOP)
+            return (String) ((UnaryOP) exprOP).accept(this);
+        if(exprOP instanceof Identifier)
+            return (String) ((Identifier) exprOP).accept(this);
+        if(exprOP instanceof FunCall)
+            return (String) ((FunCall) exprOP).accept(this);
+
         return null;
     }
 

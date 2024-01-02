@@ -45,16 +45,6 @@ public class TypeCheckingVisitor implements Visitor {
                     return new String("REAL");
                 else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
                     return new String("REAL");
-                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("STRING"))
-                    return new String("STRING");
-                else if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("STRING"))
-                    return new String("STRING");
-                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("INTEGER"))
-                    return new String("STRING");
-                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("REAL"))
-                    return new String("STRING");
-                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("STRING"))
-                    return new String("STRING");
                 else {
                     throw new RuntimeException("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
                 }
@@ -69,8 +59,20 @@ public class TypeCheckingVisitor implements Visitor {
                 if(type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("STRING")) {
                     return new String("STRING");
                 }
+                else if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("STRING"))
+                    return new String("STRING");
+                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("INTEGER"))
+                    return new String("STRING");
+                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("REAL"))
+                    return new String("STRING");
+                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("STRING"))
+                    return new String("STRING");
+                else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("BOOLEAN"))
+                    return new String("STRING");
+                else if (type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("STRING"))
+                    return new String("STRING");
                 else
-                    throw new RuntimeException("errore");
+                    throw new RuntimeException("errore nella concatenazione di stringhe");
 
             case "div_op":
                 if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))

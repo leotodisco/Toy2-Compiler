@@ -3,6 +3,7 @@ package unisa.compilatori.semantic.visitor;
 import unisa.compilatori.nodes.*;
 import unisa.compilatori.nodes.expr.ExprOP;
 
+import java.io.IOException;
 import java.io.Writer;
 import java.io.File;
 import java.util.ArrayList;
@@ -68,13 +69,13 @@ public class CodeGeneratorUtils {
             writer.write("\treturn result;\n}\n");
 
             writer.write("\n");
-            writer.write("\tchar* read_str(){\n");
+            writer.write("char* read_str(){\n");
             writer.write("\tchar* str=malloc(sizeof(char)*MAXCHAR);\n");
             writer.write("\tscanf(\"%s\",str);\n");
             writer.write("\treturn str;\n}\n");
 
             writer.write("\n");
-            writer.write("\tint str_to_bool(char* expr){\n");
+            writer.write("int str_to_bool(char* expr){\n");
             writer.write("\tint i=0;\n");
             writer.write("\tif ( (strcmp(expr, \"true\")==0) || (strcmp(expr, \"1\"))==0 )\n");
             writer.write("\t\ti=1;\n");
@@ -101,6 +102,48 @@ public class CodeGeneratorUtils {
         if(type.equalsIgnoreCase("string")) type="char*";
 
         return type;
+    }
+
+    /**
+     * Converte i nomi delle operazioni binarie nel corrispondente token compatibile in C.
+     * @param nomeOperazione
+     * @return
+     */
+    public static String convertOperations(String nomeOperazione){
+//"plus_op", "times_op", "minus_op"
+        String tipoOprazione="";
+        if(nomeOperazione.equalsIgnoreCase("plus_op")) //fare che se le due exprs sono stringhe allora è strcat
+            tipoOprazione="+";
+        if(nomeOperazione.equalsIgnoreCase("minus_op"))
+            tipoOprazione="-";
+        if(nomeOperazione.equalsIgnoreCase("times_op"))
+            tipoOprazione="*";
+        if(nomeOperazione.equalsIgnoreCase("div_op"))
+            tipoOprazione="/";
+        if(nomeOperazione.equalsIgnoreCase("gt_op"))
+            tipoOprazione=">";
+        if(nomeOperazione.equalsIgnoreCase("ge_op"))
+            tipoOprazione=">=";
+        if(nomeOperazione.equalsIgnoreCase("lt_op"))
+            tipoOprazione="<";
+        if(nomeOperazione.equalsIgnoreCase("le_op"))
+            tipoOprazione="<=";
+        if(nomeOperazione.equalsIgnoreCase("ne_op"))
+            tipoOprazione="!=";
+        if(nomeOperazione.equalsIgnoreCase("eq_op"))
+            tipoOprazione="==";
+        if(nomeOperazione.equalsIgnoreCase("and_op"))
+            tipoOprazione="&&";
+        if(nomeOperazione.equalsIgnoreCase("or_op"))
+            tipoOprazione="||";
+        if(nomeOperazione.equalsIgnoreCase("uminus"))
+            tipoOprazione="-1*";
+        if(nomeOperazione.equalsIgnoreCase("not"))
+            tipoOprazione="!";
+        if(nomeOperazione.equalsIgnoreCase("stringConcat"))
+            tipoOprazione="strcat";
+
+        return tipoOprazione;
     }
 
     /**
@@ -166,54 +209,67 @@ public class CodeGeneratorUtils {
     }
 
     //void nomeProcedura(tipo id, tipo id, tipo* id)
-    private static void addProcedureSignatureHelper(Writer writer, ArrayList<Procedure> procedureList) {
-
+    public static void addProcedureSignatureHelper(Writer writer, ArrayList<Procedure> procedureList) {
         for(Procedure proc : procedureList) {
-            var nomeProcedura = proc.getId().getLessema();
-            if(nomeProcedura.equals("main")) {
+            if (proc.getId().getLessema().equals("main")){
                 continue;
             }
-            var listaParametriProcedura = proc.getProcParamDeclList();
-
-            try{
-            //scrivi void(
-            //scrivi ogni singolo parametro
-                // scrivi )
-                writer.write("void ");
-                writer.append(nomeProcedura);
-                writer.append("(");
-
-                //Scrivi la lista di parametri
-                for(int i = 0; i < listaParametriProcedura.size(); i++){
-                    var parametro = listaParametriProcedura.get(i);
-                    var id = parametro.getId().getLessema();
-                    var tipo = parametro.getTipo().getTipo();
-                    var isPuntatore = parametro.getId().getMode().equals(ExprOP.Mode.PARAMSOUT);
-                    var tipoConvertito = convertType(tipo);
-
-                    writer.append(tipoConvertito);
-                    if(isPuntatore) {
-                        writer.append("*");
-                    }
-
-                    writer.append(" ");
-                    writer.append(id);
-
-                    //se non è l'ultimo elemento metti la virgola
-                    if(i != listaParametriProcedura.size()-1)
-                        writer.append(",");
-                    else
-                        writer.append(");\n\n");
-                }
-
-
-
-            } catch(Exception e) {
-                e.printStackTrace();
+            scriviSingolaProceduraSignature(writer, proc);
+            try {
+                writer.append(";\n\n"); //lo faccio qui per riutilizzare questo metodo
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
 
         }
 
+    }
+
+    /**
+     * Scrive una singola signature di procedura
+     * @param writer
+     * @param proc
+     */
+    public static void scriviSingolaProceduraSignature(Writer writer, Procedure proc) {
+        var nomeProcedura = proc.getId().getLessema();
+
+        var listaParametriProcedura = proc.getProcParamDeclList();
+
+        try{
+        //scrivi void(
+        //scrivi ogni singolo parametro
+            // scrivi )
+            writer.write("void ");
+            writer.append(nomeProcedura);
+            writer.append("(");
+
+            //Scrivi la lista di parametri
+            for(int i = 0; i < listaParametriProcedura.size(); i++){
+                var parametro = listaParametriProcedura.get(i);
+                var id = parametro.getId().getLessema();
+                var tipo = parametro.getTipo().getTipo();
+                var isPuntatore = parametro.getId().getMode().equals(ExprOP.Mode.PARAMSOUT);
+                var tipoConvertito = convertType(tipo);
+
+                writer.append(tipoConvertito);
+                if(isPuntatore) {
+                    writer.append("*");
+                }
+
+                writer.append(" ");
+                writer.append(id);
+
+                //se non è l'ultimo elemento metti la virgola
+                if(i != listaParametriProcedura.size()-1)
+                    writer.append(",");
+                else
+                    break;
+            }
+            writer.append(")");
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
