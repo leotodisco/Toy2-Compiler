@@ -335,6 +335,67 @@ public class CodeGeneratorVisitor implements Visitor {
 
         return null;
     }
+    @Override
+    public Object visit(IfStat ifStat) throws RuntimeException {
+        try{
+            writer.write("if( ");
+            writer.append((String)ifStat.getExpr().accept(this));
+            writer.append(") {\n");
+            enterScope(ifStat.getSymbolTableThen());
+            //scrive il then
+            ifStat.getBody().accept(this);
+            exitScope();
+            writer.append("}\n"); //finisce il then
+
+            //se ho degli else if li scrivo
+            if(!ifStat.getElseIfOPList().isEmpty()) {
+                ifStat.getElseIfOPList().forEach(elseIfOP -> elseIfOP.accept(this));
+            }
+
+            //scrivo l'else se è presente
+            if(ifStat.getElseOP()!=null) {
+                ifStat.getElseOP().accept(this);
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public Object visit(ElseOP elseOP) throws RuntimeException {
+        try{
+            writer.write("else {\n");
+
+            enterScope(elseOP.getSymbolTableElseOp());
+            elseOP.getBody().accept(this);
+            exitScope();
+
+            writer.append("}\n");
+
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public Object visit(ElseIfOP elseIfOP) throws RuntimeException {
+        String condizione = (String) elseIfOP.getExpr().accept(this);
+        try{
+            writer.write("else if (" + condizione + ") {\n");
+            enterScope(elseIfOP.getSymbolTableElseIF());
+            elseIfOP.getBody().accept(this);
+            exitScope();
+            writer.write("}\n");
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
 
     @Override
@@ -462,12 +523,15 @@ public class CodeGeneratorVisitor implements Visitor {
     public Object visit(Identifier id) throws RuntimeException {
         var lessema = id.getLessema();
         SymbolTableRecord result = currentScope.lookup(lessema).get();
+        var varFieldType = (VarFieldType) result.getFieldType();
+
+        var tipo = varFieldType.getType();
 
         if (id.getMode().equals(ExprOP.Mode.VARIABLENAME) || id.getMode().equals(ExprOP.Mode.PARAMS) || id.getMode().equals(ExprOP.Mode.NONE)) {
             return lessema;
-        } else if (id.getMode().equals(ExprOP.Mode.PARAMSOUT)) {
+        } else if (id.getMode().equals(ExprOP.Mode.PARAMSOUT) && !tipo.equalsIgnoreCase("string")) { //se è una stringa non devi fare sta roba
             return "*" + lessema;
-        } else if (id.getMode().equals(ExprOP.Mode.PARAMSREF)) {
+        } else if (id.getMode().equals(ExprOP.Mode.PARAMSREF)&& !tipo.equalsIgnoreCase("string") ) { //se è una stringa non devi fare sta roba
             return "&" + lessema;
         }
 

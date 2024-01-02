@@ -252,7 +252,7 @@ public class CodeGeneratorUtils {
                 var tipoConvertito = convertType(tipo);
 
                 writer.append(tipoConvertito);
-                if(isPuntatore) {
+                if(isPuntatore && !tipo.equalsIgnoreCase("string")) { //se è char* non deve aggiungere un altro *
                     writer.append("*");
                 }
 
