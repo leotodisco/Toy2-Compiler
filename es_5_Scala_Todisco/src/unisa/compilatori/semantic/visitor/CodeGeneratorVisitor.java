@@ -224,6 +224,11 @@ public class CodeGeneratorVisitor implements Visitor {
                 }
             }
 
+            if(operazioneBinaria.getExpr1() instanceof BinaryOP) {
+                String tipoE1 = (String) ((BinaryOP) operazioneBinaria.getExpr1()).getExpr1().accept(this);
+                String tipoE2 = (String) ((BinaryOP) operazioneBinaria.getExpr1()).getExpr2().accept(this);
+            }
+
 
             return "str_concat(" + expr1 + ", " + expr2 + ")";
         }
@@ -426,19 +431,50 @@ public class CodeGeneratorVisitor implements Visitor {
         }
         if (statement.getTipo().equals(Stat.Mode.READ)) {
             var listaEspresioni = statement.getEspressioniList();
+            Collections.reverse(listaEspresioni);
 
-            List<ExprOP> espressioniDaStampare = listaEspresioni
-                                    .stream()
-                                    .filter(exprOP -> !exprOP.getMode().equals(ExprOP.Mode.IOARGSDOLLAR))
-                                    .collect(Collectors.toList());
+            try{
+                for (ExprOP espressione : listaEspresioni) {
+                    if(espressione.getMode().equals(ExprOP.Mode.IOARGSDOLLAR)) {
+                        Identifier id = (Identifier) espressione;
+                        SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
+                        VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                        if(varFieldType.getType().equalsIgnoreCase("real")) {
+                            writer.write("scanf( \"%f\", &"+id.getLessema()+");\n" );
+                        }
+                        if(varFieldType.getType().equalsIgnoreCase("integer")) {
+                            writer.write("scanf( \"%d\", &"+id.getLessema()+");\n" );
+                        }
+                        if(varFieldType.getType().equalsIgnoreCase("string")) {
+                            writer.write("scanf( \"%s\", &"+id.getLessema()+");\n" );
+                        }
+                    }
+                    else{
+                        if(espressione instanceof ConstOP) {
+                            writer.write("printf("+(String) espressione.accept(this)+");\n");
+                        }
+                        if(espressione instanceof Identifier) {
+                            Identifier id = (Identifier) espressione;
+                            SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
+                            VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                            if(varFieldType.getType().equalsIgnoreCase("real")) {
+                                writer.write("printf( \"%f\", "+id.getLessema()+");\n" );
+                            }
+                            if(varFieldType.getType().equalsIgnoreCase("integer")) {
+                                writer.write("printf( \"%d\", "+id.getLessema()+");\n" );
+                            }
+                            if(varFieldType.getType().equalsIgnoreCase("string")) {
+                                writer.write("printf( \"%s\", "+id.getLessema()+");\n" );
+                            }
+                        }
+                        if(espressione instanceof BinaryOP) {//se è concatenazione di stringhe
+                            BinaryOP operazione = (BinaryOP) espressione;
 
-            List<Identifier> listaPerScanf = listaEspresioni
-                    .stream()
-                    .filter(exprOP -> exprOP.getMode().equals(ExprOP.Mode.IOARGSDOLLAR))
-                    .filter(exprOP -> exprOP instanceof Identifier)
-                    .map(exprOP -> (Identifier) exprOP)
-                    .toList();
-
+                            if(operazione.getName().equalsIgnoreCase("stringConcat")) {
+                                writer.write("printf( \"%s\", "+(String)operazione.accept(this)+");\n" );
+                            }
+                        }
+                    }
 
                 }
             } catch (Exception e){
