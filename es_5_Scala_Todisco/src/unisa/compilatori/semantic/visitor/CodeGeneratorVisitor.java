@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileWriter;
 
 import java.io.Writer;
+import java.lang.reflect.Array;
 import java.nio.file.*;
 import java.nio.file.Files;
 import java.util.*;
@@ -546,10 +547,51 @@ public class CodeGeneratorVisitor implements Visitor {
 
         }
         if (statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
+            ArrayList<ExprOP> listaEspressioni = statement.getEspressioniList();
+            try{
+                StringBuilder stringBuilder = new StringBuilder("printf( ");
+                for(int i = 0; i < listaEspressioni.size(); i++) {
+                    ExprOP espressione = listaEspressioni.get(i);
+                    String tipoEspressione = "";
+                    if(espressione instanceof FunCall) {
+                        FunCall espressioneCastata = (FunCall) espressione;
+                        tipoEspressione = ((ArrayList<String>) espressione.accept(new TypeCheckingVisitor())).get(0);
+                    }
+                    else if(espressione instanceof ConstOP) {
+                        ConstOP constOP = (ConstOP) espressione;
+                        stringBuilder.append((String) constOP.accept(this));
+
+                        continue;
+                    }
+                    else {
+                        tipoEspressione = (String) espressione.accept(new TypeCheckingVisitor());
+                    }
+
+                    String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipoEspressione);
+                    if(i != listaEspressioni.size()-1) {
+                        stringBuilder.append("\"" + formatSpecifier + "\"" );
+                        stringBuilder.append(",");
+                    }
+                    else{
+                        stringBuilder.append("\"" + formatSpecifier  );
+
+                    }
+                }
+                stringBuilder.append("\" \\n \"");
+                stringBuilder.append(");\n");
+                writer.append(stringBuilder.toString());
+
+
+            } catch(Exception e){
+                e.printStackTrace();
+            }
         }
 
         return null;
     }
+
+
+
     @Override
     public Object visit(IfStat ifStat) throws RuntimeException {
         try{

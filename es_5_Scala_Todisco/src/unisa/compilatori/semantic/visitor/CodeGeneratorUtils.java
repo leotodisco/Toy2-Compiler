@@ -275,4 +275,19 @@ public class CodeGeneratorUtils {
         }
     }
 
+    public static String getFormatSpecifier(String tipoEspressione) {
+        String formatSpecifier = "";
+        //todo esportare metodo e metterlo in utils
+        if(tipoEspressione.equalsIgnoreCase("integer") || tipoEspressione.equalsIgnoreCase("boolean")){
+            formatSpecifier = "%d";
+        }
+        if(tipoEspressione.equalsIgnoreCase("real")){
+            formatSpecifier = "%f";
+        }
+        if(tipoEspressione.equalsIgnoreCase("string")){
+            formatSpecifier = "%s";
+        }
+        return formatSpecifier;
+    }
+
 }

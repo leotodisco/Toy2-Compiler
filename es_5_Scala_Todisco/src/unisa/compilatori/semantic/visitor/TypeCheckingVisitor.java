@@ -53,7 +53,7 @@ public class TypeCheckingVisitor implements Visitor {
                 if(type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("BOOLEAN"))
                     return new String("boolean");
                 else
-                    throw new RuntimeException("errore");
+                    throw new RuntimeException("Tipi incompatibili per operazione binaria");
 
             case "stringConcat":
                 if(type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("STRING")) {
@@ -199,7 +199,19 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(UnaryOP operazioneUnaria) {
-        String tipoExpr1 = (String) operazioneUnaria.getExpr().accept(this);
+        String tipoExpr1;
+        //Qui si controlla che l'operazione non sia una funzione con più tipi di ritorno
+        if(operazioneUnaria.getExpr() instanceof FunCall) {
+            FunCall espressioneFuncall = ((FunCall) operazioneUnaria.getExpr());
+            ArrayList<String> tipiRitornoFunzione = (ArrayList<String>) espressioneFuncall.accept(this);
+            if(tipiRitornoFunzione.size() > 1) {
+                throw new RuntimeException("Non puoi usare una funzione con più tipi di ritorno in una UnaryOP");
+            }
+            tipoExpr1 = tipiRitornoFunzione.get(0);
+        } else {
+            tipoExpr1 = (String) operazioneUnaria.getExpr().accept(this);
+        }
+
         String expName = operazioneUnaria.getSimbolo();
         String risultato = "";
         risultato = evaluateType(tipoExpr1, expName);
@@ -519,19 +531,28 @@ public class TypeCheckingVisitor implements Visitor {
          * Si controlla che gli id nella read siano stati tutti dichiarati precedentemente
          */
         if(statement.getTipo().equals(Stat.Mode.READ)) {
-            statement.getEspressioniList().forEach(exprOP -> {
-                if(exprOP instanceof Identifier) {
-                        exprOP.accept(this);
-                } else if(exprOP instanceof ConstOP || exprOP instanceof BinaryOP) {
-                        String tipoCostante = (String) exprOP.accept(this);
-                        if(!tipoCostante.equalsIgnoreCase("String")){
-                            throw new RuntimeException("puoi usare solo un id o Stringhe in una read");
-                        }
+            for(ExprOP espressione : statement.getEspressioniList()){
+                if(espressione instanceof Identifier) {
+                    espressione.accept(this);
+                }
+                else if(espressione instanceof ConstOP || espressione instanceof BinaryOP) {
+                    String tipoCostante = (String) espressione.accept(this);
+                    if(!tipoCostante.equalsIgnoreCase("String")){
+                        throw new RuntimeException("puoi usare solo un id o Stringhe in una read");
+                    }
+                }
+                else if(espressione instanceof FunCall){
+                    ArrayList<String> tipiRitorno = (ArrayList<String>) ((FunCall) espressione).accept(this);
+                    if(tipiRitorno.size()>1){
+                        throw new RuntimeException("Non puoi usare una funzione con più tipi di ritorno in una read");
+                    }
                 }
                 else {
                     throw new RuntimeException("Una Read richiede che si usino ID");
                 }
-            });
+
+            }
+
         }
 
         //devo controllare che stia all'interno di una funzione e non di una procedura
@@ -789,7 +810,20 @@ public class TypeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(WhileStat whileStat) {
-        String condition = (String) whileStat.getExpr().accept(this);
+        String condition = "";
+
+        if(whileStat.getExpr() instanceof FunCall){
+            var espressioneFuncall = (FunCall) whileStat.getExpr();
+            var tipi = (ArrayList<String>) espressioneFuncall.accept(this);
+            if(tipi.size() > 1)
+                throw new RuntimeException("Non puoi usare una funzione con più tipi di ritorno in un while");
+            else{
+                condition = tipi.get(0);
+            }
+        }
+        else {
+            condition = (String) whileStat.getExpr().accept(this);
+        }
 
         if( !condition.equalsIgnoreCase("boolean")){
             throw new Exceptions.InvalidCondition(condition);
@@ -1022,9 +1056,7 @@ public class TypeCheckingVisitor implements Visitor {
                 if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF)) {
                     throw new RuntimeException("KEYWORD @ utilizzata in corrispondenza di una funzione");
                 }
-                while (tipiDiRitornoFunzioneIt.hasNext()) {
-
-                    CallableParam paramDichiarato = paramDichiaratiIterator.next();
+                CallableParam paramDichiarato = paramDichiaratiIterator.next();
 
 
                 String tipoParametroDichiarato = null;
@@ -1114,7 +1146,6 @@ public class TypeCheckingVisitor implements Visitor {
 
             return ((FunCall) exprOP).accept(this);
         }
-
         return null;
     }
 
