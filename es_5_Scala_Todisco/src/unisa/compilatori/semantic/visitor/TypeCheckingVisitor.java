@@ -563,7 +563,15 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(IfStat ifStat) throws RuntimeException{
         String tipoExpr = "";
-        tipoExpr = (String) ifStat.getExpr().accept(this);
+
+        Object resultExpr = ifStat.getExpr().accept(this);
+        if(resultExpr instanceof ArrayList<?>) {
+            tipoExpr = ((ArrayList<String>) resultExpr).get(0);
+        } else {
+            tipoExpr = (String) ifStat.getExpr().accept(this);
+        }
+
+
 
         if (!tipoExpr.equalsIgnoreCase("boolean")) {
             throw new Exceptions.InvalidCondition(tipoExpr);

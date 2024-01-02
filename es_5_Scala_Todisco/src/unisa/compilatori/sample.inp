@@ -1,96 +1,31 @@
-%Programma Toy2 che visualizza menu in cui scegliere operazione aritmetica
-richieda all'utente gli input (interi o double) necessari per svolgere l'operazione scelta
-esegua l'operazione, restituisca il risultato e chieda se si vuol continuare
-all'input 0 oppure 1 il programma  conclude oppure mostra il menu iniziale, rispettivamente.
-%
-
-var jimmy : integer;\
-var carlo:string;\
-
-var
-    leonardo: string; carmine:integer;\
-
-func somma_con_commento(a:integer, b:integer) -> integer:
-    var risultato:integer;\
-    risultato ^= a+b;
-
-    if (risultato > 20) && (risultato < 40) then
-
-        return risultato;
-    endif;
-
+func godo(a :real) -> real, integer:
+    return godo(12.2);
 endfunc
 
-func sottrazione(a:integer, b:integer) -> integer:
-    if a > 5 then
-        return a;
-    elseif a < 4 then
-    else
-        return a - b;
-    endif;
-
+func prova_return(a:real) ->real, integer, string:
+    return godo(12.2), "pippo";
 endfunc
 
-func foo(a : real, b:boolean) -> integer, real:
-    return 12, 12.2;
-endfunc
-var calamari : integer;\
-func divisione(a:integer, b:integer) -> real:
-    return a/b;
+func godos(a :real) -> boolean:
+    return true;
 endfunc
 
-func moltiplicazione(a:integer, b:integer) -> integer:
-    return a*b;
+func foo_prova( b :real, c: integer,a:integer, d:boolean, e:integer) -> real, integer:
+    return 12.2, 12;
 endfunc
-var jmy : integer;\
+
+func pirla() -> real:
+    return 12.2;
+endfunc
 
 proc main():
-    var a, b:integer;\
-    var scelta : integer;\
-    var risultato_intero : integer;\
-    var risultato_real : real;\
-
-    <-- "Inserire 1 per somma con commento\nInserire 2 per sottrazione\nInserire 3 per moltiplicazione\nInserire 4 per divisione" $(scelta);
-    <-- "Inserire i due input per le funzioni\n" $(a) $(b);
-
-    if scelta = 1 then
-        -->! "Hai scelto la somma";
-        var risultato_stringa: string;\
-        risultato_intero ^= somma_con_commento(a, b);
-        --> "Risultato: " $(risultato_intero);
-        --> " Commento: " $(risultato_stringa);
-        -->! "Abbiamo fatto ritornare due cose da una funzione in C!!!!";
-
-    elseif scelta = 2 then
-        -->! "Hai scelto la sottrazione";
-        risultato_intero ^= sottrazione(a, b);
-        --> "Risultato: " $(risultato_intero);
-
-    else
-        if scelta = 3 then
-            -->! "Hai scelto la moltiplicazione";
-            risultato_intero ^= moltiplicazione(a, b);
-            --> "Risultato: " $(risultato_real);
-            -->! "Questo era un risultato di tipo real!!!";
-        endif;
-
-        if scelta = 4 then
-            -->! "Hai scelto la divisione";
-            risultato_real ^= divisione(a, b);
-            --> "Risultato: " $(risultato_real);
-            -->! "Questo era un risultato di tipo real!!!";
-        endif;
-
-     endif;
-
-
-
-
-
-
+    var a:real; b:integer;\
+    a ^=2.2;
+    <-- "ciao Benito Scala" + a $(a) "ciao Leopoldo" ;
+    a,b ^= foo_prova( 2.2, 12, 12, godos(12.2), 13);
+    a ^= pirla();
+    <-- "ciao Benito Scala1" + b ;
+    <-- "ciao Ben" $(a);
 endproc
 
-var
-    leonardo1: string; carmine1:integer;\
 
-var panettone : real;\

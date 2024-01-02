@@ -196,7 +196,10 @@ public class CodeGeneratorUtils {
                 signature.append(",");
             }
             //elimino l'ultimo "," aggiunto alla fine dei parametri
-            signature.deleteCharAt(signature.length()-1);
+            if(!((function.getParametersList()==null) || function.getParametersList().isEmpty())) {
+                signature.deleteCharAt(signature.length()-1);
+            }
+
 
             signature.append(");\n\n");
             try {
