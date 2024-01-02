@@ -329,7 +329,6 @@ public class CodeGeneratorVisitor implements Visitor {
                     try {
 
                         writer.write((String)lessemaOperazione);
-                        System.out.println("chiamata a funzione numero " + temp);
                     }catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -340,8 +339,6 @@ public class CodeGeneratorVisitor implements Visitor {
                     int countResults = tipiDiRitornoFunzione.size();
                     for(int i = 0; i < countResults; i++) {
 
-                        System.out.println(countResults);
-                        System.out.println(id);
                         try {
                             writer.write(lessemaId + " = r_" + temp+ ".result" + i +";\n");
 
@@ -443,56 +440,76 @@ public class CodeGeneratorVisitor implements Visitor {
                     .toList();
 
 
-            //controlla se la lista per scanf va reversata
-            try {
-                //PRINTF
-                for(ExprOP espressione : espressioniDaStampare) {
-                    System.out.println("exp = " + (String)espressione.accept(this));
-                    if(espressione instanceof ConstOP) {
-                        writer.write("printf("+(String) espressione.accept(this)+");\n");
-                    }
-                    if(espressione instanceof Identifier) {
-                        Identifier id = (Identifier) espressione;
-                        SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
-                        VarFieldType varFieldType = (VarFieldType) record.getFieldType();
-                        if(varFieldType.getType().equalsIgnoreCase("real")) {
-                            writer.write("printf( \"%f\", "+id.getLessema()+");\n" );
-                        }
-                        if(varFieldType.getType().equalsIgnoreCase("integer")) {
-                            writer.write("printf( \"%d\", "+id.getLessema()+");\n" );
-                        }
-                        if(varFieldType.getType().equalsIgnoreCase("string")) {
-                            writer.write("printf( \"%s\", "+id.getLessema()+");\n" );
-                        }
-                    }
-                    if(espressione instanceof BinaryOP) {//se è concatenazione di stringhe
-                        BinaryOP operazione = (BinaryOP) espressione;
-
-                        if(operazione.getName().equalsIgnoreCase("stringConcat")) {
-                            writer.write("printf( \"%s\", "+(String)operazione.accept(this)+");\n" );
-                        }
-                    }
-                }
-
-                //SCANF
-                for(Identifier id : listaPerScanf) {
-                    SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
-                    VarFieldType varFieldType = (VarFieldType) record.getFieldType();
-                    if(varFieldType.getType().equalsIgnoreCase("real")) {
-                        writer.write("scanf( \"%f\", &"+id.getLessema()+");\n" );
-                    }
-                    if(varFieldType.getType().equalsIgnoreCase("integer")) {
-                        writer.write("scanf( \"%d\", &"+id.getLessema()+");\n" );
-                    }
-                    if(varFieldType.getType().equalsIgnoreCase("string")) {
-                        writer.write("scanf( \"%s\", &"+id.getLessema()+");\n" );
-                    }
                 }
             } catch (Exception e){
                 e.printStackTrace();
             }
+
         }
         if (statement.getTipo().equals(Stat.Mode.WRITE)) {
+
+            List<ExprOP> listaFunCall = statement.getEspressioniList().stream().filter(exprOP -> exprOP instanceof FunCall).toList();
+
+            ArrayList<Integer> idStructsFunzioni = new ArrayList<>();
+            for (ExprOP funCall : listaFunCall) {
+                try {
+                    int currentFunCallCount = this.funCallCount + 1;
+                    writer.write((String)funCall.accept(this));
+                    idStructsFunzioni.add(currentFunCallCount);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+            Iterator<Integer> itIdStructsFunzioni = idStructsFunzioni.iterator();
+
+            //lookup per scoprire il nome della funzione del return per costruire il tipo di ritorno
+
+            StringBuilder daRestituire = new StringBuilder();
+
+            for(int i = 0; i < statement.getEspressioniList().size(); i++) {
+                ExprOP exprOP = statement.getEspressioniList().get(i);
+
+                if(exprOP instanceof FunCall) {
+
+                    //lookup di funcal per scoprire quanti tipi restituisce
+                    SymbolTableRecord funzioneChiamataCorrente = this.currentScope.lookup(((FunCall) exprOP).getIdentifier().getLessema()).orElseThrow();
+                    ArrayList<String> tipiDiRitornoFunCallCorrente = new ArrayList<>(Arrays.asList(funzioneChiamataCorrente.getProperties().split(";")));
+
+                    int idStruct = itIdStructsFunzioni.next();
+                    int k = i;
+                    for(int j = 0; j < tipiDiRitornoFunCallCorrente.size(); j++) {
+                        daRestituire.append("daRestituire." + "result" + k + "=" + "r_" + idStruct + ".result"+ j + ";\n");
+                        k++;
+                    }
+
+                    for(int j = 0; j < tipiDiRitornoFunCallCorrente.size(); j++) {
+                        if(tipiDiRitornoFunCallCorrente.get(i).equalsIgnoreCase("integer")) {
+                            daRestituire.append("printf(\"%d \", daRestituire." + "result" + i +");");
+                        }
+                        System.out.println(tipiDiRitornoFunCallCorrente.get(i));
+                        if(tipiDiRitornoFunCallCorrente.get(i).equalsIgnoreCase("string")) {
+                            daRestituire.append("printf(\"%s \", daRestituire." + "result" + i +");");
+                            System.out.println("SONO IN UNA STRINGA");
+                        }
+
+                        i++;
+                    }
+                } else {
+                    daRestituire.append("daRestituire." + "result" + i + "=" + exprOP.accept(this)+ ";\n");
+                }
+            }
+
+            try {
+                System.out.println(daRestituire.toString());
+                writer.write(daRestituire.toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+
 
         }
         if (statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
@@ -572,7 +589,6 @@ public class CodeGeneratorVisitor implements Visitor {
             writer.write(lessemaId + "(");
 
             if(parametri == null || parametri.isEmpty()){
-                System.out.println("sono in parametri null o vuoto");
                 writer.write(");\n");
                 return null;
             }
@@ -822,7 +838,6 @@ public class CodeGeneratorVisitor implements Visitor {
                 }
             }
             chiamataAFunzione.append(");\n");
-            //System.out.println(chiamataAFunzione);
             stringBuilder.append(chiamataAFunzione);
         }
 
@@ -836,7 +851,6 @@ public class CodeGeneratorVisitor implements Visitor {
         }
         */
 
-        System.out.println("log"+ stringBuilder.toString());
         return stringBuilder.toString();
     }
 
