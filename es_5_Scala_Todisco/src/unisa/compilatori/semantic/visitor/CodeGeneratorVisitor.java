@@ -3,6 +3,7 @@ package unisa.compilatori.semantic.visitor;
 import unisa.compilatori.nodes.*;
 import unisa.compilatori.nodes.expr.*;
 import unisa.compilatori.nodes.stat.*;
+import unisa.compilatori.semantic.symboltable.CallableFieldType;
 import unisa.compilatori.semantic.symboltable.SymbolTable;
 import unisa.compilatori.semantic.symboltable.SymbolTableRecord;
 import unisa.compilatori.semantic.symboltable.VarFieldType;
@@ -13,9 +14,7 @@ import java.io.FileWriter;
 
 import java.nio.file.*;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CodeGeneratorVisitor implements Visitor {
@@ -23,6 +22,8 @@ public class CodeGeneratorVisitor implements Visitor {
     private static File outFile;
     private FileWriter writer;
     public static String FILE_NAME = "output.c";
+
+    private int countFunCall = 0;
 
 
     public void enterScope(SymbolTable scope) {
@@ -71,6 +72,7 @@ public class CodeGeneratorVisitor implements Visitor {
     public Object visit(IterWithoutProcedure iterWithoutProcedure) throws RuntimeException {
         //aggiungere firme delle funzioni e delle procedure ad inizio file
         iterWithoutProcedure.getDeclarations().forEach(varDecl -> varDecl.accept(this));
+        iterWithoutProcedure.getFunctions().forEach(funzione->funzione.accept(this));
         return null;
     }
 
@@ -78,6 +80,8 @@ public class CodeGeneratorVisitor implements Visitor {
     public Object visit(IterOp iterOP) throws RuntimeException {
         iterOP.getDeclarations().forEach(varDecl -> varDecl.accept(this));
         iterOP.getProcedures().forEach(procedure -> procedure.accept(this));
+
+        iterOP.getFunctions().forEach(funzione->funzione.accept(this));
         return null;
     }
 
@@ -139,6 +143,46 @@ public class CodeGeneratorVisitor implements Visitor {
 
     @Override
     public Object visit(Function funzione) throws RuntimeException {
+        String idFunzione = funzione.getId().getLessema();
+        var parametri = funzione.getParametersList();
+        boolean ritornaStruct = funzione.getReturnTypes().size()>1;
+        StringBuilder signature = new StringBuilder();
+
+        try{
+            if(ritornaStruct){
+                signature.append("result_" + idFunzione);
+            }
+            else{
+                signature.append(CodeGeneratorUtils.convertType(funzione.getReturnTypes().get(0).getTipo()));
+            }
+            signature.append(" ");
+
+            signature.append(idFunzione);
+            signature.append("(");
+
+            //aggiungo parametri della funzione
+            for(CallableParam param : parametri) {
+                //aggiungo il tipo
+                signature.append(CodeGeneratorUtils.convertType(param.getTipo().getTipo()));
+                signature.append(" ");
+                //aggiungo l'id del parametro
+                signature.append(param.getId().getLessema());
+                signature.append(",");
+            }
+            //elimino l'ultimo "," aggiunto alla fine dei parametri
+            signature.deleteCharAt(signature.length()-1);
+            writer.write(signature.toString());
+
+
+            enterScope(funzione.getTable());
+            writer.append(") {\n");
+            funzione.getBody().accept(this);
+            writer.append("}\n");
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        exitScope();
         return null;
     }
 
@@ -155,17 +199,52 @@ public class CodeGeneratorVisitor implements Visitor {
         }
         if (statement.getTipo().equals(Stat.Mode.ASSIGN)) {
             //lo statement ha lista di id e corrispondente lista di exprs
+
             var listaId = statement.getIdsList();
             var listaEspressioni = statement.getEspressioniList();
-            for(int i = 0; i < listaId.size(); i++) {
-                Identifier id = listaId.get(i);
-                ExprOP espressione = listaEspressioni.get(i);
+            Iterator<Identifier> itListaId = listaId.iterator();
+            Iterator<ExprOP> itListaEspressioni = listaEspressioni.iterator();
+
+            while(itListaId.hasNext() && itListaEspressioni.hasNext()) {
+                Identifier id = itListaId.next();
+                ExprOP espressione = itListaEspressioni.next();
 
                 String lessemaId = (String) id.accept(this);
                 var lessemaOperazione = espressione.accept(this);
+                //a,b,c ^= foo(), 12;
+                //
+                //result_foo r1 = foo();
+                //
+                //a = r1.result0;
+                //b = r1.result1;
+                //c = 12;
+                if(espressione instanceof FunCall){
+                    try {
+                        writer.write((String)lessemaOperazione);
+                    }catch (Exception e) {
 
-                if(lessemaOperazione instanceof ArrayList<?>){
-                    //TODO caso funzione con più return
+                    }
+
+
+                    int countResults = ((FunCall) espressione).getExprs().size();
+                    for(int i = 0; i < countResults; i++) {
+
+                        System.out.println(countResults);
+                        System.out.println(id);
+                        try {
+                            writer.write(lessemaId + " = r" + countFunCall+ ".result" + i +";\n");
+
+                            if(itListaId.hasNext()) {
+                                id = itListaId.next();
+                                lessemaId = id.getLessema();
+                            }
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+
+                    }
+                    
+                    countFunCall++;
                 }
                 else {
                     //Quando l' expr non è una chimaata a funzione ho solo una stringa
@@ -175,6 +254,10 @@ public class CodeGeneratorVisitor implements Visitor {
                         e.printStackTrace();
                     }
                 }
+
+            }
+            for(int i = 0; i < listaId.size(); i++) {
+
             }
         }
         //TODO implementare statement return, write, write-return
@@ -253,23 +336,38 @@ public class CodeGeneratorVisitor implements Visitor {
         return null;
     }
 
-    @Override
-    public Object visit(IfStat ifStat) throws RuntimeException {
-        return null;
-    }
-
-    @Override
-    public Object visit(ElseOP elseOP) throws RuntimeException {
-        return null;
-    }
-
-    @Override
-    public Object visit(ElseIfOP elseIfOP) throws RuntimeException {
-        return null;
-    }
 
     @Override
     public Object visit(ProcCall procCall) throws RuntimeException {
+        var lessemaId = procCall.getIdentifier().getLessema();
+        var parametri = procCall.getExprs();
+
+        try{
+            writer.write(lessemaId + "(");
+
+            if(parametri == null || parametri.isEmpty()){
+                System.out.println("sono in parametri null o vuoto");
+                writer.write(");\n");
+                return null;
+            }
+
+            for(int i = 0; i < parametri.size(); i++) {
+                ExprOP parametroAttuale = parametri.get(i);
+                if(i == parametri.size()-1){
+                    String result = (String) parametroAttuale.accept(this);
+                    if (result != null) {
+                        writer.write(result);
+                    }
+
+                    continue;
+                }
+                writer.write((String) parametroAttuale.accept(this) + ",");
+            }
+            writer.write(");\n");
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
         return null;
     }
 
@@ -388,8 +486,106 @@ public class CodeGeneratorVisitor implements Visitor {
         return constOP.getLessema();
     }
 
+    private void ricorsioneFunCall(FunCall funCall, StringBuilder stringBuilder) {
+        if(funCall.getExprs()==null ||funCall.getExprs().isEmpty()) {
+            stringBuilder.append("result_" + funCall.getIdentifier().getLessema()+ " r" +countFunCall+ " " +funCall.getIdentifier().getLessema() + "();\n");
+            return;
+        }
+
+        ArrayList<String> param = new ArrayList<>();
+
+        ArrayList<String> valoriAssegnati = new ArrayList<>();
+
+        for(ExprOP exprOP: funCall.getExprs()) {
+            ArrayList<String> nomiId = null;
+            String nonFunCall;
+
+            if (exprOP instanceof FunCall) {
+                ricorsioneFunCall((FunCall) exprOP, stringBuilder);
+
+            } else {
+                stringBuilder.append("tipo valore" + countFunCall + " = " + (String)exprOP.accept(this) + ";\n");
+            }
+
+
+        }
+
+        SymbolTableRecord funzioneChiamata = this.currentScope.lookup(funCall.getIdentifier().getLessema()).orElseThrow();
+        ArrayList<String> tipiRitornatiFunzione = new ArrayList<>(Arrays.asList(funzioneChiamata.getProperties().split(";")));
+
+
+        int count_param = 0;
+        Iterator<String> itTipiRitornatiFunzione = tipiRitornatiFunzione.iterator();
+        while (itTipiRitornatiFunzione.hasNext()) {break;}
+        for(String tipo : tipiRitornatiFunzione) {
+
+
+            stringBuilder.append(tipo + " r" + countFunCall + "_" + count_param +" = \n" );
+            count_param++;
+        }
+
+        stringBuilder.append("result_" + funCall.getIdentifier().getLessema()+ " r" +countFunCall+ " = "  + funCall.getIdentifier().getLessema() + "(");
+        count_param = 0;
+        for(String tipo : tipiRitornatiFunzione) {
+            stringBuilder.append( "r" + countFunCall + "_" + count_param +" ,");
+            count_param++;
+        }
+
+        stringBuilder.append( ");\n\n");
+    }
+
+    Stack<FunCall> stackFunzioni = new Stack<>();
     @Override
     public Object visit(FunCall funCall) throws RuntimeException {
+        //a,b,c ^= foo(), 12;
+        //
+        //result_foo r1 = foo();
+        //
+        //a = r1.result0;
+        //b = r1.result1;
+        //c = 12;
+        /*
+        String idFunCall = funCall.getIdentifier().getLessema();
+        StringBuilder resultStringFunCall = new StringBuilder();
+
+        StringBuilder exprOPStringBuilder = new StringBuilder();
+
+        try {
+            if(funCall.getExprs()!= null && !funCall.getExprs().isEmpty()) {
+                for(ExprOP exprOp: funCall.getExprs()) {
+                    String exprOpResult = (String) exprOp.accept(this);
+
+                    if(exprOp instanceof FunCall) {
+                        exprOPStringBuilder.append(exprOpResult);
+                    } else {
+                        exprOPStringBuilder.append("r = " + exprOpResult + "\n");
+                    }
+
+                    exprOPStringBuilder.append(" ");
+                }
+                exprOPStringBuilder.append(" ");
+                exprOPStringBuilder.deleteCharAt(exprOPStringBuilder.length()-1);
+            }
+
+            resultStringFunCall.append(exprOPStringBuilder.toString());
+
+            resultStringFunCall.append("result_" + idFunCall + " r" + countFunCall + " =");
+            resultStringFunCall.append(idFunCall + "(");
+
+            resultStringFunCall.append(");\n\n");
+        } catch (Exception e ) {
+            e.printStackTrace();
+        }
+        */
+
+        //Lookup Della Funzione
+        Function function = (Function) this.currentScope.lookup(funCall.getIdentifier().getLessema()).orElseThrow().getNodo();
+        //Mi prendo i tipi di ritorno della funzione
+        ArrayList<Type> tipiDiRitorno = function.getReturnTypes();
+
+
+
+
         return null;
     }
 
