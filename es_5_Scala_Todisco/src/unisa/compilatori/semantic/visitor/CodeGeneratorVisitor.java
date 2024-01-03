@@ -29,6 +29,7 @@ public class CodeGeneratorVisitor implements Visitor {
     private FileWriter writer;
     public static String FILE_NAME = "output.c";
 
+    ArrayList <String> idParamsOut = new ArrayList<>();
     private int countFunCall = 0;
 
 
@@ -92,7 +93,7 @@ public class CodeGeneratorVisitor implements Visitor {
     }
 
 
-    ArrayList <String> idParamsOut;
+
     @Override
     public Object visit(Procedure procedure) throws RuntimeException {
         String idProcedura = procedure.getId().getLessema();
