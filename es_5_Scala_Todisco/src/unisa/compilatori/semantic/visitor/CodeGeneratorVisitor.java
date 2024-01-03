@@ -123,8 +123,25 @@ public class CodeGeneratorVisitor implements Visitor {
 
     @Override
     public Object visit(BinaryOP operazioneBinaria) throws RuntimeException {
+
         String expr1 = (String) operazioneBinaria.getExpr1().accept(this);
+        if(operazioneBinaria.getExpr1() instanceof Identifier && idParamsOut.contains(((Identifier) operazioneBinaria.getExpr1()).getLessema())) {
+            SymbolTableRecord record = this.currentScope.lookup(((Identifier) operazioneBinaria.getExpr1()).getLessema()).orElseThrow();
+            VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+            if(varFieldType.getType().equalsIgnoreCase("string")) {
+                expr1 = expr1.replace("*", "");
+            }
+
+        }
+
         String expr2 = (String) operazioneBinaria.getExpr2().accept(this);
+        if(operazioneBinaria.getExpr2() instanceof Identifier && idParamsOut.contains(((Identifier) operazioneBinaria.getExpr2()).getLessema())) {
+            SymbolTableRecord record = this.currentScope.lookup(((Identifier) operazioneBinaria.getExpr2()).getLessema()).orElseThrow();
+            VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+            if(varFieldType.getType().equalsIgnoreCase("string")) {
+                expr2 = expr2.replace("*", "");
+            }
+        }
 
         String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneBinaria.getName()); //ottieni il lessema giusto per l'operazione
 
