@@ -19,6 +19,7 @@ import java.nio.file.*;
 import java.nio.file.Files;
 import java.sql.Statement;
 import java.util.*;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -91,11 +92,18 @@ public class CodeGeneratorVisitor implements Visitor {
     }
 
 
+    ArrayList <String> idParamsOut;
     @Override
     public Object visit(Procedure procedure) throws RuntimeException {
         String idProcedura = procedure.getId().getLessema();
         ArrayList<CallableParam> parametri = procedure.getProcParamDeclList();
 
+        idParamsOut = new ArrayList<>();
+        parametri.stream()
+                .filter(param -> param.getId().getMode().equals(ExprOP.Mode.PARAMSOUT))
+                .map(param -> param.getId().getLessema())
+                .forEach(param -> idParamsOut.add(param));
+        
         enterScope(procedure.getTable());
         try{
             writer.append("\n\n");
@@ -109,7 +117,7 @@ public class CodeGeneratorVisitor implements Visitor {
         }
         exitScope();
 
-
+        idParamsOut = new ArrayList<>();
         return null;
     }
 
@@ -945,6 +953,9 @@ public class CodeGeneratorVisitor implements Visitor {
         var varFieldType = (VarFieldType) result.getFieldType();
 
         var tipo = varFieldType.getType();
+        if(idParamsOut.contains(id.getLessema())) {
+            return "*" + lessema;
+        }
 
         if (id.getMode().equals(ExprOP.Mode.VARIABLENAME) || id.getMode().equals(ExprOP.Mode.PARAMS) || id.getMode().equals(ExprOP.Mode.NONE)) {
             return lessema;
