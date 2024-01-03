@@ -127,6 +127,15 @@ public class CodeGeneratorVisitor implements Visitor {
         String expr2 = (String) operazioneBinaria.getExpr2().accept(this);
 
         String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneBinaria.getName()); //ottieni il lessema giusto per l'operazione
+
+        if(lessemaOperazione.equalsIgnoreCase("==")) {
+            //se expr1 è id e expr2 è id e sono entrmabi stringhe -> strcmp
+            //se expr1 è id e expr2 è constante di tipo string -> strcmp
+            //se expr1 è costante stringa e expre è id -> strcmp
+            //se expr1 è costante stringa e expr2 è costante stringa -> strcmp
+
+        }
+
         if (lessemaOperazione.equalsIgnoreCase("strcat")) {
             //todo fare controlli per vedere di che tipo sono le due espressioni
             //a quel punto puoi richiamare la funzione helper che converte quel tipo specifico
@@ -137,7 +146,7 @@ public class CodeGeneratorVisitor implements Visitor {
                 if (record.getFieldType() instanceof VarFieldType) {
                     VarFieldType varFieldType = (VarFieldType) record.getFieldType();
                     if (varFieldType.getType().equalsIgnoreCase("integer")) {
-                        return "str_concat(" + "integer_to_str(" + expr1 + ")" + ", " + expr2 + ")";
+                        return "str_concat(" + "integer_to_str(" + expr1 + ")" + ", " + expr2.replace("*","") + ")";
                     }
                     if (varFieldType.getType().equalsIgnoreCase("real")) {
                         return "str_concat(" + "real_to_str(" + expr1 + ")" + ", " + expr2 + ")";
