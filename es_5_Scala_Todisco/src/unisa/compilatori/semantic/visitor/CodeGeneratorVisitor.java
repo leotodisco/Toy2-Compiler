@@ -497,7 +497,7 @@ public class CodeGeneratorVisitor implements Visitor {
                             writer.write("scanf( \"%d\", &"+id.getLessema()+");\n" );
                         }
                         if(varFieldType.getType().equalsIgnoreCase("string")) {
-                            writer.write("scanf( \"%s\", &"+id.getLessema()+");\n" );
+                            writer.write("scanf( \"%s\", "+id.getLessema()+");\n" );
                         }
                     }
                     else{
@@ -878,20 +878,22 @@ public class CodeGeneratorVisitor implements Visitor {
         if (decl.getTipoDecl().equals(Decl.TipoDecl.TYPE)) {
             //tipo listaID ;
             try {
-                writer.write(CodeGeneratorUtils.convertType(decl.getTipo().getTipo()));
+                String tipo = CodeGeneratorUtils.convertType(decl.getTipo().getTipo());
 
                 for (int i = 0; i < decl.getIds().size(); i++) {
                     Identifier idParametro = decl.getIds().get(i);
                     String id = (String) idParametro.accept(this);
 
+                    writer.write(tipo);
                     writer.append(" ");
                     writer.append(id);
 
-                    //se non è l'ultimo elemento metti la virgola
-                    if (i != decl.getIds().size() - 1)
-                        writer.append(",");
-                    else
-                        writer.append(";\n");
+                    if(tipo.equalsIgnoreCase("char*")){
+                        writer.write(" = ");
+                        writer.write("malloc(sizeof(char) * MAXCHAR)");
+                    }
+
+                    writer.append(";\n");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
