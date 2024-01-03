@@ -180,7 +180,12 @@ public class CodeGeneratorUtils {
             }
             signature.append("}" +" result_" + function.getId().getLessema() + ";\n\n");
 
-            signature.append("result_" + function.getId().getLessema() + " ");
+            if(function.getReturnTypes().size() > 1) {
+                signature.append("result_" + function.getId().getLessema() + " ");
+            } else {
+                signature.append(convertType(function.getReturnTypes().get(0).getTipo()) + " ");
+            }
+
 
             signature.append(function.getId().getLessema());
             signature.append("(");

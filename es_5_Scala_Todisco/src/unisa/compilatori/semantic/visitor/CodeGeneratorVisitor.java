@@ -9,6 +9,7 @@ import unisa.compilatori.semantic.symboltable.SymbolTableRecord;
 import unisa.compilatori.semantic.symboltable.VarFieldType;
 
 
+import javax.swing.tree.TreeNode;
 import java.io.File;
 import java.io.FileWriter;
 
@@ -16,6 +17,7 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.nio.file.*;
 import java.nio.file.Files;
+import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -262,7 +264,13 @@ public class CodeGeneratorVisitor implements Visitor {
         StringBuilder signature = new StringBuilder();
 
         try{
-            signature.append("result_" + idFunzione);
+            if( funzione.getReturnTypes().size() == 1) {
+                signature.append(CodeGeneratorUtils.convertType(funzione.getReturnTypes().get(0).getTipo()));
+                signature.append(" ");
+            } else {
+                signature.append("result_" + idFunzione);
+            }
+
 
             signature.append(" ");
 
@@ -346,7 +354,13 @@ public class CodeGeneratorVisitor implements Visitor {
                     for(int i = 0; i < countResults; i++) {
 
                         try {
-                            writer.write(lessemaId + " = r_" + temp+ ".result" + i +";\n");
+                            if(tipiDiRitornoFunzione.size() > 1) {
+                                writer.write(lessemaId + " = r_" + temp+ ".result" + i +";\n");
+                            } else {
+                                writer.write(lessemaId + " = r_" + temp+ ";\n");
+                            }
+
+
 
                             if(itListaId.hasNext()) {
                                 id = itListaId.next();
@@ -376,6 +390,37 @@ public class CodeGeneratorVisitor implements Visitor {
         }
         //TODO implementare statement return, write, write-return
         if (statement.getTipo().equals(Stat.Mode.RETURN)) {
+            ArrayList<ExprOP> listaEspressioni = statement.getEspressioniList();
+
+            //CASO IN CUI NEL RETURN CI SIA SOLTANTO UN ESPRESSIONE, QUINDI SOLO UNA FUNZIONE, UNA COSTANTE O UNA VARIABILE
+            if(listaEspressioni.size() == 1) {
+                if(listaEspressioni.get(0) instanceof FunCall) {
+                    //lookup per scoprire i tipi di ritorno
+                    SymbolTableRecord function = this.currentScope.lookup(((FunCall) listaEspressioni.get(0)).getIdentifier().getLessema()).orElseThrow();
+                    ArrayList<String> tipiDiRitorno = new ArrayList<>(Arrays.asList(function.getProperties().split(";")));
+
+                    if(tipiDiRitorno.size() == 1) {
+                        try {
+                            int temp = funCallCount;
+                            writer.write((String) listaEspressioni.get(0).accept(this));
+                            writer.write("return r_" + (temp+1) +";");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return "";
+                    }
+                } else {
+                    try {
+                        writer.write("return ");
+                        writer.write(listaEspressioni.get(0).accept(this) + ";");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return "";
+                }
+
+            }
+
             List<ExprOP> listaFunCall = statement.getEspressioniList().stream().filter(exprOP -> exprOP instanceof FunCall).toList();
             StringBuffer daRestituire = new StringBuffer();
 
@@ -393,7 +438,12 @@ public class CodeGeneratorVisitor implements Visitor {
             Iterator<Integer> itIdStructsFunzioni = idStructsFunzioni.iterator();
 
             //lookup per scoprire il nome della funzione del return per costruire il tipo di ritorno
-            Function funzioneDiAssign = (Function) statement.getParent().getParent();
+            TreeNode nodo = statement.getParent();
+            while(!(nodo instanceof Function)){
+                nodo = nodo.getParent();
+            }
+
+            Function funzioneDiAssign = (Function) nodo;
             try {
                 writer.write("result_" + funzioneDiAssign.getId().getLessema() + " daRestituire;\n");
             } catch (Exception e) {
@@ -484,68 +534,103 @@ public class CodeGeneratorVisitor implements Visitor {
 
         }
         if (statement.getTipo().equals(Stat.Mode.WRITE)) {
+            ArrayList<ExprOP> listaEspressioni = statement.getEspressioniList();
+            Collections.reverse(listaEspressioni);
 
-            List<ExprOP> listaFunCall = statement.getEspressioniList().stream().filter(exprOP -> exprOP instanceof FunCall).toList();
+            StringBuilder parteDopoLeVirgolette = new StringBuilder();
+            try{
+                StringBuilder stringBuilder = new StringBuilder("printf(\" ");
+                for(int i = 0; i < listaEspressioni.size(); i++) {
+                    ExprOP espressione = listaEspressioni.get(i);
+                    String tipoEspressione = "";
+                    if(espressione instanceof FunCall) {
+                        FunCall espressioneCastata = (FunCall) espressione;
+                        var record = this.currentScope.lookup(espressioneCastata.getIdentifier().getLessema()).get();
+                        String tipo = record.getProperties();
 
-            ArrayList<Integer> idStructsFunzioni = new ArrayList<>();
-            for (ExprOP funCall : listaFunCall) {
-                try {
-                    int currentFunCallCount = this.funCallCount + 1;
-                    writer.write((String)funCall.accept(this));
-                    idStructsFunzioni.add(currentFunCallCount);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+                        String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo.substring(0, tipo.length()-1));
 
+                        stringBuilder.append(formatSpecifier + " ");
+                        parteDopoLeVirgolette.append(espressione.accept(this) + ", ");
 
-            Iterator<Integer> itIdStructsFunzioni = idStructsFunzioni.iterator();
-
-            //lookup per scoprire il nome della funzione del return per costruire il tipo di ritorno
-
-            StringBuilder daRestituire = new StringBuilder();
-
-            for(int i = 0; i < statement.getEspressioniList().size(); i++) {
-                ExprOP exprOP = statement.getEspressioniList().get(i);
-
-                if(exprOP instanceof FunCall) {
-
-                    //lookup di funcal per scoprire quanti tipi restituisce
-                    SymbolTableRecord funzioneChiamataCorrente = this.currentScope.lookup(((FunCall) exprOP).getIdentifier().getLessema()).orElseThrow();
-                    ArrayList<String> tipiDiRitornoFunCallCorrente = new ArrayList<>(Arrays.asList(funzioneChiamataCorrente.getProperties().split(";")));
-
-                    int idStruct = itIdStructsFunzioni.next();
-                    int k = i;
-                    for(int j = 0; j < tipiDiRitornoFunCallCorrente.size(); j++) {
-                        daRestituire.append("daRestituire." + "result" + k + "=" + "r_" + idStruct + ".result"+ j + ";\n");
-                        k++;
+                        continue;
                     }
+                    else if(espressione instanceof ConstOP) {
+                        ConstOP constOP = (ConstOP) espressione;
+                        if (constOP.getType().equals(ConstOP.Kind.STRING)){
+                            String costante = (String) constOP.accept(this);
+                            stringBuilder.append(costante.replace("\"", ""));
+                            stringBuilder.append(" ");
 
-                    for(int j = 0; j < tipiDiRitornoFunCallCorrente.size(); j++) {
-                        if(tipiDiRitornoFunCallCorrente.get(j).equalsIgnoreCase("integer")) {
-                            daRestituire.append("printf(\"%d \", daRestituire." + "result" + j +");");
-                        }
-                        System.out.println(tipiDiRitornoFunCallCorrente.get(j));
-                        if(tipiDiRitornoFunCallCorrente.get(j).equalsIgnoreCase("string")) {
-                            daRestituire.append("printf(\"%s \", daRestituire." + "result" + j +");");
-                            System.out.println("SONO IN UNA STRINGA");
+
+                        } else {
+                            stringBuilder.append((String) constOP.accept(this));
                         }
 
-                        //i++;
+                        continue;
                     }
-                } else {
-                    daRestituire.append("daRestituire." + "result" + i + "=" + exprOP.accept(this)+ ";\n");
-                }
-            }
+                    else if(espressione instanceof Identifier) {
+                        Identifier id = (Identifier) espressione;
+                        //String tipo = (String) id.accept(new TypeCheckingVisitor());
+                        var record = this.currentScope.lookup(id.getLessema()).get();
+                        var fieldType = (VarFieldType) record.getFieldType();
+                        String tipo = fieldType.getType();
 
-            try {
-                System.out.println(daRestituire.toString());
-                writer.write(daRestituire.toString());
-            } catch (Exception e) {
+                        String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo);
+                        stringBuilder.append(formatSpecifier + " ");
+                        parteDopoLeVirgolette.append(id.accept(this) + ", ");
+
+
+                        continue;
+                    }
+                    else if(espressione instanceof BinaryOP) {
+                        BinaryOP operazioneBinaria = (BinaryOP) espressione;
+                        System.out.println("tipo = " + operazioneBinaria.getReturnType());
+
+                        String tipo = operazioneBinaria.getReturnType();
+
+
+                        String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo);
+                        stringBuilder.append(formatSpecifier + " ");
+                        parteDopoLeVirgolette.append(espressione.accept(this) + ", ");
+
+
+                        continue;
+                    }
+                    else if(espressione instanceof UnaryOP) {
+                        UnaryOP operazioneUnaria = (UnaryOP) espressione;
+
+
+                        String tipo = operazioneUnaria.getReturnType();
+
+
+                        String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo);
+                        stringBuilder.append(formatSpecifier + " ");
+                        parteDopoLeVirgolette.append(espressione.accept(this) + ", ");
+
+
+                        continue;
+                    }
+                    else {
+                        tipoEspressione = (String) espressione.accept(new TypeCheckingVisitor());
+                    }
+
+                    String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipoEspressione);
+                    stringBuilder.append(formatSpecifier + " ");
+
+                }
+                stringBuilder.append("\", " + parteDopoLeVirgolette);
+
+                stringBuilder.deleteCharAt(stringBuilder.length()-2); //rimuovi l'ultima virgola
+                stringBuilder.append(");\n");
+                writer.append(stringBuilder.toString());
+
+
+            } catch(Exception e){
                 e.printStackTrace();
             }
-
         }
+
         if (statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
             ArrayList<ExprOP> listaEspressioni = statement.getEspressioniList();
             try{
@@ -810,80 +895,80 @@ public class CodeGeneratorVisitor implements Visitor {
     int funCallCount = 0;
     @Override
     public Object visit(FunCall funCall) throws RuntimeException {
-        funCallCount++;
-        int funCallCorrente = funCallCount;
+
         StringBuilder stringBuilder = new StringBuilder();
-        //Lookup Della Funzione
-        Function function = (Function) this.currentScope.lookup(funCall.getIdentifier().getLessema()).orElseThrow().getNodo();
-        //Mi prendo i tipi di ritorno della funzione
-        ArrayList<Type> tipiDiRitorno = function.getReturnTypes();
+        TreeNode ParentFunCall = funCall.getParent();
+        if(ParentFunCall instanceof Stat && (((Stat)ParentFunCall).getTipo().equals(Stat.Mode.ASSIGN) || ((Stat)ParentFunCall).getTipo().equals(Stat.Mode.RETURN))) {
+            funCallCount++;
+            int funCallCorrente = funCallCount;
 
-        ArrayList<ExprOP> listaExprOp = funCall.getExprs();
-        Iterator<ExprOP> itListaExprOp = listaExprOp.iterator();
+            //Lookup Della Funzione
+            Function function = (Function) this.currentScope.lookup(funCall.getIdentifier().getLessema()).orElseThrow().getNodo();
+            //Mi prendo i tipi di ritorno della funzione
+            ArrayList<Type> tipiDiRitorno = function.getReturnTypes();
 
-        //caso senza nessun parametro con funzione all'interno tipo foo(a , 12, "pippo");
-        if(!funCall.getExprs().stream().anyMatch(exprOP -> exprOP instanceof FunCall)) {
-            //stringBuilder.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = ");
-            if(function.getReturnTypes().size() > 1 ){
-                stringBuilder.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
+            ArrayList<ExprOP> listaExprOp = funCall.getExprs();
+            Iterator<ExprOP> itListaExprOp = listaExprOp.iterator();
+
+            if (function.getReturnTypes().size() > 1) {
+                stringBuilder.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = " + funCall.getIdentifier().getLessema() + "(");
             } else {
-                stringBuilder.append(CodeGeneratorUtils.convertType(function.getReturnTypes().get(0).getTipo()) + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
+                stringBuilder.append(CodeGeneratorUtils.convertType(function.getReturnTypes().get(0).getTipo()) + " r_" + funCallCount + " = " + funCall.getIdentifier().getLessema() + "(");
             }
 
-            stringBuilder.append(funCall.getIdentifier().getLessema() + "(");
-            int i = 0;
-            for(ExprOP exprOP : funCall.getExprs()) {
+            //caso senza nessun parametro con funzione all'interno tipo foo(a , 12, "pippo");
+            if (!funCall.getExprs().stream().anyMatch(exprOP -> exprOP instanceof FunCall)) {
 
-                stringBuilder.append(exprOP.accept(this));
+                //stringBuilder.append(funCall.getIdentifier().getLessema() + "(");
+                int i = 0;
+                for (ExprOP exprOP : funCall.getExprs()) {
 
-                i++;
-                if(funCall.getExprs().size() != i) {
-                    stringBuilder.append(",");
+                    stringBuilder.append(exprOP.accept(this));
+
+                    i++;
+                    if (funCall.getExprs().size() != i) {
+                        stringBuilder.append(",");
+                    }
                 }
-            }
-            stringBuilder.append(");\n");
-        } else {
-            StringBuilder chiamataAFunzione = new StringBuilder();
-            if(function.getReturnTypes().size() > 1 ){
-                chiamataAFunzione.append("result_" + funCall.getIdentifier().getLessema() + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
+                stringBuilder.append(");\n");
             } else {
-                chiamataAFunzione.append(CodeGeneratorUtils.convertType(function.getReturnTypes().get(0).getTipo()) + " r_" + funCallCount + " = "+ funCall.getIdentifier().getLessema() + "(");
-            }
+                StringBuilder chiamataAFunzione = new StringBuilder();
 
-            //bisogna prepararsi i parametri da passare alla funzione nel caso di chiamata di funzione
-            int j = 0;
-            for(ExprOP exprOP : listaExprOp) {
-                //caso di espressione non funCall
-                if(!(exprOP instanceof FunCall)) {
+                //bisogna prepararsi i parametri da passare alla funzione nel caso di chiamata di funzione
+                int j = 0;
+                for (ExprOP exprOP : listaExprOp) {
+                    //caso di espressione non funCall
+
                     chiamataAFunzione.append(exprOP.accept(this) + ",");
+                    if (exprOP instanceof FunCall) {
+                        funCallCorrente++;
+                    }
 
                     j++;
-                    if((listaExprOp.size()-1) == j) {
-                       // chiamataAFunzione.deleteCharAt(chiamataAFunzione.length()-1);
+                    if( j > listaExprOp.size()-1) {
+                        chiamataAFunzione.deleteCharAt(chiamataAFunzione.length()-1);
                     }
+                }
+                chiamataAFunzione.append(");\n");
+                stringBuilder.append(chiamataAFunzione);
+            }
+            //System.out.println("Chiamata funzione dentro assign");
+        } else { //CASO IN CUI NON è UN ASSIGN, QUINDI QUANDO LA FUNZIONE NON PUò TORNARE TIPI DI RITORNO MULTIPLI
+            stringBuilder.append(funCall.getIdentifier().getLessema() + "(");
 
+            int i = 0;
+            for( ExprOP exprOP : funCall.getExprs()) {
+                stringBuilder.append(exprOP.accept(this) + ",");
+                i++;
 
-                } else {
-                    stringBuilder.append(exprOP.accept(this));
-                    FunCall f = (FunCall) exprOP;
-                    SymbolTableRecord funzioneChiamataCorrente = this.currentScope.lookup(f.getIdentifier().getLessema()).orElseThrow();
-                    ArrayList<String> tipiDiRitornoFunCallCorrente = new ArrayList<>(Arrays.asList(funzioneChiamataCorrente.getProperties().split(";")));
-
-                    int i = 0;
-                    while( i < tipiDiRitornoFunCallCorrente.size()) {
-                        chiamataAFunzione.append("r_" + (funCallCorrente+1) + ".result" + i+ ",");
-                        i++;
-
-
-                    }
-                    funCallCorrente++;
-
+                if(i > funCall.getExprs().size() -1 ) {
+                    stringBuilder.deleteCharAt(stringBuilder.length()-1);
                 }
             }
-            chiamataAFunzione.append(");\n");
-            stringBuilder.append(chiamataAFunzione);
-        }
 
+            stringBuilder.append(")");
+
+        }
 
         return stringBuilder.toString();
 
