@@ -488,16 +488,31 @@ public class CodeGeneratorVisitor implements Visitor {
                 for (ExprOP espressione : listaEspresioni) {
                     if(espressione.getMode().equals(ExprOP.Mode.IOARGSDOLLAR)) {
                         Identifier id = (Identifier) espressione;
-                        SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
-                        VarFieldType varFieldType = (VarFieldType) record.getFieldType();
-                        if(varFieldType.getType().equalsIgnoreCase("real")) {
-                            writer.write("scanf( \"%f\", &"+id.getLessema()+");\n" );
+                        if(this.idParamsOut.contains(id.getLessema())){
+                            SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
+                            VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                            if (varFieldType.getType().equalsIgnoreCase("real")) {
+                                writer.write("scanf( \"%f\", " + id.getLessema() + ");\n");
+                            }
+                            if (varFieldType.getType().equalsIgnoreCase("integer")) {
+                                writer.write("scanf( \"%d\", " + id.getLessema() + ");\n");
+                            }
+                            if (varFieldType.getType().equalsIgnoreCase("string")) {
+                                writer.write("scanf( \"%s\", " + id.getLessema() + ");\n");
+                            }
                         }
-                        if(varFieldType.getType().equalsIgnoreCase("integer")) {
-                            writer.write("scanf( \"%d\", &"+id.getLessema()+");\n" );
-                        }
-                        if(varFieldType.getType().equalsIgnoreCase("string")) {
-                            writer.write("scanf( \"%s\", "+id.getLessema()+");\n" );
+                        else {
+                            SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
+                            VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                            if (varFieldType.getType().equalsIgnoreCase("real")) {
+                                writer.write("scanf( \"%f\", &" + id.getLessema() + ");\n");
+                            }
+                            if (varFieldType.getType().equalsIgnoreCase("integer")) {
+                                writer.write("scanf( \"%d\", &" + id.getLessema() + ");\n");
+                            }
+                            if (varFieldType.getType().equalsIgnoreCase("string")) {
+                                writer.write("scanf( \"%s\", " + id.getLessema() + ");\n");
+                            }
                         }
                     }
                     else{
@@ -811,15 +826,20 @@ public class CodeGeneratorVisitor implements Visitor {
 
             for(int i = 0; i < parametri.size(); i++) {
                 ExprOP parametroAttuale = parametri.get(i);
-                if(i == parametri.size()-1){
-                    String result = (String) parametroAttuale.accept(this);
-                    if (result != null) {
-                        writer.write(result);
-                    }
 
-                    continue;
+                //quando chiami una procedura dentro una procedura
+                //si utilizza la struttura dati idParamsOut che memorizza i parametri out della procedura chiamante
+                String result_paramsref = (String) parametroAttuale.accept(this);
+
+                if (parametroAttuale.getMode().equals(ExprOP.Mode.PARAMSREF) && idParamsOut.contains(((Identifier) parametroAttuale).getLessema())) {
+                    result_paramsref = result_paramsref.replace("*", "");
                 }
-                writer.write((String) parametroAttuale.accept(this) + ",");
+
+                if( i == parametri.size()-1) {
+                    writer.write(result_paramsref );
+                } else {
+                    writer.write(result_paramsref + " ,");
+                }
             }
             writer.write(");\n");
         } catch(Exception e){
