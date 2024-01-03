@@ -34,7 +34,7 @@ public class TypeCheckingVisitor implements Visitor {
      * @param op
      * @return
      */
-    private String evaluateType(String type1, String type2, String op){
+    public String evaluateType(String type1, String type2, String op){
         switch (op){
             case "plus_op", "times_op", "minus_op":
                 if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))
@@ -192,6 +192,7 @@ public class TypeCheckingVisitor implements Visitor {
         String typeOp = operazioneBinaria.getName();
         //controllo di che tipo l'operazione binaria
         String risultato =  evaluateType(typeExpr1, typeExpr2, typeOp);
+operazioneBinaria.setReturnType(risultato);
 
         return risultato;
     }

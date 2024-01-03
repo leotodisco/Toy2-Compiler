@@ -633,36 +633,92 @@ public class CodeGeneratorVisitor implements Visitor {
 
         if (statement.getTipo().equals(Stat.Mode.WRITE_RETURN)) {
             ArrayList<ExprOP> listaEspressioni = statement.getEspressioniList();
+            Collections.reverse(listaEspressioni);
+
+            StringBuilder parteDopoLeVirgolette = new StringBuilder();
             try{
-                StringBuilder stringBuilder = new StringBuilder("printf( ");
+                StringBuilder stringBuilder = new StringBuilder("printf(\" ");
                 for(int i = 0; i < listaEspressioni.size(); i++) {
                     ExprOP espressione = listaEspressioni.get(i);
                     String tipoEspressione = "";
                     if(espressione instanceof FunCall) {
                         FunCall espressioneCastata = (FunCall) espressione;
-                        tipoEspressione = ((ArrayList<String>) espressione.accept(new TypeCheckingVisitor())).get(0);
-                    }
-                    else if(espressione instanceof ConstOP) {
-                        ConstOP constOP = (ConstOP) espressione;
-                        stringBuilder.append((String) constOP.accept(this));
+                        var record = this.currentScope.lookup(espressioneCastata.getIdentifier().getLessema()).get();
+                        String tipo = record.getProperties();
+
+                        String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo.substring(0, tipo.length()-1));
+
+                        stringBuilder.append(formatSpecifier + " ");
+                        parteDopoLeVirgolette.append(espressione.accept(this) + ", ");
 
                         continue;
                     }
-                    else {
-                        tipoEspressione = (String) espressione.accept(new TypeCheckingVisitor());
+                    else if(espressione instanceof ConstOP) {
+                        ConstOP constOP = (ConstOP) espressione;
+
+                        if (constOP.getType().equals(ConstOP.Kind.STRING)){
+                            String costante = (String) constOP.accept(this);
+                            stringBuilder.append(costante.replace("\"", ""));
+                            stringBuilder.append(" ");
+
+                        } else {
+                            stringBuilder.append((String) constOP.accept(this));
+                        }
+
+                        continue;
                     }
+                    else if(espressione instanceof Identifier) {
+                        Identifier id = (Identifier) espressione;
+                        //String tipo = (String) id.accept(new TypeCheckingVisitor());
+                        var record = this.currentScope.lookup(id.getLessema()).get();
+                        var fieldType = (VarFieldType) record.getFieldType();
+                        String tipo = fieldType.getType();
+
+                        String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo);
+                        stringBuilder.append(formatSpecifier + " ");
+                        parteDopoLeVirgolette.append(id.accept(this) + ", ");
+
+
+                        continue;
+                    }
+                    else if(espressione instanceof BinaryOP) {
+                        BinaryOP operazioneBinaria = (BinaryOP) espressione;
+                        System.out.println("tipo = " + operazioneBinaria.getReturnType());
+
+                        String tipo = operazioneBinaria.getReturnType();
+
+
+                        String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo);
+                        stringBuilder.append(formatSpecifier + " ");
+                        parteDopoLeVirgolette.append(espressione.accept(this) + ", ");
+
+
+                        continue;
+                    }
+                    else if(espressione instanceof UnaryOP) {
+                        UnaryOP operazioneUnaria = (UnaryOP) espressione;
+
+
+                        String tipo = operazioneUnaria.getReturnType();
+
+
+                        String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo);
+                        stringBuilder.append(formatSpecifier + " ");
+                        parteDopoLeVirgolette.append(espressione.accept(this) + ", ");
+
+
+                        continue;
+                    }
+
+
 
                     String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipoEspressione);
-                    if(i != listaEspressioni.size()-1) {
-                        stringBuilder.append("\"" + formatSpecifier + "\"" );
-                        stringBuilder.append(",");
-                    }
-                    else{
-                        stringBuilder.append("\"" + formatSpecifier  );
+                    stringBuilder.append(formatSpecifier + " ");
 
-                    }
                 }
-                stringBuilder.append("\" \\n \"");
+                stringBuilder.append("\\n\", " + parteDopoLeVirgolette);
+
+                stringBuilder.deleteCharAt(stringBuilder.length()-2); //rimuovi l'ultima virgola
                 stringBuilder.append(");\n");
                 writer.append(stringBuilder.toString());
 
