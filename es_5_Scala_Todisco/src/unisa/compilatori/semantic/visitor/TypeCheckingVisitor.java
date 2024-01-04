@@ -192,7 +192,10 @@ public class TypeCheckingVisitor implements Visitor {
         String typeOp = operazioneBinaria.getName();
         //controllo di che tipo l'operazione binaria
         String risultato =  evaluateType(typeExpr1, typeExpr2, typeOp);
-operazioneBinaria.setReturnType(risultato);
+        operazioneBinaria.setReturnType(risultato);
+
+        operazioneBinaria.getExpr1().setTipo(typeExpr1);
+        operazioneBinaria.getExpr2().setTipo(typeExpr2);
 
         return risultato;
     }
@@ -216,6 +219,7 @@ operazioneBinaria.setReturnType(risultato);
         String expName = operazioneUnaria.getSimbolo();
         String risultato = "";
         risultato = evaluateType(tipoExpr1, expName);
+        operazioneUnaria.setTipo(tipoExpr1);
 
         return risultato;
     }

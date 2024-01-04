@@ -7,6 +7,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 public class ExprOP extends DefaultMutableTreeNode implements Visitable {
     private Mode mode;
+    private String tipo;
     public enum Mode {
         PARAMSREF, //modalità ref in procexprs
         PARAMSOUT,  //modalità out per id in procparamid
@@ -36,6 +37,13 @@ public class ExprOP extends DefaultMutableTreeNode implements Visitable {
         this.mode = mode;
     }
 
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
 
     @Override
     public String toString() {
