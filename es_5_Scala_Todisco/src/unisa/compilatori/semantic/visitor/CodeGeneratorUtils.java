@@ -5,7 +5,6 @@ import unisa.compilatori.nodes.expr.ExprOP;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.io.File;
 import java.util.ArrayList;
 
 public class CodeGeneratorUtils {
@@ -106,14 +105,20 @@ public class CodeGeneratorUtils {
 
     /**
      * Converte i nomi delle operazioni binarie nel corrispondente token compatibile in C.
+     *
      * @param nomeOperazione
+     * @param isString è un flag che se è true fa si che la plus_op si converte in strcat, se false allora plus_op diventa +
      * @return
      */
-    public static String convertOperations(String nomeOperazione){
+    public static String convertOperations(String nomeOperazione, boolean isString){
 //"plus_op", "times_op", "minus_op"
         String tipoOprazione="";
-        if(nomeOperazione.equalsIgnoreCase("plus_op")) //fare che se le due exprs sono stringhe allora è strcat
-            tipoOprazione="+";
+        if(nomeOperazione.equalsIgnoreCase("plus_op") && !isString) {//fare che se le due exprs sono stringhe allora è strcat
+            tipoOprazione = "+";
+        }
+        if(nomeOperazione.equalsIgnoreCase("plus_op") && isString) {//fare che se le due exprs sono stringhe allora è strcat
+            tipoOprazione = "strcat";
+        }
         if(nomeOperazione.equalsIgnoreCase("minus_op"))
             tipoOprazione="-";
         if(nomeOperazione.equalsIgnoreCase("times_op"))

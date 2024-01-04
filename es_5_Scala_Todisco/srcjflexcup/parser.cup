@@ -205,7 +205,7 @@ IOArgsExpr ::= ID:lessema {: Identifier id = new Identifier(lessema, ExprOP.Mode
                                        RESULT = cons;
                                        :}   /* Aggiunto un expr speciale per IOArgs, dato che si richiedeva soltanto la concatenazione di stringhe e null altro */
         | IOArgsExpr:e1 PLUS IOArgsExpr:e2 {:
-                                            BinaryOP expr = new BinaryOP("stringConcat", (ExprOP) e1, (ExprOP) e2);
+                                            BinaryOP expr = new BinaryOP("plus_op", (ExprOP) e1, (ExprOP) e2);
                                             expr.setMode(ExprOP.Mode.IOARGS);
                                             RESULT = expr;
                                             :};

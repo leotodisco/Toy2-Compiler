@@ -41,21 +41,10 @@ public class TypeCheckingVisitor implements Visitor {
                     return "integer";
                 else if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("REAL"))
                     return new String("REAL");
-                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("INTEGER"))
+                if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("INTEGER"))
                     return new String("REAL");
-                else if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
+                if (type1.equalsIgnoreCase("REAL") && type2.equalsIgnoreCase("REAL"))
                     return new String("REAL");
-                else {
-                    throw new RuntimeException("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
-                }
-
-            case "or_op", "and_op":
-                if(type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("BOOLEAN"))
-                    return new String("boolean");
-                else
-                    throw new RuntimeException("Tipi incompatibili per operazione binaria");
-
-            case "stringConcat":
                 if(type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("STRING")) {
                     return new String("STRING");
                 }
@@ -73,8 +62,15 @@ public class TypeCheckingVisitor implements Visitor {
                     return new String("STRING");
                 else if (type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("STRING"))
                     return new String("STRING");
+                else {
+                    throw new RuntimeException("errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
+                }
+
+            case "or_op", "and_op":
+                if(type1.equalsIgnoreCase("BOOLEAN") && type2.equalsIgnoreCase("BOOLEAN"))
+                    return new String("boolean");
                 else
-                    throw new RuntimeException("errore nella concatenazione di stringhe");
+                    throw new RuntimeException("Tipi incompatibili per operazione binaria");
 
             case "div_op":
                 if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("INTEGER"))

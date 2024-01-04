@@ -3,7 +3,6 @@ package unisa.compilatori.semantic.visitor;
 import unisa.compilatori.nodes.*;
 import unisa.compilatori.nodes.expr.*;
 import unisa.compilatori.nodes.stat.*;
-import unisa.compilatori.semantic.symboltable.CallableFieldType;
 import unisa.compilatori.semantic.symboltable.SymbolTable;
 import unisa.compilatori.semantic.symboltable.SymbolTableRecord;
 import unisa.compilatori.semantic.symboltable.VarFieldType;
@@ -13,15 +12,9 @@ import javax.swing.tree.TreeNode;
 import java.io.File;
 import java.io.FileWriter;
 
-import java.io.Writer;
-import java.lang.reflect.Array;
 import java.nio.file.*;
 import java.nio.file.Files;
-import java.sql.Statement;
 import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CodeGeneratorVisitor implements Visitor {
     private SymbolTable currentScope;
@@ -143,7 +136,9 @@ public class CodeGeneratorVisitor implements Visitor {
             }
         }
 
-        String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneBinaria.getName()); //ottieni il lessema giusto per l'operazione
+        //serve a capure se l'operazione è tra due stringhe
+        boolean isString = operazioneBinaria.getExpr1().getTipo().equalsIgnoreCase("string") || operazioneBinaria.getExpr2().getTipo().equalsIgnoreCase("string");
+        String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneBinaria.getName(), isString ); //ottieni il lessema giusto per l'operazione
 
         if(lessemaOperazione.equalsIgnoreCase("==") || lessemaOperazione.equalsIgnoreCase("!=")) {
             if(operazioneBinaria.getExpr1().getTipo().equalsIgnoreCase("string")
@@ -279,7 +274,8 @@ public class CodeGeneratorVisitor implements Visitor {
     public Object visit(UnaryOP operazioneUnaria) throws RuntimeException {
         String expr = (String) operazioneUnaria.getExpr().accept(this);
 
-        String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneUnaria.getSimbolo());
+        //isString qui è falso perchè non esistono operazioni unarie con stringhe
+        String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneUnaria.getSimbolo(), false);
 
         return lessemaOperazione + " " + expr;
     }
