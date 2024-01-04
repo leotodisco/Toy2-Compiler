@@ -103,7 +103,7 @@ public class TypeCheckingVisitor implements Visitor {
                     throw new RuntimeException("tipo1 = " + type1 + "tipo2 = " + type2 + " op name = " + op);
 
             case "eq_op", "ne_op":
-                if(type1.equals(type2))
+                if(type1.equalsIgnoreCase(type2))
                     return new String("BOOLEAN");
                 else
                     throw new RuntimeException("errore");

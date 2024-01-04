@@ -146,12 +146,53 @@ public class CodeGeneratorVisitor implements Visitor {
 
         String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneBinaria.getName()); //ottieni il lessema giusto per l'operazione
 
-        if(lessemaOperazione.equalsIgnoreCase("==")) {
-            //se expr1 è id e expr2 è id e sono entrmabi stringhe -> strcmp
-            //se expr1 è id e expr2 è constante di tipo string -> strcmp
-            //se expr1 è costante stringa e expre è id -> strcmp
-            //se expr1 è costante stringa e expr2 è costante stringa -> strcmp
+        if(lessemaOperazione.equalsIgnoreCase("==") || lessemaOperazione.equalsIgnoreCase("!=")) {
+            var operazione = lessemaOperazione.equalsIgnoreCase("==") ? "==" : "!=";
+            //se expr 1 è id
+            if (operazioneBinaria.getExpr1() instanceof Identifier) {
+                var id1 = ((Identifier) operazioneBinaria.getExpr1()).getLessema();
+                var record1 = this.currentScope.lookup(id1).get();
+                var tipo1 = ((VarFieldType) record1.getFieldType()).getType();
+                //se expr1 è id e expr2 è id e sono entrmabi stringhe -> strcmp
+                if (operazioneBinaria.getExpr2() instanceof Identifier) {
+                    var id2 = ((Identifier) operazioneBinaria.getExpr2()).getLessema();
+                    var record2 = this.currentScope.lookup(id2).get();
+                    var tipo2 = ((VarFieldType) record1.getFieldType()).getType();
 
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + operazione +"0";
+                    }
+                }
+                //se expr1 è id e expr2 è constante di tipo string -> strcmp
+                if (operazioneBinaria.getExpr2() instanceof ConstOP) {
+                    String tipo2  = ((ConstOP) operazioneBinaria.getExpr2()).getType().toString();
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + operazione +"0";
+                    }
+                }
+
+            }
+
+            if (operazioneBinaria.getExpr2() instanceof Identifier) {
+                var id2 = ((Identifier) operazioneBinaria.getExpr2()).getLessema();
+                var record2 = this.currentScope.lookup(id2).get();
+                var tipo2 = ((VarFieldType) record2.getFieldType()).getType();
+                //se expr1 è id e expr2 è id e sono entrmabi stringhe -> strcmp (Controllo già fatto sopra)
+
+                //se expr1 è costante stringa e expre è id -> strcmp
+                if (operazioneBinaria.getExpr1() instanceof ConstOP) {
+                    String tipo1  = ((ConstOP) operazioneBinaria.getExpr1()).getType().toString();
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + operazione +"0";
+                    }
+                }
+
+            }
+
+            //se expr1 è costante stringa e expr2 è costante stringa -> strcmp
+            if(operazioneBinaria.getExpr1() instanceof ConstOP && operazioneBinaria.getExpr2() instanceof  ConstOP) {
+                return "strcmp(" + expr1 + ", " + expr2 + ")" + operazione +"0";
+            }
         }
 
         if (lessemaOperazione.equalsIgnoreCase("strcat")) {
