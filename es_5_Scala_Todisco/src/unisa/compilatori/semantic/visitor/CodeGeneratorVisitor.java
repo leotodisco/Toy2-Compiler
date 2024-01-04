@@ -124,7 +124,6 @@ public class CodeGeneratorVisitor implements Visitor {
 
     @Override
     public Object visit(BinaryOP operazioneBinaria) throws RuntimeException {
-
         String expr1 = (String) operazioneBinaria.getExpr1().accept(this);
         if(operazioneBinaria.getExpr1() instanceof Identifier && idParamsOut.contains(((Identifier) operazioneBinaria.getExpr1()).getLessema())) {
             SymbolTableRecord record = this.currentScope.lookup(((Identifier) operazioneBinaria.getExpr1()).getLessema()).orElseThrow();
@@ -147,8 +146,71 @@ public class CodeGeneratorVisitor implements Visitor {
         String lessemaOperazione = CodeGeneratorUtils.convertOperations(operazioneBinaria.getName()); //ottieni il lessema giusto per l'operazione
 
         if(lessemaOperazione.equalsIgnoreCase("==") || lessemaOperazione.equalsIgnoreCase("!=")) {
-            var operazione = lessemaOperazione.equalsIgnoreCase("==") ? "==" : "!=";
             //se expr 1 è id
+            if(operazioneBinaria.getExpr1() instanceof FunCall) {
+                var id1 = ((FunCall) operazioneBinaria.getExpr1()).getIdentifier().getLessema();
+                var record1 = this.currentScope.lookup(id1).get();
+                var tipo1 = Arrays.asList(record1.getProperties().split(";")).get(0);
+
+                if (operazioneBinaria.getExpr2() instanceof FunCall) {
+                    var id2 = ((FunCall) operazioneBinaria.getExpr2()).getIdentifier().getLessema();
+                    var record2 = this.currentScope.lookup(id2).get();
+                    var tipo2 = Arrays.asList(record2.getProperties().split(";")).get(0);
+
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
+                    }
+                }
+                //se expr1 è id e expr2 è constante di tipo string -> strcmp
+                if (operazioneBinaria.getExpr2() instanceof ConstOP) {
+                    String tipo2  = ((ConstOP) operazioneBinaria.getExpr2()).getType().toString();
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
+                    }
+                }
+                if (operazioneBinaria.getExpr2() instanceof Identifier) {
+                    var id2 = ((Identifier) operazioneBinaria.getExpr2()).getLessema();
+                    var record2 = this.currentScope.lookup(id2).get();
+                    var tipo2 = ((VarFieldType) record2.getFieldType()).getType();
+
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
+                    }
+                }
+            }
+
+            if(operazioneBinaria.getExpr2() instanceof FunCall) {
+                var id2 = ((FunCall) operazioneBinaria.getExpr2()).getIdentifier().getLessema();
+                var record2 = this.currentScope.lookup(id2).get();
+                var tipo2 = Arrays.asList(record2.getProperties().split(";")).get(0);
+
+                if (operazioneBinaria.getExpr1() instanceof FunCall) {
+                    var id1 = ((Identifier) operazioneBinaria.getExpr1()).getLessema();
+                    var record1 = this.currentScope.lookup(id1).get();
+                    var tipo1 = Arrays.asList(record1.getProperties().split(";")).get(0);
+
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
+                    }
+                }
+                //se expr1 è id e expr2 è constante di tipo string -> strcmp
+                if (operazioneBinaria.getExpr1() instanceof ConstOP) {
+                    String tipo1  = ((ConstOP) operazioneBinaria.getExpr1()).getType().toString();
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
+                    }
+                }
+                if (operazioneBinaria.getExpr1() instanceof Identifier) {
+                    var id1 = ((Identifier) operazioneBinaria.getExpr1()).getLessema();
+                    var record1 = this.currentScope.lookup(id1).get();
+                    var tipo1 = ((VarFieldType) record1.getFieldType()).getType();
+
+                    if (tipo1.equalsIgnoreCase(tipo2)) {
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
+                    }
+                }
+            }
+
             if (operazioneBinaria.getExpr1() instanceof Identifier) {
                 var id1 = ((Identifier) operazioneBinaria.getExpr1()).getLessema();
                 var record1 = this.currentScope.lookup(id1).get();
@@ -157,17 +219,17 @@ public class CodeGeneratorVisitor implements Visitor {
                 if (operazioneBinaria.getExpr2() instanceof Identifier) {
                     var id2 = ((Identifier) operazioneBinaria.getExpr2()).getLessema();
                     var record2 = this.currentScope.lookup(id2).get();
-                    var tipo2 = ((VarFieldType) record1.getFieldType()).getType();
+                    var tipo2 = ((VarFieldType) record2.getFieldType()).getType();
 
                     if (tipo1.equalsIgnoreCase(tipo2)) {
-                        return "strcmp(" + expr1 + ", " + expr2 + ")" + operazione +"0";
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
                     }
                 }
                 //se expr1 è id e expr2 è constante di tipo string -> strcmp
                 if (operazioneBinaria.getExpr2() instanceof ConstOP) {
                     String tipo2  = ((ConstOP) operazioneBinaria.getExpr2()).getType().toString();
                     if (tipo1.equalsIgnoreCase(tipo2)) {
-                        return "strcmp(" + expr1 + ", " + expr2 + ")" + operazione +"0";
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
                     }
                 }
 
@@ -183,7 +245,7 @@ public class CodeGeneratorVisitor implements Visitor {
                 if (operazioneBinaria.getExpr1() instanceof ConstOP) {
                     String tipo1  = ((ConstOP) operazioneBinaria.getExpr1()).getType().toString();
                     if (tipo1.equalsIgnoreCase(tipo2)) {
-                        return "strcmp(" + expr1 + ", " + expr2 + ")" + operazione +"0";
+                        return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
                     }
                 }
 
@@ -191,9 +253,11 @@ public class CodeGeneratorVisitor implements Visitor {
 
             //se expr1 è costante stringa e expr2 è costante stringa -> strcmp
             if(operazioneBinaria.getExpr1() instanceof ConstOP && operazioneBinaria.getExpr2() instanceof  ConstOP) {
-                return "strcmp(" + expr1 + ", " + expr2 + ")" + operazione +"0";
+                return "strcmp(" + expr1 + ", " + expr2 + ")" + lessemaOperazione +"0";
             }
         }
+
+
 
         if (lessemaOperazione.equalsIgnoreCase("strcat")) {
             //todo fare controlli per vedere di che tipo sono le due espressioni
