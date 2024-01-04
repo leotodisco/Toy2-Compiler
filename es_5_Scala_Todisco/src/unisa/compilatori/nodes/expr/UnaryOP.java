@@ -8,6 +8,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class UnaryOP extends ExprOP implements Visitable {
     private String simbolo; //nome può essere NOT o MINUS (UMINUS)
     private ExprOP expr;
+    private String returnType;
 
     public UnaryOP(String simbolo, ExprOP expr) {
         super(Mode.UNARY);
@@ -32,6 +33,14 @@ public class UnaryOP extends ExprOP implements Visitable {
 
     public void setSimbolo(String simbolo) {
         this.simbolo = simbolo;
+    }
+
+    public String getReturnType() {
+        return this.returnType;
+    }
+
+    public void setReturnType(String returnType) {
+        this.returnType = returnType;
     }
 
     @Override

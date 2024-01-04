@@ -462,6 +462,35 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(Body body) throws RuntimeException {
+
+        //se il body ha una lista di dichiarazioni non vuota
+        //mettiamo nella symbol table le variabili
+        if(body.getVarDeclList() != null) {
+            ArrayList<SymbolTableRecord> listaVar;
+            for (VarDecl var : body.getVarDeclList()) {
+                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
+                for ( SymbolTableRecord record: listaVar) {
+                    try{
+                        table.addEntry(record);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
+
+
+        //per ogni statement si chiama la accept corretta
+        if(body.getStatList() != null) {
+            for(Stat s : body.getStatList()) {
+                s.accept(this);
+            }
+        }
+
+        return null;
+
+        /*
         int a = 0;
         for(int i = body.getChildCount()-1; i>=0; i--)
         {
@@ -477,6 +506,7 @@ public class ScopeCheckingVisitor implements Visitor {
         }
 
         return null;
+        */
     }
 
     @Override

@@ -199,13 +199,13 @@ IOArgs ::= IOArgsExpr:ioArgsExpr IOArgs:ioArgs {:
                                                 :}
        | /* empty */ {:ArrayList<ExprOP> listaIOArgs = new ArrayList<>(); RESULT = listaIOArgs;:};
 
-IOArgsExpr ::= ID:lessema {: Identifier id = new Identifier(lessema, ExprOP.Mode.IOARGSDOLLAR); RESULT = id;:}
+IOArgsExpr ::= ID:lessema {: Identifier id = new Identifier(lessema, ExprOP.Mode.IOARGS); RESULT = id;:}
         | STRING_CONST:strConst {:
-                                       ConstOP cons = new ConstOP(strConst, ConstOP.Kind.STRING, ExprOP.Mode.IOARGSDOLLAR) ;
+                                       ConstOP cons = new ConstOP(strConst, ConstOP.Kind.STRING, ExprOP.Mode.IOARGS) ;
                                        RESULT = cons;
                                        :}   /* Aggiunto un expr speciale per IOArgs, dato che si richiedeva soltanto la concatenazione di stringhe e null altro */
         | IOArgsExpr:e1 PLUS IOArgsExpr:e2 {:
-                                            BinaryOP expr = new BinaryOP("plus_op", (ExprOP) e1, (ExprOP) e2);
+                                            BinaryOP expr = new BinaryOP("stringConcat", (ExprOP) e1, (ExprOP) e2);
                                             expr.setMode(ExprOP.Mode.IOARGS);
                                             RESULT = expr;
                                             :};

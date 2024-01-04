@@ -59,6 +59,8 @@ InputCharacter = [^\r\n]
 WhiteSpace = {LineTerminator} | [ \t\f]
 Identifier = [A-Za-z_][A-Za-z0-9_]*
 
+RegexRisultatiStruct = r_[0-9]+
+
 %state BLK_COMMENT
 %state STRING_STATE
 
@@ -122,6 +124,7 @@ Identifier = [A-Za-z_][A-Za-z0-9_]*
 {RealConst} { return symbol(sym.REAL_CONST, new Token("REAL", yytext())); }
  "%" {yybegin(BLK_COMMENT);}
 "\"" {yybegin(STRING_STATE);}
+"daRestituire" {System.out.println("L'identificatore " + yytext() + " è una parola riservata per la traduzione");}
 }
 
 /*stato personalizzato per i commenti*/
@@ -163,6 +166,7 @@ Identifier = [A-Za-z_][A-Za-z0-9_]*
 }
 
 {WhiteSpace} {/*ignore*/}
+{RegexRisultatiStruct} {System.out.println("L'identificatore " + yytext() + " è una parola riservata per la traduzione");}
 {Identifier} {return symbol(sym.ID, new Token("ID", yytext())); }
 /* error fallback */
 [^] { throw new Error("Illegal character <"+ yytext()+"> at line:"+yyline+" and column:" + yycolumn); }
