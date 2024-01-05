@@ -498,7 +498,7 @@ public class CodeGeneratorVisitor implements Visitor {
                     int idStruct = itIdStructsFunzioni.next();
 
                     if(tipiDiRitornoFunCallCorrente.size() == 1) {
-                        daRestituire.append("daRestituire." + "result" + k + "=" + "r_" + idStruct +"\n");
+                        daRestituire.append("daRestituire." + "result" + k + "=" + "r_" + idStruct +";\n");
                         k++;
                         continue;
                     }
