@@ -481,6 +481,10 @@ public class CodeGeneratorVisitor implements Visitor {
                 e.printStackTrace();
             }
 
+            //k è il counter che viene usato per incrementare la variabili result
+            //in daRestituire tipo daResituire.resultK
+            //viene incrementato ogni volta che si mette un valore nel .result di daRestituire
+            int k = 0;
 
             for(int i = 0; i < statement.getEspressioniList().size(); i++) {
                 ExprOP exprOP = statement.getEspressioniList().get(i);
@@ -492,13 +496,21 @@ public class CodeGeneratorVisitor implements Visitor {
                     ArrayList<String> tipiDiRitornoFunCallCorrente = new ArrayList<>(Arrays.asList(funzioneChiamataCorrente.getProperties().split(";")));
 
                     int idStruct = itIdStructsFunzioni.next();
+
+                    if(tipiDiRitornoFunCallCorrente.size() == 1) {
+                        daRestituire.append("daRestituire." + "result" + k + "=" + "r_" + idStruct +"\n");
+                        k++;
+                        continue;
+                    }
+
                     for(int j = 0; j < tipiDiRitornoFunCallCorrente.size(); j++) {
-                        daRestituire.append("daRestituire." + "result" + i + "=" + "r_" + idStruct + ".result"+ j + ";\n");
-                        i++;
+                        daRestituire.append("daRestituire." + "result" + k + "=" + "r_" + idStruct + ".result"+ j + ";\n");
+                        k++;
                     }
 
                 } else {
-                    daRestituire.append("daRestituire." + "result" + i + "=" + exprOP.accept(this)+ ";\n");
+                    daRestituire.append("daRestituire." + "result" + k + "=" + exprOP.accept(this)+ ";\n");
+                    k++;
                 }
             }
 
