@@ -1097,7 +1097,7 @@ public class TypeCheckingVisitor implements Visitor {
 
                 // ora si vede se i tipi matchano
                 String tipoParametroInTable = parametroInTable.getTipo().getTipo();
-                if (!tipoParametroInTable.equals(parametroUtilizzatoCorrente_string)) {
+                if (!tipoParametroInTable.equalsIgnoreCase(parametroUtilizzatoCorrente_string)) {
                     throw new Exceptions.TypesMismatch(funCall.getIdentifier().getLessema(), parametroInTable.getTipo().toString(), parametroUtilizzatoCorrente_string);
 
                 }
