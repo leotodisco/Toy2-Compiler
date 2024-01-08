@@ -148,11 +148,7 @@ public class TypeCheckingVisitor implements Visitor {
         if ( main.getNodo() instanceof Function) {
             throw new RuntimeException("Il main è una funzione");
         }
-            //TODO Dobbiamo controllare se il main ha dei parametri?
-
-        program.getIterWithoutProcedure().accept(this);
-
-        program.getProc().accept(this);
+        //TODO Dobbiamo controllare se il main ha dei parametri?
 
         program.getIterOp().accept(this);
 
@@ -188,7 +184,7 @@ public class TypeCheckingVisitor implements Visitor {
         String typeOp = operazioneBinaria.getName();
         //controllo di che tipo l'operazione binaria
         String risultato =  evaluateType(typeExpr1, typeExpr2, typeOp);
-        operazioneBinaria.setReturnType(risultato);
+        operazioneBinaria.setTipo(risultato);
 
         operazioneBinaria.getExpr1().setTipo(typeExpr1);
         operazioneBinaria.getExpr2().setTipo(typeExpr2);
@@ -954,13 +950,6 @@ public class TypeCheckingVisitor implements Visitor {
     }
 
 
-    @Override
-    public Object visit(IterWithoutProcedure iterOP) throws RuntimeException{
-        iterOP.getDeclarations().forEach(s->s.accept(this));
-        iterOP.getFunctions().forEach(s -> s.accept(this));
-
-        return null;
-    }
 
 
     @Override
@@ -991,6 +980,7 @@ public class TypeCheckingVisitor implements Visitor {
     @Override
     public Object visit(ConstOP constOP) throws RuntimeException{
         var typeAsString = constOP.getType().toString();
+        constOP.setTipo(typeAsString);
         //Prendo solo la parte che mi interessa di type ossia quella senza "_CONST"
         return typeAsString;
     }

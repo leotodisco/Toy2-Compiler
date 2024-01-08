@@ -1,31 +1,79 @@
-func godo(a :real) -> real, integer:
-    return godo(12.2);
-endfunc
+proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
 
-func prova_return(a:real) ->real, integer, string:
-    return godo(12.2), "pippo";
-endfunc
+    result  ^=  a + b + c + d;
 
-func godos(a :real) -> boolean:
-    return true;
-endfunc
-
-func foo_prova( b :real, c: integer,a:integer, d:boolean, e:integer) -> real, integer:
-    return 12.2, 12;
-endfunc
-
-func pirla() -> real:
-    return 12.2;
-endfunc
-
-proc main():
-    var a:real; b:integer;\
-    a ^=2.2;
-    <-- "ciao Benito Scala" + a $(a) "ciao Leopoldo" ;
-    a,b ^= foo_prova( 2.2, 12, 12, godos(12.2), 13);
-    a ^= pirla();
-    <-- "ciao Benito Scala1" + b ;
-    <-- "ciao Ben" $(a);
+    if result > 100 then
+        var valore ^= "grande";\
+         size ^= valore;
+    elseif result > 50 then
+        var valore ^= "media";\
+         size ^= valore;
+    else
+        var valore ^= "piccola";\
+         size ^= valore;
+    endif;
+    stampa(size);
 endproc
 
 
+var c ^= 1;\
+
+proc somma(a: integer, d: integer, b:real, size: string, out result: real):
+
+    result  ^=  a + b + c + d;
+
+    if result > 100 then
+        var valore ^= "grande";\
+         size ^= valore;
+    elseif result > 50 then
+        var valore ^= "media";\
+         size ^= valore;
+    else
+        var valore ^= "piccola";\
+         size ^= valore;
+    endif;
+    stampa(size);
+endproc
+
+% programma principale %
+proc main():
+      var
+    a, b ^= 1, 2.2; x ^= 3;
+    taglia, ans1 : string;
+    ans ^= "no";
+    risultato ^= 0.0;\
+
+    somma(a, x, b, taglia, @risultato);
+
+    var valore ^= "nok";\
+
+    valore ^= stampa("la somma di " + a + " e " + b +  " incrementata di "  + c +  " è " + taglia);
+    valore ^= stampa("ed è pari a " + risultato);
+
+    <-- "vuoi continuare? (si/no) - inserisci due volte la risposta" $(ans) $(ans1) ;
+    while ans = "si" do
+        <-- "inserisci un intero:" $(a);
+        <-- "inserisci un reale:" $(b);
+        sommac(a, c, b, @taglia, @risultato);
+        valore ^= stampa("la somma di " + a + " e " + b +  " incrementata di " + c + " è " + taglia);
+        valore ^= stampa(a+ans);
+        <-- "vuoi continuare? (si/no):\t" $(ans);
+        endwhile;
+
+        -->! ;
+        --> "ciao";
+
+endproc
+
+
+% stampa il messaggio dopo 4 ritorni a capo %
+func stampa(messaggio: string)-> string:
+    var i ^= 0;\
+    while i < 4 do
+    -->! ;
+    i^= i + 1;
+    endwhile;
+
+     --> $(messaggio);
+    return "ok";
+endfunc

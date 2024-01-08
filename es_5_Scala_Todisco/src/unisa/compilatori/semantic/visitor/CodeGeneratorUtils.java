@@ -154,18 +154,13 @@ public class CodeGeneratorUtils {
     /**
      * Aggiunge al file le firme di tutte le procedure/funzioni di Toy2.
      * @param iter
-     * @param iterWithoutProcedure
-     * @param procedure
      * @param writer
      */
-    public static void addFunctionSignatures(Writer writer, IterOp iter, IterWithoutProcedure iterWithoutProcedure, Procedure procedure) {
+    public static void addFunctionSignatures(Writer writer, IterOp iter) {
 
         addFunctionsSignaturesHelper(writer, iter.getFunctions());
-        addFunctionsSignaturesHelper(writer, iterWithoutProcedure.getFunctions());
 
-        ArrayList<Procedure> procedures = new ArrayList<>(iter.getProcedures());
-        procedures.add(procedure);
-        addProcedureSignatureHelper(writer, procedures);
+        addProcedureSignatureHelper(writer, iter.getProcedures());
 
 
     }
@@ -265,7 +260,7 @@ public class CodeGeneratorUtils {
                 var tipoConvertito = convertType(tipo);
 
                 writer.append(tipoConvertito);
-                if(isPuntatore && !tipo.equalsIgnoreCase("string")) { //se è char* non deve aggiungere un altro *
+                if(isPuntatore /* &&!tipo.equalsIgnoreCase("string")*/) { //se è char* non deve aggiungere un altro *
                     writer.append("*");
                 }
 

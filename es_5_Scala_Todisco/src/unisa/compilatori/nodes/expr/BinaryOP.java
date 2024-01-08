@@ -7,7 +7,6 @@ import unisa.compilatori.semantic.visitor.Visitor;
 public class BinaryOP extends ExprOP implements Visitable {
     private String name; //indica che espressione binaria è: plus,...
     private ExprOP expr1, expr2;
-    private String returnType;
 
     public BinaryOP(String name, ExprOP expr1, ExprOP expr2) {
         super(Mode.BINARY);
@@ -42,13 +41,6 @@ public class BinaryOP extends ExprOP implements Visitable {
         this.expr2 = expr2;
     }
 
-    public void setReturnType(String tipo) {
-        this.returnType = tipo;
-    }
-
-    public String getReturnType() {
-        return this.returnType;
-    }
 
     @Override
     public String toString() {

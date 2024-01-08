@@ -54,11 +54,9 @@ public class CodeGeneratorVisitor implements Visitor {
 
             //scriviamo i nomi di tutte le funzioni
             //TODO Se togliamo iterWithoutProcedure bisogna cambiare anche questo metodo
-            CodeGeneratorUtils.addFunctionSignatures(this.writer, program.getIterOp(), program.getIterWithoutProcedure(), program.getProc());
+            CodeGeneratorUtils.addFunctionSignatures(this.writer, program.getIterOp());
 
-            program.getIterWithoutProcedure().accept(this);
             program.getIterOp().accept(this);
-            program.getProc().accept(this);
 
             writer.close();
         } catch (Exception e) {
@@ -68,13 +66,6 @@ public class CodeGeneratorVisitor implements Visitor {
         return null;
     }
 
-    @Override
-    public Object visit(IterWithoutProcedure iterWithoutProcedure) throws RuntimeException {
-        //aggiungere firme delle funzioni e delle procedure ad inizio file
-        iterWithoutProcedure.getDeclarations().forEach(varDecl -> varDecl.accept(this));
-        iterWithoutProcedure.getFunctions().forEach(funzione->funzione.accept(this));
-        return null;
-    }
 
     @Override
     public Object visit(IterOp iterOP) throws RuntimeException {
@@ -360,6 +351,7 @@ public class CodeGeneratorVisitor implements Visitor {
                 Identifier id = itListaId.next();
                 ExprOP espressione = itListaEspressioni.next();
 
+
                 String lessemaId = (String) id.accept(this);
                 int temp = this.funCallCount + 1;
                 var lessemaOperazione = espressione.accept(this);
@@ -391,8 +383,6 @@ public class CodeGeneratorVisitor implements Visitor {
                                 writer.write(lessemaId + " = r_" + temp+ ";\n");
                             }
 
-
-
                             if(itListaId.hasNext()) {
                                 id = itListaId.next();
                                 lessemaId = id.getLessema();
@@ -406,16 +396,25 @@ public class CodeGeneratorVisitor implements Visitor {
                     countFunCall++;
                 }
                 else {
-                    //Quando l' expr non è una chimaata a funzione ho solo una stringa
                     try{
+                        if(espressione instanceof Identifier) {
+                            SymbolTableRecord record = this.currentScope.lookup(((Identifier) espressione).getLessema()).orElseThrow();
+                            VarFieldType varFieldType = (VarFieldType) record.getFieldType();
+                            if(varFieldType.getType().equalsIgnoreCase("String")) {
+                                writer.write(lessemaId + " = " + " malloc(sizeof(char) * MAXCHAR);\n");
+                                writer.write("strncpy(" + lessemaId + "," +  (String) lessemaOperazione+", MAXCHAR);\n");
+                                continue;
+                            }
+                        }else if(espressione.getTipo().equalsIgnoreCase("String")) {
+                            writer.write(lessemaId + " = " + " malloc(sizeof(char) * MAXCHAR)\n;");
+                            writer.write("strncpy(" + lessemaId + "," +  (String) lessemaOperazione+", MAXCHAR);\n");
+                            continue;
+                        }
                         writer.write(lessemaId + " = " + (String) lessemaOperazione+";\n");
                     }catch (Exception e){
                         e.printStackTrace();
                     }
                 }
-
-            }
-            for(int i = 0; i < listaId.size(); i++) {
 
             }
         }
@@ -643,9 +642,9 @@ public class CodeGeneratorVisitor implements Visitor {
                     }
                     else if(espressione instanceof BinaryOP) {
                         BinaryOP operazioneBinaria = (BinaryOP) espressione;
-                        System.out.println("tipo = " + operazioneBinaria.getReturnType());
+                        System.out.println("tipo = " + operazioneBinaria.getTipo());
 
-                        String tipo = operazioneBinaria.getReturnType();
+                        String tipo = operazioneBinaria.getTipo();
 
 
                         String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo);
@@ -741,9 +740,9 @@ public class CodeGeneratorVisitor implements Visitor {
                     }
                     else if(espressione instanceof BinaryOP) {
                         BinaryOP operazioneBinaria = (BinaryOP) espressione;
-                        System.out.println("tipo = " + operazioneBinaria.getReturnType());
+                        System.out.println("tipo = " + operazioneBinaria.getTipo());
 
-                        String tipo = operazioneBinaria.getReturnType();
+                        String tipo = operazioneBinaria.getTipo();
 
 
                         String formatSpecifier = CodeGeneratorUtils.getFormatSpecifier(tipo);
@@ -971,7 +970,13 @@ public class CodeGeneratorVisitor implements Visitor {
                 String lessemaCostante = (String) costante.accept(this);
 
                 try {
-                    writer.write(tipo + " " + lessemaId + " = " + lessemaCostante + ";\n");
+                    if(costante.getType().toString().equalsIgnoreCase("String")) {
+                        writer.write(tipo + " " + lessemaId + " = " + " malloc(sizeof(char) * MAXCHAR);\n");
+                        writer.write("strncpy(" + lessemaId + "," + lessemaCostante+", MAXCHAR);\n");
+                    } else {
+                        writer.write(tipo + " " + lessemaId + " = " + lessemaCostante + ";\n");
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -987,16 +992,21 @@ public class CodeGeneratorVisitor implements Visitor {
         SymbolTableRecord result = currentScope.lookup(lessema).get();
         var varFieldType = (VarFieldType) result.getFieldType();
 
-        var tipo = varFieldType.getType();
-        if(idParamsOut.contains(id.getLessema())) {
+        if(result.getNodo() instanceof CallableParam && ((CallableParam) result.getNodo()).getId().getMode().equals(ExprOP.Mode.PARAMSOUT)) {
             return "*" + lessema;
         }
 
-        if (id.getMode().equals(ExprOP.Mode.VARIABLENAME) || id.getMode().equals(ExprOP.Mode.PARAMS) || id.getMode().equals(ExprOP.Mode.NONE)) {
-            return lessema;
-        } else if (id.getMode().equals(ExprOP.Mode.PARAMSOUT) && !tipo.equalsIgnoreCase("string")) { //se è una stringa non devi fare sta roba
+        var tipo = varFieldType.getType();
+        /*
+        if(idParamsOut.contains(id.getLessema()) && !tipo.equalsIgnoreCase("string")) {
             return "*" + lessema;
-        } else if (id.getMode().equals(ExprOP.Mode.PARAMSREF)&& !tipo.equalsIgnoreCase("string") ) { //se è una stringa non devi fare sta roba
+        }
+        */
+        if(id.getMode().equals(ExprOP.Mode.PARAMSOUT)) {
+            return "*" + lessema;
+        }else if (id.getMode().equals(ExprOP.Mode.VARIABLENAME) || id.getMode().equals(ExprOP.Mode.PARAMS) || id.getMode().equals(ExprOP.Mode.NONE)) {
+            return lessema;
+        }  else if (id.getMode().equals(ExprOP.Mode.PARAMSREF)/*&& !tipo.equalsIgnoreCase("string") */) { //se è una stringa non devi fare sta roba
             return "&" + lessema;
         }
 
