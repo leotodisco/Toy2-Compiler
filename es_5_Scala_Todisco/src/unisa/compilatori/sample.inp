@@ -43,7 +43,7 @@ proc main():
     ans ^= "no";
     risultato ^= 0.0;\
 
-    somma(a, x, b, taglia, @risultato);
+    sommac(a, x, b, @taglia, @risultato);
 
     var valore ^= "nok";\
 
