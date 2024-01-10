@@ -23,7 +23,6 @@ public interface Visitor<T> {
     T visit(Decl decl) throws RuntimeException;
     T visit(Identifier id) throws RuntimeException;
     T visit(IterOp iterOP) throws RuntimeException;
-    T visit(IterWithoutProcedure iterWithoutProcedure) throws RuntimeException;
     T visit(Procedure procedure) throws RuntimeException;
     T visit(ConstOP constOP) throws RuntimeException;
     T visit(FunCall funCall) throws RuntimeException;

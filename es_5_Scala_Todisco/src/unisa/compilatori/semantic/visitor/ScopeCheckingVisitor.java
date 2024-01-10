@@ -33,13 +33,6 @@ public class ScopeCheckingVisitor implements Visitor {
         table.setFather(null);
         program.setTable(table);
 
-        program.getIterWithoutProcedure().accept(this);
-        Procedure proc = program.getProc();
-        CallableFieldType fieldTypeProc = new CallableFieldType();
-        var fieldType = new CallableFieldType(proc.getProcParamDeclList());
-        SymbolTableRecord recordProc = new SymbolTableRecord(proc.getId().getLessema(), proc, fieldType, "");
-        table.addEntry(recordProc);
-        program.getProc().accept(this);
         program.getIterOp().accept(this);
 
         return null;
@@ -59,34 +52,6 @@ public class ScopeCheckingVisitor implements Visitor {
         return res.toString();
     }
 
-    @Override
-    public Object visit(IterWithoutProcedure iterOP) {
-        if(!iterOP.getFunctions().isEmpty()) {
-            iterOP.getFunctions().forEach(function -> {
-                String identificatore = function.getId().getLessema();
-                CallableFieldType fieldType = new CallableFieldType();
-
-                fieldType.setParams(function.getParametersList());
-                SymbolTableRecord record = new SymbolTableRecord(identificatore, function, fieldType, returnTypeListToString(function.getReturnTypes()));
-                table.addEntry(record);
-                function.accept(this);
-
-            });
-        }
-
-        if(!iterOP.getDeclarations().isEmpty()) {
-            //per ogni decl dobbiamo chiamare accept e addentry
-            ArrayList<SymbolTableRecord> listaVar;
-            for (VarDecl var : iterOP.getDeclarations()) {
-                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
-                for ( SymbolTableRecord record: listaVar) {
-                    table.addEntry(record);
-                }
-            }
-        }
-
-        return null;
-    }
 
     @Override
     public Object visit(IterOp iterOP) {
