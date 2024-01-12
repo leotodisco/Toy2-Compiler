@@ -513,6 +513,10 @@ public class TypeCheckingVisitor implements Visitor {
                 String tipoLeftSide = itLeftSide.next();
                 String tipoRightSide = itRightSide.next();
 
+                if(tipoLeftSide.equalsIgnoreCase("real") && tipoRightSide.equalsIgnoreCase("integer")){
+                    continue;
+                }
+
                 if(!tipoRightSide.equalsIgnoreCase(tipoLeftSide)) {
                     throw new Exceptions.TypesMismatch(tipoLeftSide,tipoRightSide);
                 }
@@ -792,6 +796,7 @@ public class TypeCheckingVisitor implements Visitor {
 
                 // ora si vede se i tipi matchano
                 String tipoParametroInTable = parametroInTable.getTipo().getTipo();
+
                 if (!tipoParametroInTable.equals(parametroUtilizzatoCorrente_string)) {
                     throw new Exceptions.TypesMismatch(procCall.getIdentifier().getLessema(), parametroInTable.getTipo().toString(), parametroUtilizzatoCorrente_string);
 
