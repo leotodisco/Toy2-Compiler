@@ -1066,6 +1066,9 @@ public class TypeCheckingVisitor implements Visitor {
 
 
                 if(!tipoParametroUtilizzato.equals(tipoParametroDichiarato)) {
+                    if(tipoParametroDichiarato.equalsIgnoreCase("real") && tipoParametroUtilizzato.equalsIgnoreCase("integer")){
+                        continue;
+                    }
                     throw new Exceptions.TypesMismatch(funCall.getIdentifier().getLessema(), tipoParametroDichiarato, tipoParametroUtilizzato);
                 }
 
@@ -1093,6 +1096,9 @@ public class TypeCheckingVisitor implements Visitor {
                 // ora si vede se i tipi matchano
                 String tipoParametroInTable = parametroInTable.getTipo().getTipo();
                 if (!tipoParametroInTable.equalsIgnoreCase(parametroUtilizzatoCorrente_string)) {
+                    if(tipoParametroInTable.equalsIgnoreCase("real") && parametroUtilizzatoCorrente_string.equalsIgnoreCase("integer")){
+                        continue;
+                    }
                     throw new Exceptions.TypesMismatch(funCall.getIdentifier().getLessema(), parametroInTable.getTipo().toString(), parametroUtilizzatoCorrente_string);
 
                 }

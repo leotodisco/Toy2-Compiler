@@ -41,6 +41,7 @@ public class CodeGeneratorVisitor implements Visitor {
         // controllo che esista la directory dei file e inizializzo il file
         try {
             if (!(new File("test_files" + File.separator + "c_out" + File.separator)).exists()) {
+
                 Files.createDirectory(Paths.get("test_files" + File.separator + "c_out" + File.separator));
             }
             outFile = new File("test_files" + File.separator + "c_out" + File.separator + FILE_NAME);
