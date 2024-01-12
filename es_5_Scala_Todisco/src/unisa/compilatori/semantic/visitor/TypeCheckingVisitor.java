@@ -796,6 +796,12 @@ public class TypeCheckingVisitor implements Visitor {
 
                 // ora si vede se i tipi matchano
                 String tipoParametroInTable = parametroInTable.getTipo().getTipo();
+                if(!exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && tipoParametroInTable.equalsIgnoreCase("real") && parametroUtilizzatoCorrente_string.equalsIgnoreCase("integer")) {
+                    continue;
+                } else if (exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && tipoParametroInTable.equalsIgnoreCase("real") && parametroUtilizzatoCorrente_string.equalsIgnoreCase("integer") ){
+                    throw new RuntimeException("Non puoi usare out quando fai il cast da integer a real");
+                }
+
 
                 if (!tipoParametroInTable.equals(parametroUtilizzatoCorrente_string)) {
                     throw new Exceptions.TypesMismatch(procCall.getIdentifier().getLessema(), parametroInTable.getTipo().toString(), parametroUtilizzatoCorrente_string);
@@ -803,9 +809,9 @@ public class TypeCheckingVisitor implements Visitor {
                 }
             }
         }
-            if(paramUtilizzatiIterator.hasNext() || paramDichiaratiIterator.hasNext()) {
-                throw new RuntimeException("i parametri utilizzati sono diversi da quelli dichiarati");
-            }
+        if(paramUtilizzatiIterator.hasNext() || paramDichiaratiIterator.hasNext()) {
+            throw new RuntimeException("i parametri utilizzati sono diversi da quelli dichiarati");
+        }
 
         return null;
     }
