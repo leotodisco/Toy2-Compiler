@@ -25,6 +25,10 @@ public class Prova {
             tree=new JTree(root);
             ((ProgramOp) root).accept(new ScopeCheckingVisitor());
             ((ProgramOp) root).accept(new TypeCheckingVisitor());
+            String[] slashSplit = args[0].split("/");
+            String fullName = slashSplit[slashSplit.length-1];
+            String fileName = fullName.split(".txt")[0];
+            CodeGeneratorVisitor.FILE_NAME = fileName + ".c";
             ((ProgramOp) root).accept(new CodeGeneratorVisitor());
             int a = 0;
             //JFrame framePannello=new JFrame();

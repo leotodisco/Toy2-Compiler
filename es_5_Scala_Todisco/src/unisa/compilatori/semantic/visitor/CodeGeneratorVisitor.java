@@ -643,7 +643,7 @@ public class CodeGeneratorVisitor implements Visitor {
                     }
                     else if(espressione instanceof BinaryOP) {
                         BinaryOP operazioneBinaria = (BinaryOP) espressione;
-                        System.out.println("tipo = " + operazioneBinaria.getTipo());
+
 
                         String tipo = operazioneBinaria.getTipo();
 
@@ -741,7 +741,7 @@ public class CodeGeneratorVisitor implements Visitor {
                     }
                     else if(espressione instanceof BinaryOP) {
                         BinaryOP operazioneBinaria = (BinaryOP) espressione;
-                        System.out.println("tipo = " + operazioneBinaria.getTipo());
+
 
                         String tipo = operazioneBinaria.getTipo();
 

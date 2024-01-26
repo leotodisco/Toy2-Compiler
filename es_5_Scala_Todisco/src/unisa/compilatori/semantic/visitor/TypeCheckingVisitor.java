@@ -51,7 +51,7 @@ public class TypeCheckingVisitor implements Visitor {
                 else if (type1.equalsIgnoreCase("INTEGER") && type2.equalsIgnoreCase("STRING"))
                     return new String("STRING");
                 else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("INTEGER")) {
-                    System.out.println("sono nella evaluate type corretta quella di string + int");
+
                     return new String("STRING");
                 }
                 else if (type1.equalsIgnoreCase("STRING") && type2.equalsIgnoreCase("REAL"))
@@ -495,7 +495,7 @@ public class TypeCheckingVisitor implements Visitor {
         }
 
         if(statement.getTipo().equals(Stat.Mode.ASSIGN)) {
-            System.out.println("stateent = " + statement );
+
             //1. prendiamo i tipi di ritorno di una possibile funzione
             //2. prendiamo i tipi dei
             ArrayList<String> leftSide = statement.getIdsList()
