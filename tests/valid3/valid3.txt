@@ -1,0 +1,60 @@
+% scoping %
+
+proc scoping(n : integer, m: integer):
+    var message ^= "level 1";\
+        if(n <= 1) then
+            var message ^=  2.1;\
+           if(m <= 1) then
+                var message ^= "level 3.1";\
+                -->! $(message);
+           elseif(m > 1) && (m < 5) then
+                var message ^= "level 3.2";\
+                -->! $(message);
+           else
+                var message ^= "level 3.3";\
+                -->! $(message);
+           endif;
+            -->! $(message);
+        else
+            var message ^= 2.2;\
+           if(m <= 1) then
+                var message ^= "level 3.4";\
+                -->! $(message);
+           elseif(m > 1) && (m < 5) then
+                var message ^= "level 3.5";\
+                -->! $(message);
+           else
+                var message ^= "level 3.6";\
+                -->! $(message);
+           endif;
+            -->! $(message);
+        endif;
+    -->! $(message);
+
+endproc
+
+
+
+proc main():
+    var message ^= "level 0";\
+    var n, m : integer;\
+    var k ^= 6;\
+
+    while k >= 1 do
+        <-- "Inserisci n "  $(n);
+        <-- "Inserisci m "  $(m);
+        -->! "I valori inseriti sono " $(n) "e " $(m);
+        scoping(n, m);
+        k ^= k-1;
+    endwhile;
+
+    -->! $(message);
+    -->! $(glob());
+endproc
+
+
+func glob() -> integer:
+    return message;
+endfunc
+
+var message ^= 100;\

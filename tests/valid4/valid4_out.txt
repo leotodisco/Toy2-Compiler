@@ -1,0 +1,33 @@
+Inserisci 2 per eseguire la somma
+Inserisci 3 per eseguire la moltiplicazione
+Inserisci 4 per eseguire la divisione
+Inserisci 5 per eseguire la sottrazione
+Inserisci 1 o 0 per chiudere il programma Inserisci un numero :         Inserisci primo operando :      Inserisci secondo operando :
+Il risultato ? :         6.000000
+
+Inserisci 2 per eseguire la somma
+Inserisci 3 per eseguire la moltiplicazione
+Inserisci 4 per eseguire la divisione
+Inserisci 5 per eseguire la sottrazione
+Inserisci 1 o 0 per chiudere il programma Inserisci un numero :         Inserisci primo operando :      Inserisci secondo operando :
+Il risultato ? :         8.000000
+
+Inserisci 2 per eseguire la somma
+Inserisci 3 per eseguire la moltiplicazione
+Inserisci 4 per eseguire la divisione
+Inserisci 5 per eseguire la sottrazione
+Inserisci 1 o 0 per chiudere il programma Inserisci un numero :         Inserisci primo operando :      Inserisci secondo operando :
+Il risultato ? :         2.000000
+
+Inserisci 2 per eseguire la somma
+Inserisci 3 per eseguire la moltiplicazione
+Inserisci 4 per eseguire la divisione
+Inserisci 5 per eseguire la sottrazione
+Inserisci 1 o 0 per chiudere il programma Inserisci un numero :         Inserisci primo operando :      Inserisci secondo operando :
+Il risultato ? :         2.000000
+
+Inserisci 2 per eseguire la somma
+Inserisci 3 per eseguire la moltiplicazione
+Inserisci 4 per eseguire la divisione
+Inserisci 5 per eseguire la sottrazione
+Inserisci 1 o 0 per chiudere il programma Inserisci un numero :

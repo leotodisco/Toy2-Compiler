@@ -1,0 +1,20 @@
+%error #19%
+
+func fib(n : integer) -> integer:
+
+    if(n <= 1) then
+
+        return n;
+    else
+        return fib(n-1) + fib(n-2);
+    endif;
+
+    return 0;
+endfunc
+
+
+proc main():
+    var a ^= 25;\
+
+    -->! "Fib = " fib(a);
+endproc

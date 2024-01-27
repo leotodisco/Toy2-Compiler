@@ -1,0 +1,75 @@
+%PROGRAMMA PRINCIPALE%
+
+proc main():
+
+    var
+    scelta ^= 2;
+    n1,n2: real;
+    condizione1 ^= true;
+    condizione2 ^= true;\
+
+    while condizione1 && condizione2 do
+    --> "Inserisci 2 per eseguire la somma";
+    -->!;
+    -->"Inserisci 3 per eseguire la moltiplicazione";
+    -->!;
+    -->"Inserisci 4 per eseguire la divisione";
+    -->!;
+    -->"Inserisci 5 per eseguire la sottrazione";
+    -->!;
+    -->"Inserisci 1 o 0 per chiudere il programma";
+    <-- "Inserisci un numero : \t" $(scelta);
+    if scelta = 2 then
+        <-- "Inserisci primo operando : \t" $(n1);
+        <-- "Inserisci secondo operando : \t" $(n2);
+        -->!;
+        -->"Il risultato è : \t" $(somma(n1,n2));
+    elseif scelta = 3 then
+        <-- "Inserisci primo operando : \t" $(n1);
+        <-- "Inserisci secondo operando : \t" $(n2);
+        -->!;
+        -->"Il risultato è : \t" $(moltiplicazione(n1,n2));
+    elseif scelta = 4 then
+        <-- "Inserisci primo operando : \t" $(n1);
+        <-- "Inserisci secondo operando : \t" $(n2);
+        -->!;
+        -->"Il risultato è : \t" $(divisione(n1,n2));
+    elseif scelta = 5 then
+        <-- "Inserisci primo operando : \t" $(n1);
+        <-- "Inserisci secondo operando : \t" $(n2);
+        -->!;
+        -->"Il risultato è : \t" $(sottrazione(n1,n2));
+    else
+        condizione1 ^= false;
+    endif;
+    -->!;
+    -->!;
+
+    endwhile;
+    endproc
+
+func somma(n1:real,n2:real)-> real:
+    var risultato: real;\
+    risultato ^= n1 + n2;
+    return risultato;
+endfunc
+
+func moltiplicazione(n1:real,n2:real)-> real:
+    var risultato: real;\
+    risultato ^= n1 * n2;
+    return risultato;
+endfunc
+
+func divisione(n1:real,n2:real)-> real:
+    var risultato: real;\
+    risultato ^= n1 / n2;
+    return risultato;
+endfunc
+
+func sottrazione(n1:real,n2:real)-> real:
+    var risultato: real;\
+    risultato ^= n1 - n2;
+    return risultato;
+endfunc
+
+

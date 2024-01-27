@@ -1,0 +1,76 @@
+
+%
+ Programma esemplificativo del linguaggio Toy2 a volte volutamente ridondante.
+ La sua sintassi deve essere ancora attentamente verificata
+
+ Questo programma calcola e stampa la somma di due numeri, incrementata di 1.
+ Inoltre ne definisce la taglia
+
+ error #75
+%
+
+
+
+% fa somma e restituisce anche la taglia del numero, oltre che il risultato%
+proc sommac(a: integer, d: integer, b:real, out size: string, out result: real):
+
+	result  ^=  a + b + c + d;
+
+	if result > 100 then
+		var valore ^= "grande";\
+ 		size ^= valore;
+	elseif result > 50 then
+		var valore ^= "media";\
+ 		size ^= valore;
+	else
+		var valore ^= "piccola";\
+ 		size ^= valore;
+	endif;
+
+endproc
+
+
+var c ^= 1;\
+
+
+% programma principale %
+proc main():
+      var
+	a, b ^= 1, 2.2; x ^= 3;
+	taglia, ans1 : string;
+	ans ^= "no";
+	risultato ^= 0.0;\
+
+	sommac(a, x, b, @taglia, @risultato);
+
+	var valore ^= "nok";\
+
+	valore ^= stampa("la somma di " + a + " e " + b +  " incrementata di "  + c +  " e' " + taglia);
+	valore ^= stampa("ed e' pari a " + risultato);
+
+	<-- "vuoi continuare? (si/no) - inserisci due volte la risposta\n" $(ans) $(ans1) ;
+	while ans = "si" do
+	    <-- "inserisci un intero:" $(a);
+	    <-- "inserisci un reale:" $(b);
+	    sommac(a, x, b, @taglia, @risultato);
+	    valore ^= stampa("la somma di " + a + " e " + b +  " incrementata di " + c + " e' " + taglia);
+	    valore ^= stampa(" ed e' pari a " + risultato);
+	    <-- "vuoi continuare? (si/no):\t" $(ans);
+   endwhile;
+
+        -->! ;
+        --> "ciao";
+endproc
+
+
+% stampa il messaggio dopo 4 ritorni a capo %
+func stampa(messaggio: string)-> string:
+    var i ^= 0;\
+    while i < 4 do
+	-->! ;
+	i ^= i +1;
+    endwhile;
+
+     --> $(messaggio);
+    return 1;
+endfunc

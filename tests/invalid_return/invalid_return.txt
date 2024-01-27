@@ -1,0 +1,16 @@
+%Errore: manca il return%
+func fib(n : integer) -> integer:
+    if(n <= 1) then
+
+    else
+
+    endif;
+
+endfunc
+
+
+proc main():
+    var a ^= 25;\
+
+    -->! "Fib = " $(fib(a));
+endproc

@@ -1,0 +1,12 @@
+tmoltiplicazione
+4
+2
+1
+tutte_le_operazioni
+12
+12
+1
+divisione
+3
+4
+0

@@ -1,0 +1,90 @@
+% programma principale %
+proc main():
+
+    var operazione : string;
+        input1, input2, answer : real;\
+    var flag ^= true;
+        result : real;
+        res1, res2, res3, res4: real;\
+
+    while flag = true do
+     <-- "Inserisci l'operazione da effettuare (somma, sottrazione, divisione, moltiplicazione, tutte_le_operazioni): " $(operazione);
+     <-- "Inserisci il primo input: " $(input1);
+     <-- "Inserisci il secondo input: " $(input2);
+
+ -->! "hai scelto l'operazione" $(operazione) "con gli argomenti" $(input1) " e " $(input2);
+
+     if operazione = "somma" then
+        somma(input1, input2, @result);
+     elseif operazione = "sottrazione" then
+        sottrazione(input1, input2, @result);
+    elseif operazione = "divisione" then
+       result ^= divisione(input1, input2);
+    elseif operazione = "moltiplicazione" then
+       result ^= moltiplicazione(input1, input2);
+    elseif operazione = "tutte_le_operazioni" then
+
+        res1, res2, res3, res4 ^= tutte_le_operazioni(input1, input2);
+    else
+        -->! "Operazione non consentita";
+    endif;
+
+if operazione <> "tutte_le_operazioni" then
+    -->! "Il risultato e': "  $(result);
+else
+    -->! $(stampa("i risultati delle 4 operazioni sono \n" + res1 + "\n" + res2 + "\n" + res3 + "\n" + res3 + "\n" ));
+endif;
+
+    <-- "Vuoi continuare? (1 yes/0 no): " $(answer) ;
+
+    if answer = 1 then
+        flag ^= true;
+    else
+        flag ^= false;
+    endif;
+    endwhile;
+
+
+
+endproc
+
+
+proc somma(input1: real, input2: real, out result: real):
+    result ^= input1 + input2;
+endproc
+
+proc sottrazione(input1: real, input2: real, out result : real):
+    result ^= input1 - input2;
+endproc
+
+func moltiplicazione(input1: real, input2: real) -> real:
+    var result : real;\
+    result ^= input1 * input2;
+    return result;
+endfunc
+
+func divisione(input1: real, input2: real) -> real:
+
+    var result : real;\
+    if input2 = 0 then
+        --> "Errore";
+        result ^= 0.0;
+
+    endif;
+    result ^= input1 / input2;
+    return result;
+endfunc
+
+
+func tutte_le_operazioni(input1: real, input2:real) -> real, real, real, real:
+
+    var somma_res, sottrazione_res ^= 0.0, 0.0; \
+    somma(input1,input2, @somma_res);
+    sottrazione(input1,input2, @sottrazione_res);
+    return somma_res, sottrazione_res, divisione(input1,input2), moltiplicazione(input1,input2);
+endfunc
+
+func stampa(stringa: string)->string:
+    var s ^= "Ciao! ";\
+    return s + stringa;
+endfunc

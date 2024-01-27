@@ -1,0 +1,35 @@
+
+
+
+
+la somma di 1 e 2.200000 incrementata di 1 e' piccola
+
+
+
+ed e' pari a 7.200000 vuoi continuare? (si/no) - inserisci due volte la risposta
+inserisci un intero:inserisci un reale:
+
+
+
+la somma di 12 e 2.000000 incrementata di 1 e' piccola
+
+
+
+ ed e' pari a 18.000000 vuoi continuare? (si/no):       inserisci un intero:inserisci un reale:
+
+
+
+la somma di 24 e 44.300000 incrementata di 1 e' media
+
+
+
+ ed e' pari a 72.300000 vuoi continuare? (si/no):       inserisci un intero:inserisci un reale:
+
+
+
+la somma di 1000 e 1234.200000 incrementata di 1 e' grande
+
+
+
+ ed e' pari a 2238.200000 vuoi continuare? (si/no):
+ciao
