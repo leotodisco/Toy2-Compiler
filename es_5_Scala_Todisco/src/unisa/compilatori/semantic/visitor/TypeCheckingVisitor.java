@@ -99,10 +99,19 @@ public class TypeCheckingVisitor implements Visitor {
                     throw new RuntimeException("tipo1 = " + type1 + "tipo2 = " + type2 + " op name = " + op);
 
             case "eq_op", "ne_op":
-                if(type1.equalsIgnoreCase(type2))
+                if(type1.equalsIgnoreCase(type2)) {
                     return new String("BOOLEAN");
-                else
+                }
+                else {
+                    if(type1.equalsIgnoreCase("real") && type2.equalsIgnoreCase("integer")){
+                        return new String("BOOLEAN");
+                    }
+                    if(type1.equalsIgnoreCase("integer") && type2.equalsIgnoreCase("real")){
+                        return new String("BOOLEAN");
+                    }
+
                     throw new RuntimeException("errore");
+                }
         }
         return null;
     }
