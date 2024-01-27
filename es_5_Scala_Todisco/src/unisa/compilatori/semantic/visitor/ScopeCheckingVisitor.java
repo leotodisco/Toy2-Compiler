@@ -55,6 +55,19 @@ public class ScopeCheckingVisitor implements Visitor {
 
     @Override
     public Object visit(IterOp iterOP) {
+
+        if(!iterOP.getDeclarations().isEmpty()) {
+            //per ogni decl dobbiamo chiamare accept e addentry
+            ArrayList<SymbolTableRecord> listaVar;
+            for (VarDecl var : iterOP.getDeclarations()) {
+                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
+
+                for ( SymbolTableRecord record: listaVar) {
+                    table.addEntry(record);
+                }
+            }
+        }
+
         if(!iterOP.getFunctions().isEmpty()) {
             iterOP.getFunctions().forEach(function -> {
                 String identificatore = function.getId().getLessema();
@@ -70,17 +83,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
         }
 
-        if(!iterOP.getDeclarations().isEmpty()) {
-            //per ogni decl dobbiamo chiamare accept e addentry
-            ArrayList<SymbolTableRecord> listaVar;
-            for (VarDecl var : iterOP.getDeclarations()) {
-                listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
 
-                for ( SymbolTableRecord record: listaVar) {
-                    table.addEntry(record);
-                }
-            }
-        }
 
         if(!iterOP.getProcedures().isEmpty()) {
             //su tutte le procedure chiami accept
