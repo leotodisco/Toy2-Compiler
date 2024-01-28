@@ -32,7 +32,7 @@ proc main():
 if operazione <> "tutte_le_operazioni" then
     -->! "Il risultato e': "  $(result);
 else
-    -->! $(stampa("i risultati delle 4 operazioni sono \n" + res1 + "\n" + res2 + "\n" + res3 + "\n" + res3 + "\n" ));
+    -->! $(stampa("i risultati delle 4 operazioni sono \n" + res1 + "\n" + res2 + "\n" + res3 + "\n" + res4 + "\n" ));
 endif;
 
     <-- "Vuoi continuare? (1 yes/0 no): " $(answer) ;
