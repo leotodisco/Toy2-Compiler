@@ -20,7 +20,7 @@ public class CodeGeneratorVisitor implements Visitor {
     private SymbolTable currentScope;
     private static File outFile;
     private FileWriter writer;
-    public static String FILE_NAME = "output.c";
+    public static String FILE_NAME = "";
 
     ArrayList <String> idParamsOut = new ArrayList<>();
     private int countFunCall = 0;

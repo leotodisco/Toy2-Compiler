@@ -21,16 +21,19 @@ public class Main {
             Lexer prova = new Lexer(br);
             parser p = new parser(prova);
 
+            //get filename from file path
+            String[] slashSplit = args[0].split("/");
+            String fullName = slashSplit[slashSplit.length-1];
+            String fileName = fullName.split(".txt")[0];
+            CodeGeneratorVisitor.FILE_NAME = fileName + ".c";
+
             DefaultMutableTreeNode root = (DefaultMutableTreeNode) p.parse().value;
             tree=new JTree(root);
 
             ((ProgramOp) root).accept(new ScopeCheckingVisitor());
             ((ProgramOp) root).accept(new TypeCheckingVisitor());
 
-            String[] slashSplit = args[0].split("/");
-            String fullName = slashSplit[slashSplit.length-1];
-            String fileName = fullName.split(".txt")[0];
-            CodeGeneratorVisitor.FILE_NAME = fileName + ".c";
+
             ((ProgramOp) root).accept(new CodeGeneratorVisitor());
             int a = 0;
             //JFrame framePannello=new JFrame();
