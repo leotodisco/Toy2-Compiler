@@ -796,11 +796,11 @@ public class TypeCheckingVisitor implements Visitor {
                 String parametroUtilizzatoCorrente_string = (String) parametroUtilizzatoCorrente;
 
                 if(!exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && parametroInTable.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)) {
-                    throw new RuntimeException("type mismatch nella procedura: NON CI SIAMO CON LE OUT E I REF "); //TODO CUSTOM EXCEPTION
+                    throw new RuntimeException("il numero di out e ref non matcha "); //TODO CUSTOM EXCEPTION
                 }
 
                 if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && !parametroInTable.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
-                    throw new RuntimeException("non si trovano out e ref"); //TODO CUSTOM EXCEPTION
+                    throw new RuntimeException("il numero di out e ref non matcha"); //TODO CUSTOM EXCEPTION
                 }
 
                 // ora si vede se i tipi matchano
@@ -1101,11 +1101,11 @@ public class TypeCheckingVisitor implements Visitor {
                 String parametroUtilizzatoCorrente_string = (String) parametroUtilizzatoCorrente;
 
                 if(!exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && parametroInTable.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)) {
-                    throw new RuntimeException("type mismatch nella procedura: NON CI SIAMO CON LE OUT E I REF "); //TODO CUSTOM EXCEPTION
+                    throw new RuntimeException("il numero di out e ref non matcha"); //TODO CUSTOM EXCEPTION
                 }
 
                 if(exprOPcorrente.getMode().equals(ExprOP.Mode.PARAMSREF) && !parametroInTable.getId().getMode().equals(ExprOP.Mode.PARAMSOUT)){
-                    throw new RuntimeException("non si trovano out e ref"); //TODO CUSTOM EXCEPTION
+                    throw new RuntimeException("il numero di out e ref non matcha"); //TODO CUSTOM EXCEPTION
                 }
 
                 // ora si vede se i tipi matchano
