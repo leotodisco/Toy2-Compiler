@@ -46,7 +46,8 @@ public class Main {
                 p.debug_parse();
             }*/
         } catch (Exception e) {
-            System.err.println("\nErrore durante la compilazione: " + CodeGeneratorVisitor.FILE_NAME +"\n" + e.getMessage());
+
+            System.err.println("\n\n--------------ERRORE--------------\nErrore durante la compilazione: " + CodeGeneratorVisitor.FILE_NAME +"\n" + e.getMessage() + "\n----------------------------------\n\n");
         }
 
 
