@@ -193,3 +193,28 @@ Expr ::= FunCall <br>
 | NOT Expr;
 
 ***
+
+## Modifiche Aggiuntive
+Nel Lexer sono state aggiunte delle parole riservate che servono nella traduzione in C:
+- daRestituire
+- r [0-9
+
+
+Inoltre nel nostro compilatore è stato anche eseguito un controllo relativo ai return quando si ha un if-else.
+Come si può vedere nell'esempio di seguito, sebbene non ci sia un return statement alla fine, il codice viene compilato poichè sia il body dell'if che il body dell'else hanno un return statement.
+
+
+	`func funzione(a:integer)->integer :
+		if a>8 then
+			return 8;
+		else
+			return 10;
+		endif;
+	endfunc`
+
+Inoltre, nella repository è presente una branch chiamata "OrderOfVariable" nella quale è presente una prima versione del compilatore (incompleta) in cui si poteva usare una variabile se e solo se questa era stata dichiarata nelle linee precedenti di codice.
+Ciò è stato fatto grazie alla classe DefaultMutableTreeNode che è stata anche usata per produrre l'albero sintattico.
+Nel metodo visit dello ScopeCheckingVisitor si iterava su tutti i figli di un body e si visitava l'albero al contrario, in questo modo se, in uno statement, si usava una variabile che non era presente nella tabella dei simboli si lanciava un'eccezione.
+Nella repository è anche presente una branch chiamata "CodeGeneratorVisitor" nella quale è presente una versione del compilatore (anche questa incompleta) che consentiva di usare funzioni con multipli tipi di ritorno anche nei parametri di altre funzioni.
+
+
