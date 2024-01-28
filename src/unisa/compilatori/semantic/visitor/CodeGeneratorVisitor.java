@@ -535,26 +535,26 @@ public class CodeGeneratorVisitor implements Visitor {
                             SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
                             VarFieldType varFieldType = (VarFieldType) record.getFieldType();
                             if (varFieldType.getType().equalsIgnoreCase("real")) {
-                                writer.write("scanf( \"%f\", " + id.getLessema() + ");\n");
+                                writer.write("scanf(\"%f\", " + id.getLessema() + ");\n");
                             }
                             if (varFieldType.getType().equalsIgnoreCase("integer")) {
-                                writer.write("scanf( \"%d\", " + id.getLessema() + ");\n");
+                                writer.write("scanf(\"%d\", " + id.getLessema() + ");\n");
                             }
                             if (varFieldType.getType().equalsIgnoreCase("string")) {
-                                writer.write("scanf( \"%s\", " + id.getLessema() + ");\n");
+                                writer.write("scanf(\"%s\", " + id.getLessema() + ");\n");
                             }
                         }
                         else {
                             SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
                             VarFieldType varFieldType = (VarFieldType) record.getFieldType();
                             if (varFieldType.getType().equalsIgnoreCase("real")) {
-                                writer.write("scanf( \"%f\", &" + id.getLessema() + ");\n");
+                                writer.write("scanf(\"%f\", &" + id.getLessema() + ");\n");
                             }
                             if (varFieldType.getType().equalsIgnoreCase("integer")) {
-                                writer.write("scanf( \"%d\", &" + id.getLessema() + ");\n");
+                                writer.write("scanf(\"%d\", &" + id.getLessema() + ");\n");
                             }
                             if (varFieldType.getType().equalsIgnoreCase("string")) {
-                                writer.write("scanf( \"%s\", " + id.getLessema() + ");\n");
+                                writer.write("scanf(\"%s\", " + id.getLessema() + ");\n");
                             }
                         }
                     }
@@ -567,20 +567,20 @@ public class CodeGeneratorVisitor implements Visitor {
                             SymbolTableRecord record = this.currentScope.lookup(id.getLessema()).get();
                             VarFieldType varFieldType = (VarFieldType) record.getFieldType();
                             if(varFieldType.getType().equalsIgnoreCase("real")) {
-                                writer.write("printf( \"%f\", "+id.getLessema()+");\n" );
+                                writer.write("printf(\"%f\", "+id.getLessema()+");\n" );
                             }
                             if(varFieldType.getType().equalsIgnoreCase("integer")) {
-                                writer.write("printf( \"%d\", "+id.getLessema()+");\n" );
+                                writer.write("printf(\"%d\", "+id.getLessema()+");\n" );
                             }
                             if(varFieldType.getType().equalsIgnoreCase("string")) {
-                                writer.write("printf( \"%s\", "+id.getLessema()+");\n" );
+                                writer.write("printf(\"%s\", "+id.getLessema()+");\n" );
                             }
                         }
                         if(espressione instanceof BinaryOP) {//se è concatenazione di stringhe
                             BinaryOP operazione = (BinaryOP) espressione;
 
                             if(operazione.getName().equalsIgnoreCase("stringConcat")) {
-                                writer.write("printf( \"%s\", "+(String)operazione.accept(this)+");\n" );
+                                writer.write("printf(\"%s\", "+(String)operazione.accept(this)+");\n" );
                             }
                         }
                     }
@@ -597,7 +597,7 @@ public class CodeGeneratorVisitor implements Visitor {
 
             StringBuilder parteDopoLeVirgolette = new StringBuilder();
             try{
-                StringBuilder stringBuilder = new StringBuilder("printf(\" ");
+                StringBuilder stringBuilder = new StringBuilder("printf(\"");
                 for(int i = 0; i < listaEspressioni.size(); i++) {
                     ExprOP espressione = listaEspressioni.get(i);
                     String tipoEspressione = "";
