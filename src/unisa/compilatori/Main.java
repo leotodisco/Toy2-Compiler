@@ -43,7 +43,7 @@ public class Main {
                 p.debug_parse();
             }*/
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("\nErrore durante la compilazione: " + CodeGeneratorVisitor.FILE_NAME +"\n" + e.getMessage());
         }
 
 
