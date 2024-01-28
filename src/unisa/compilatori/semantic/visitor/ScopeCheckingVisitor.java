@@ -151,7 +151,7 @@ public class ScopeCheckingVisitor implements Visitor {
 
             //*[[Nell’inizializzazione il numero delle costanti deve essere pari al numero degli id]]*
             if(itConst.hasNext() || itIds.hasNext()) {
-                throw new RuntimeException("Errore"); //TODO ECCEZIONE
+                throw new RuntimeException("Nell'avvenire dell'inizializzazione il numero delle costanti deve essere pari al numero degli id");
             }
         // se il tipo di dichiarazione è del tipo var a : string;\
         } else {

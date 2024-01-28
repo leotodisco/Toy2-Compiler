@@ -110,7 +110,7 @@ public class TypeCheckingVisitor implements Visitor {
                         return new String("BOOLEAN");
                     }
 
-                    throw new RuntimeException("errore");
+                    throw new RuntimeException("Errore di tipo nella evaluate type, type1 = " + type1 + " type2 = " + type2);
                 }
         }
         return null;
@@ -141,7 +141,7 @@ public class TypeCheckingVisitor implements Visitor {
                 else
                     throw new Exceptions.InvalidOperation(op, type1);
             default:
-                throw new RuntimeException("ERRORE COI TIPI");
+                throw new RuntimeException("Errore di tipo nella evaluate type, type1 = " + type1 + " op name = " + op);
         }
     }
 
