@@ -11,10 +11,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
-import static java.lang.System.exit;
 
-
-public class Prova {
+public class Main {
 
     public static void main(String[] args){
         JTree tree;
@@ -25,13 +23,9 @@ public class Prova {
 
             DefaultMutableTreeNode root = (DefaultMutableTreeNode) p.parse().value;
             tree=new JTree(root);
-            try {
-                ((ProgramOp) root).accept(new ScopeCheckingVisitor());
-                ((ProgramOp) root).accept(new TypeCheckingVisitor());
-            } catch (Exception e) {
-                e.printStackTrace();
-                exit(-1);
-            }
+
+            ((ProgramOp) root).accept(new ScopeCheckingVisitor());
+            ((ProgramOp) root).accept(new TypeCheckingVisitor());
 
             String[] slashSplit = args[0].split("/");
             String fullName = slashSplit[slashSplit.length-1];
