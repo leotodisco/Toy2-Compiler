@@ -438,11 +438,7 @@ public class ScopeCheckingVisitor implements Visitor {
             for (VarDecl var : body.getVarDeclList()) {
                 listaVar = (ArrayList<SymbolTableRecord>) var.accept(this);
                 for ( SymbolTableRecord record: listaVar) {
-                    try{
-                        table.addEntry(record);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    table.addEntry(record);
                 }
             }
 

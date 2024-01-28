@@ -11,6 +11,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+import static java.lang.System.exit;
+
 
 public class Prova {
 
@@ -23,8 +25,14 @@ public class Prova {
 
             DefaultMutableTreeNode root = (DefaultMutableTreeNode) p.parse().value;
             tree=new JTree(root);
-            ((ProgramOp) root).accept(new ScopeCheckingVisitor());
-            ((ProgramOp) root).accept(new TypeCheckingVisitor());
+            try {
+                ((ProgramOp) root).accept(new ScopeCheckingVisitor());
+                ((ProgramOp) root).accept(new TypeCheckingVisitor());
+            } catch (Exception e) {
+                e.printStackTrace();
+                exit(-1);
+            }
+
             String[] slashSplit = args[0].split("/");
             String fullName = slashSplit[slashSplit.length-1];
             String fileName = fullName.split(".txt")[0];
