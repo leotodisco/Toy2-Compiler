@@ -8,6 +8,11 @@ public interface Visitor<T> {
     default T visit(LetStat l) throws RuntimeException {
         return null;
     };
+
+    default T visit(When w) throws RuntimeException {
+        return null;
+    };
+
     T visit(ProgramOp program) throws RuntimeException;
     T visit(BinaryOP operazioneBinaria) throws RuntimeException;
     T visit(UnaryOP operazioneUnaria) throws RuntimeException;

@@ -904,15 +904,10 @@ public class CodeGeneratorVisitor implements Visitor {
             writer.write("//MODIFICA");
         writer.write("\n{\n");
             l.getDichiarazioni().accept(this);
-            writer.write("while( " + (String) l.getCondizione1().accept(this) + " ) {\n");
-            Collections.reverse(l.getStatements1());
-            l.getStatements1().forEach(stat -> stat.accept(this));
-            writer.write("};\n");
 
-            writer.write("while( " + (String) l.getCondizione2().accept(this) + " ) {\n");
-            Collections.reverse(l.getStatements2());
-            l.getStatements2().forEach(stat -> stat.accept(this));
-            writer.write("};\n");
+            Collections.reverse(l.getListaWhens());
+            l.getListaWhens().forEach(when -> when.accept(this));
+
             Collections.reverse(l.getStatementsOtherwise());
             l.getStatementsOtherwise().forEach(stat -> stat.accept(this));
 
@@ -924,9 +919,24 @@ public class CodeGeneratorVisitor implements Visitor {
 
 
         return null;
+    }
 
+    @Override
+    public Object visit(When w) {
+        try{
+            writer.write("while( " + (String) w.getCondizione().accept(this) + " ) {\n");
+            Collections.reverse(w.getStats());
+            w.getStats().forEach(stat -> stat.accept(this));
+            writer.write("};\n");
+
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+return null;
 
     }
+
+
 
     @Override
     public Object visit(WhileStat whileStat) throws RuntimeException {

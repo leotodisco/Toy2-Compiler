@@ -2,8 +2,8 @@
 % programma principale %
 proc main():
 
-
-    %qui c'è un'assign anzichè una boolean expr nella prima condixione%
+%ERRORE SEMANTICO%
+    %qui c'è una constante anzichè una boolean expr nella prima condixione%
     let var a ^= 1;\;
     go.when(4).loop{
     -->! "ciao sono nel primo loop";

@@ -835,60 +835,44 @@ public class TypeCheckingVisitor implements Visitor {
         enterScope(l.getTable());
 
         l.getDichiarazioni().accept(this);
-
-        //controllare tutte le 2 condizioni affinchè siano di tipo boolean
-        var tipoCondizione1 = l.getCondizione1().accept(this);
-        if(tipoCondizione1 instanceof String){
-            var tipo = (String) tipoCondizione1;
-
-            if(!tipo.equalsIgnoreCase("boolean")){
-                throw new RuntimeException("Non puoi usare qualcosa che non sia boolenano come condizione in un let");
-            }
+        if(l.getListaWhens() == null || l.getListaWhens().isEmpty()){
+            throw new RuntimeException("DEVI AVERE ALMENO UN WHEN");
         }
 
-        if(tipoCondizione1 instanceof ArrayList<?>){
-            var listaTipi = (ArrayList<String>) tipoCondizione1;
-
-            if(listaTipi.size() > 1){
-                throw new RuntimeException("Non puoi usare una funzione con più tipi di ritorno in un let");
-            }
-
-            var tipo = listaTipi.get(0);
-            if(!tipo.equalsIgnoreCase("boolean")){
-                throw new RuntimeException("Non puoi usare qualcosa che non sia boolenano come condizione in un let");
-            }
-        }
-
-        l.getStatements1().forEach(stat -> stat.accept(this));
-
-        //check condizione 2
-        var tipoCondizione2 = l.getCondizione2().accept(this);
-        if(tipoCondizione2 instanceof String) {
-            var tipo = (String) tipoCondizione1;
-
-            if (!tipo.equalsIgnoreCase("boolean")) {
-                throw new RuntimeException("Non puoi usare qualcosa che non sia boolenano come condizione in un let");
-            }
-        }
-
-        if(tipoCondizione1 instanceof ArrayList<?>){
-            var listaTipi = (ArrayList<String>) tipoCondizione1;
-
-            if(listaTipi.size() > 1){
-                throw new RuntimeException("Non puoi usare una funzione con più tipi di ritorno in un let");
-            }
-
-            var tipo = listaTipi.get(0);
-            if(!tipo.equalsIgnoreCase("boolean")){
-                throw new RuntimeException("Non puoi usare qualcosa che non sia boolenano come condizione in un let");
-            }
-        }
-
-        l.getStatements2().forEach(stat -> stat.accept(this));
+        l.getListaWhens().forEach(when -> when.accept(this));
         l.getStatementsOtherwise().forEach(stat -> stat.accept(this));
 
         exitScope();
      return null;
+    }
+
+    @Override
+    public Object visit(When w) {
+        var tipoCondizione1 = w.getCondizione().accept(this);
+
+        if(tipoCondizione1 instanceof String){
+            var tipo = (String) tipoCondizione1;
+
+            if(!tipo.equalsIgnoreCase("boolean")){
+                throw new RuntimeException("Non puoi usare qualcosa che non sia boolenano come condizione in un when");
+            }
+        }
+
+        if(tipoCondizione1 instanceof ArrayList<?>){
+            var listaTipi = (ArrayList<String>) tipoCondizione1;
+
+            if(listaTipi.size() > 1){
+                throw new RuntimeException("Non puoi usare una funzione con più tipi di ritorno in un when");
+            }
+
+            var tipo = listaTipi.get(0);
+            if(!tipo.equalsIgnoreCase("boolean")){
+                throw new RuntimeException("Non puoi usare qualcosa che non sia boolenano come condizione in un when");
+            }
+        }
+
+        w.getStats().forEach(stat -> stat.accept(this));
+        return null;
     }
 
     @Override

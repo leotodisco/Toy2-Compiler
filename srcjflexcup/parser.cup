@@ -6,7 +6,7 @@ import unisa.compilatori.Token;
 import java.util.ArrayList;
 
 terminal OTHERWISE,LBRACK, RBRACK, LET, GO, DOT, WHEN, LOOP, REF, ENDVAR, UMINUS, VAR, COLON, ASSIGN, SEMI, ID, COMMA, REAL_CONST, INTEGER_CONST, STRING_CONST, TRUE, FALSE, REAL, INTEGER, STRING, BOOLEAN, RETURN, FUNCTION, TYPERETURN, ENDFUNCTION, LPAR, RPAR, PROCEDURE, ENDPROCEDURE, OUT, WRITE, WRITERETURN, DOLLARSIGN, READ, IF, THEN, ELSE, ENDIF, ELIF, WHILE, DO, ENDWHILE, PLUS, MINUS, TIMES, DIV, EQ, NE, LT, LE, GT, GE, AND, OR, NOT;
-nonterminal Stats, Let, FunCall, ProcExprs, ProcCall, IOArgsExpr, IterWithoutProcedure, Program, Iter, VarDecl, Decls, Ids, Consts, Type, Function, FuncParams, OtherFuncParams, Types, Procedure, ProcParams, OtherProcParams, ProcParamId, Body, Stat, IfStat, Elifs, Else, WhileStat, Elif, Exprs, IOArgs;
+nonterminal When, Whens, Stats, Let, FunCall, ProcExprs, ProcCall, IOArgsExpr, IterWithoutProcedure, Program, Iter, VarDecl, Decls, Ids, Consts, Type, Function, FuncParams, OtherFuncParams, Types, Procedure, ProcParams, OtherProcParams, ProcParamId, Body, Stat, IfStat, Elifs, Else, WhileStat, Elif, Exprs, IOArgs;
 nonterminal ConstOP Const;
 nonterminal UnaryOP Unary;
 nonterminal ExprOP Expr;
@@ -175,25 +175,33 @@ Stats ::= Stat:s Stats:l
  :}
  | /**/ {:RESULT = new ArrayList<Stat>();:};
 
-Let ::= LET VarDecl:v SEMI GO DOT WHEN LPAR Expr:condizione RPAR DOT LOOP LBRACK Stats:listaStats RBRACK DOT WHEN LPAR Expr:condizione2 RPAR DOT LOOP LBRACK Stats:lista2 RBRACK DOT OTHERWISE DOT DO LBRACK Stats:statsOtherwise RBRACK
-
+Let ::= LET VarDecl:v SEMI GO DOT Whens:whens OTHERWISE DOT DO LBRACK Stats:statsOtherwise RBRACK
 {:
 var decls = (VarDecl) v;
-var condizione1 = (ExprOP) condizione;
-var listaStats1 = (ArrayList<Stat>) listaStats;
-
-var condizione22 = (ExprOP) condizione2;
-var listaStats2 = (ArrayList<Stat>) lista2;
+var listaWhens = (ArrayList<When>) whens;
 
 var listaOtherwise = (ArrayList<Stat>) statsOtherwise;
 
-var let = new LetStat(decls, condizione1, listaStats1, condizione22, listaStats2, listaOtherwise);
+var let = new LetStat(decls, listaWhens, listaOtherwise);
 RESULT = let;
 
-:}
+:};
 
+Whens ::= When:w Whens:whens {:
+ArrayList<When> temp = (ArrayList<When>) whens;
+                                temp.add((When) w);
+                                RESULT = temp;
+                                :}
+       | /* empty */ {:RESULT = new ArrayList<When>();:};
 
-;
+When ::= WHEN LPAR Expr:condizione RPAR DOT LOOP LBRACK Stats:listaStats RBRACK DOT
+{:
+var condizione1 = (ExprOP) condizione;
+var listaStats1 = (ArrayList<Stat>) listaStats;
+
+var res = new When(condizione1, listaStats1);
+RESULT = res;
+:};
 
 
 FunCall ::= ID:id LPAR Exprs:listaEspressioni RPAR {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni);:}           /* chiamata con almeno un parametro */

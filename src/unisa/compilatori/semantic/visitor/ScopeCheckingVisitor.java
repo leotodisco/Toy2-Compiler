@@ -293,11 +293,7 @@ public class ScopeCheckingVisitor implements Visitor {
         var listaRecords = (ArrayList<SymbolTableRecord>) l.getDichiarazioni().accept(this);
         listaRecords.forEach(symbolTable::addEntry);
 
-
-        l.getCondizione1().accept(this);
-        l.getStatements1().forEach(stat -> stat.accept(this));
-        l.getCondizione2().accept(this);
-        l.getStatements2().forEach(stat -> stat.accept(this));
+        l.getListaWhens().forEach(when -> when.accept(this));
         l.getStatementsOtherwise().forEach(stat -> stat.accept(this));
 
 
@@ -305,6 +301,16 @@ public class ScopeCheckingVisitor implements Visitor {
 
         return null;
     }
+
+
+    @Override
+    public Object visit(When w) {
+        w.getCondizione().accept(this);
+        w.getStats().forEach(stat -> stat.accept(this));
+        return null;
+    }
+
+
 
     @Override
     public Object visit(WhileStat whileStat) {
