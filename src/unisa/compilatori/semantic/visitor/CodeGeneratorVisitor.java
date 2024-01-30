@@ -340,6 +340,11 @@ public class CodeGeneratorVisitor implements Visitor {
         if(statement instanceof ProcCall) {
             ((ProcCall) statement).accept(this);
         }
+
+        if(statement instanceof LetStat) {
+            ((LetStat) statement).accept(this);
+        }
+
         if (statement.getTipo().equals(Stat.Mode.ASSIGN)) {
             //lo statement ha lista di id e corrispondente lista di exprs
 
@@ -890,6 +895,37 @@ public class CodeGeneratorVisitor implements Visitor {
         }
 
         return null;
+    }
+
+    @Override
+    public Object visit(LetStat l) throws RuntimeException {
+        try{
+        enterScope(l.getTable());
+            writer.write("//MODIFICA");
+        writer.write("\n{\n");
+            l.getDichiarazioni().accept(this);
+            writer.write("while( " + (String) l.getCondizione1().accept(this) + " ) {\n");
+            Collections.reverse(l.getStatements1());
+            l.getStatements1().forEach(stat -> stat.accept(this));
+            writer.write("};\n");
+
+            writer.write("while( " + (String) l.getCondizione2().accept(this) + " ) {\n");
+            Collections.reverse(l.getStatements2());
+            l.getStatements2().forEach(stat -> stat.accept(this));
+            writer.write("};\n");
+            Collections.reverse(l.getStatementsOtherwise());
+            l.getStatementsOtherwise().forEach(stat -> stat.accept(this));
+
+        writer.write("}\n");
+        exitScope();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+
+        return null;
+
+
     }
 
     @Override

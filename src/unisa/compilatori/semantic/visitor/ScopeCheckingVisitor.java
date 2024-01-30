@@ -282,6 +282,31 @@ public class ScopeCheckingVisitor implements Visitor {
     }
 
     @Override
+    public Object visit(LetStat l) throws RuntimeException {
+        l.setTable(new SymbolTable());
+        SymbolTable symbolTable = l.getTable();
+        symbolTable.setScope("Let");
+        symbolTable.setFather(this.table);
+
+        enterScope(l.getTable());
+
+        var listaRecords = (ArrayList<SymbolTableRecord>) l.getDichiarazioni().accept(this);
+        listaRecords.forEach(symbolTable::addEntry);
+
+
+        l.getCondizione1().accept(this);
+        l.getStatements1().forEach(stat -> stat.accept(this));
+        l.getCondizione2().accept(this);
+        l.getStatements2().forEach(stat -> stat.accept(this));
+        l.getStatementsOtherwise().forEach(stat -> stat.accept(this));
+
+
+        exitScope();
+
+        return null;
+    }
+
+    @Override
     public Object visit(WhileStat whileStat) {
         whileStat.setTable(new SymbolTable());
         SymbolTable symbolTable = whileStat.getTable();
@@ -408,6 +433,10 @@ public class ScopeCheckingVisitor implements Visitor {
             stat.accept(this);
         } else if(s instanceof ElseOP) {
             var stat = (ElseOP) s;
+            stat.accept(this);
+        }
+        else if(s instanceof LetStat) {
+            var stat = (LetStat) s;
             stat.accept(this);
         }
 

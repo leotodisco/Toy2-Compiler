@@ -1,0 +1,21 @@
+
+% programma principale %
+proc main():
+
+    %qui c'è un'assign anzichè una boolean expr nella prima condixione%
+    let var a ^= 1;\;
+    go.when(a ^= 4).loop{
+    -->! "ciao sono nel primo loop";
+    a ^= a +1;
+    }
+    .when(a > 2 && a < 7 ).loop{
+    -->! "SONO NEL SECONDO WHEN-LOOP";
+    a ^= a+1;
+    }
+    .otherwise.do{
+        a ^= 9;
+        -->! $(a);
+    };
+
+endproc
+

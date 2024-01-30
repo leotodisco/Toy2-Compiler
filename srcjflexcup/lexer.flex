@@ -70,6 +70,14 @@ RegexRisultatiStruct = r_[0-9]+
 
 <YYINITIAL> {
 //blocca l'inizio dei commenti
+"let" { return symbol(sym.LET, new Token("LET", yytext())); }
+"otherwise" { return symbol(sym.OTHERWISE, new Token("OTHERWISE", yytext())); }
+"." { return symbol(sym.DOT, new Token("DOT", yytext())); }
+"go" { return symbol(sym.GO, new Token("GO", yytext())); }
+"{" { return symbol(sym.LBRACK, new Token("LBRACK", yytext())); }
+"}" { return symbol(sym.RBRACK, new Token("RBRACK", yytext())); }
+"when" { return symbol(sym.WHEN, new Token("WHEN", yytext())); }
+"loop" { return symbol(sym.LOOP, new Token("LOOP", yytext())); }
 "var" { return symbol(sym.VAR, new Token("VAR", yytext())); }
 ":" { return symbol(sym.COLON, new Token("COLON", yytext())); }
 "^=" { return symbol(sym.ASSIGN, new Token("ASSIGN", yytext())); }
