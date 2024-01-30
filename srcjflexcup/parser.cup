@@ -11,6 +11,11 @@ nonterminal ConstOP Const;
 nonterminal UnaryOP Unary;
 nonterminal ExprOP Expr;
 
+nonterminal FirstWhen;
+nonterminal LetGoWhen, When;
+
+terminal LET, GO, DOT, OTHERWISE,LBRACK, WHEN, LOOP, RBRACK,GOWHEN;
+
 /* Precedenze */
 precedence left OR;
 precedence left AND;
@@ -164,7 +169,31 @@ Stat ::= Ids:ids ASSIGN Exprs:exprList SEMI {:Stat stat = new Stat(Stat.Mode.ASS
 	 | WRITERETURN IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.WRITE_RETURN, (ArrayList<ExprOP>)ioArgs); RESULT=stat; :}
 	 | READ IOArgs:ioArgs SEMI {:Stat stat = new Stat(Stat.Mode.READ, (ArrayList<ExprOP>) ioArgs); RESULT=stat; :}
 	 | IfStat:IfStat SEMI {:RESULT = IfStat;:}
-	 | WhileStat:WhileStat SEMI {:RESULT = WhileStat;:};
+	 | WhileStat:WhileStat SEMI {:RESULT = WhileStat;:}
+	 | LetGoWhen:letGoWhen SEMI {:RESULT = letGoWhen;:};
+
+
+LetGoWhen ::= LET VarDecl:dichiarazioni SEMI GOWHEN LPAR Expr:condizione RPAR LOOP LBRACK Body:firstWhenBody RBRACK When:temp OTHERWISE LBRACK Body:otherwiseBody RBRACK
+
+{:
+
+    When firstWhen = new When((ExprOP) condizione, (Body) firstWhenBody);
+    ArrayList<When> listWhen = (ArrayList<When>) temp;
+    listWhen.add(firstWhen);
+    LetGoWhen letGoWhen = new LetGoWhen(listWhen, (VarDecl) dichiarazioni, (Body) otherwiseBody);
+    RESULT = letGoWhen;
+:};
+
+
+When ::= WHEN LPAR Expr:condizione RPAR LOOP LBRACK Body:body RBRACK When:tempList
+{:
+    When when = new When((ExprOP) condizione, (Body) body);
+    ArrayList<When> listWhens = (ArrayList<When>) tempList;
+    listWhens.add(when);
+    RESULT = listWhens;
+:}
+| {:RESULT = new ArrayList<When>();:} /**/;
+
 
 FunCall ::= ID:id LPAR Exprs:listaEspressioni RPAR {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER), (ArrayList<ExprOP>)listaEspressioni);:}           /* chiamata con almeno un parametro */
          | ID:id LPAR RPAR   {:RESULT = new FunCall(new Identifier(id, Identifier.Mode.FUNCTIONIDENTIFIER)); :}               /* chiamata con nessun parametro */;

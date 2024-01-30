@@ -340,6 +340,9 @@ public class CodeGeneratorVisitor implements Visitor {
         if(statement instanceof ProcCall) {
             ((ProcCall) statement).accept(this);
         }
+        if(statement instanceof LetGoWhen) {
+            ((LetGoWhen) statement).accept(this);
+        }
         if (statement.getTipo().equals(Stat.Mode.ASSIGN)) {
             //lo statement ha lista di id e corrispondente lista di exprs
 
@@ -1127,6 +1130,42 @@ public class CodeGeneratorVisitor implements Visitor {
 
     @Override
     public Object visit(CallableParam callableParam) throws RuntimeException {
+        return null;
+    }
+
+    @Override
+    public Object visit(LetGoWhen letGoWhen) throws RuntimeException {
+        try {
+            enterScope(letGoWhen.getSymbolTable());
+            writer.write("{");
+            letGoWhen.getVarDecl().accept(this);
+            Collections.reverse(letGoWhen.getListWhens());
+            letGoWhen.getListWhens().forEach(when-> when.accept(this));
+
+            letGoWhen.getOtherwiseBody().accept(this);
+            writer.write("}");
+            exitScope();
+        }catch (Exception e) {
+            throw new RuntimeException("erroe nella scrittura");
+        }
+
+        return null;
+    }
+
+    @Override
+    public Object visit(When when) throws RuntimeException {
+
+        try {
+            writer.write("while(");
+            writer.write((String) when.getCondizioneWhen().accept(this));
+            writer.write("){\n");
+            when.getBodyStatements().accept(this);
+            writer.write("}\n");
+
+
+        }catch (Exception e) {
+            throw new RuntimeException("Errore nella scrittura");
+        }
         return null;
     }
 }

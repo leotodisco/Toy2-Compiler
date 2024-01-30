@@ -12,6 +12,7 @@ import java.util.Optional;
 public class Stat extends DefaultMutableTreeNode implements Visitable {
     public enum Mode {
         READ,
+        LETGO,
         ASSIGN,
         RETURN,
         PROCCALL,

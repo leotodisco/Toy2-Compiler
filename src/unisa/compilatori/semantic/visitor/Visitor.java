@@ -28,4 +28,8 @@ public interface Visitor<T> {
     T visit(FunCall funCall) throws RuntimeException;
     T visit(ExprOP exprOP) throws RuntimeException;
     T visit(CallableParam callableParam) throws RuntimeException;
+
+    T visit(LetGoWhen letGoWhen) throws RuntimeException;
+
+    T visit(When when) throws RuntimeException;
 }

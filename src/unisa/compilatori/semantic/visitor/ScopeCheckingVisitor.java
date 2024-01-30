@@ -395,6 +395,39 @@ public class ScopeCheckingVisitor implements Visitor {
     }
 
     @Override
+    public Object visit(LetGoWhen letGoWhen) throws RuntimeException {
+        SymbolTable symbolTable = new SymbolTable();
+        symbolTable.setScope("letgowhen");
+        symbolTable.setFather(this.table);
+        letGoWhen.setSymbolTable(symbolTable);
+
+        enterScope(symbolTable);
+
+        ArrayList<SymbolTableRecord> lista = (ArrayList<SymbolTableRecord>) letGoWhen.getVarDecl().accept(this);
+        for (SymbolTableRecord symbolTableRecord : lista) {
+            this.table.addEntry(symbolTableRecord);
+        }
+
+        letGoWhen.getListWhens().forEach(when -> when.accept(this));
+
+        letGoWhen.getOtherwiseBody().accept(this);
+
+        exitScope();
+
+
+        return null;
+    }
+
+    @Override
+    public Object visit(When when) throws RuntimeException {
+        when.getCondizioneWhen().accept(this);
+
+        when.getBodyStatements().accept(this);
+
+        return null;
+    }
+
+    @Override
     public Object visit(Stat s) {
         //qui si gestrisce dove deve andare
         if(s instanceof WhileStat) {
@@ -408,6 +441,9 @@ public class ScopeCheckingVisitor implements Visitor {
             stat.accept(this);
         } else if(s instanceof ElseOP) {
             var stat = (ElseOP) s;
+            stat.accept(this);
+        } else if(s instanceof LetGoWhen) {
+            var stat = (LetGoWhen) s;
             stat.accept(this);
         }
 

@@ -1,0 +1,12 @@
+
+%
+ errore sintattico non c'è un punto in .when(a < 2)loop{-->! "due"; a^= a+1;}
+%
+
+proc main():
+    let var a, b^=1,2;\;
+    go.when(a > 2).loop{-->! "uno"; a^= a-1; }
+    .when(a < 2)loop{-->! "due"; a^= a+1;}
+    .otherwise.do{-->!"sono uguali";};
+
+endproc

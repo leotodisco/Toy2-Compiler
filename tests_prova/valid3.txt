@@ -1,16 +1,9 @@
-func aggiungi(a :integer)->integer:
-    return a +1;
-endfunc
-
 proc main():
-
-    var i ^= 0;\
-    i ^= aggiungi(12);
     let var pippo, pluto^=20,40; a,b ^=1, 2; temp:integer; counter^=0;\;
     go.when(a > b).loop{-->! "diminuito a"; a^= a-1; }
     .when(a < b).loop{-->! "aumentato b"; a^= a+1;}
     .when(counter < 4 && pluto > pippo ).loop{counter^= counter + 1; temp^= pippo; -->!"pluto è maggiore di pippo"; pippo ^= pippo - 1; -->!"ora pippo vale" $(pippo) "prima valeva" $(temp);}
-    .when(counter = 4).loop{counter ^= aggiungi(a); -->!"finito";}
+    .when(counter == 4).loop{counter ^= counter +1; -->!"finito";}
     .otherwise.do{-->!"sono uguali";};
 
 endproc

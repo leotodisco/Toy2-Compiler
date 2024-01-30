@@ -1,0 +1,9 @@
+
+%
+ errore non c'è otherwise
+%
+proc main():
+    let var a, b^=3,2;\;
+    go.when(a > b).loop{-->! "uno"; a^= a-1; };
+
+endproc

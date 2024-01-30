@@ -1,0 +1,9 @@
+
+%
+ errore non c'è gowhen
+%
+proc main():
+    let var a, b^=3,2;\;
+
+    .otherwise.do{-->!"sono uguali";};
+endproc

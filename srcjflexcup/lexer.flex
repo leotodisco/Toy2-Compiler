@@ -120,6 +120,15 @@ RegexRisultatiStruct = r_[0-9]+
 "||"      { return symbol(sym.OR, new Token("OR", yytext())); }
 "!"     { return symbol(sym.NOT, new Token("NOT", yytext())); }
 "@"     { return symbol(sym.REF, new Token("REF", yytext())); }
+"let" { return symbol(sym.LET, new Token("LET", yytext())); }
+"go"  { return symbol(sym.GO, new Token("GO", yytext())); }
+"."  { return symbol(sym.DOT, new Token("DOT", yytext())); }
+".otherwise.do" { return symbol(sym.OTHERWISE, new Token("OTHERWISE", yytext())); }
+"{" { return symbol(sym.LBRACK, new Token("LBRACK", yytext())); }
+"}" { return symbol(sym.RBRACK, new Token("RBRACK", yytext())); }
+".when" { return symbol(sym.WHEN, new Token("WHEN", yytext())); }
+".loop" { return symbol(sym.LOOP, new Token("LOOP", yytext())); }
+"go.when" { return symbol(sym.GOWHEN, new Token("GOWHEN", yytext())); }
 {IntegerConst} { return symbol(sym.INTEGER_CONST, new Token("INTEGER", yytext())); }
 {RealConst} { return symbol(sym.REAL_CONST, new Token("REAL", yytext())); }
  "%" {yybegin(BLK_COMMENT);}

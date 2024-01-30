@@ -1170,4 +1170,36 @@ public class TypeCheckingVisitor implements Visitor {
     public Object visit(CallableParam callableParam) throws RuntimeException{
         return null;
     }
+
+    @Override
+    public Object visit(LetGoWhen letGoWhen) throws RuntimeException {
+        enterScope(letGoWhen.getSymbolTable());
+
+        letGoWhen.getVarDecl().accept(this);
+
+        letGoWhen.getListWhens().forEach(when -> when.accept(this));
+
+        letGoWhen.getOtherwiseBody().accept(this);
+
+        exitScope();
+        return null;
+    }
+
+    @Override
+    public Object visit(When when) throws RuntimeException {
+
+        if(!when.getBodyStatements().getVarDeclList().isEmpty()) {
+            throw new RuntimeException("non puoi usare dichiarazioni nel when");
+        }
+        String tipoCondizione = (String) when.getCondizioneWhen().accept(this);
+        if(!tipoCondizione.equalsIgnoreCase("BOOLEAN")) {
+            throw new RuntimeException("Condizione nel when non booleana");
+        }
+
+        when.getBodyStatements().accept(this);
+
+        when.getBodyStatements().accept(this);
+
+        return null;
+    }
 }

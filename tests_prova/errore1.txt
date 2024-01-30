@@ -1,0 +1,12 @@
+
+
+%
+ errore semantico in un when si usa un espressione non booleana
+%
+proc main():
+    let var a, b^=1,2;\;
+    go.when(a + 2).loop{-->! "uno"; a^= a-1; }
+    .when(a < 2).loop{-->! "due"; a^= a+1;}
+    .otherwise.do{-->!"sono uguali";};
+
+endproc

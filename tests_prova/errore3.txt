@@ -1,0 +1,11 @@
+%
+ errore non si possono usare dichiarazioni nel body del when
+%
+
+proc main():
+    let var a, b^=1,2;\;
+    go.when(a > b).loop{-->! "uno"; a^= a-1;var d, c^=4,5;\ }
+    .when(a < b).loop{-->! "due"; a^= a+1;}
+    .otherwise.do{-->!"sono uguali";};
+
+endproc
